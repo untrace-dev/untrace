@@ -1,0 +1,17 @@
+{
+  "name": "@acme/commitlint-config",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./commitlint.config.js"
+  },
+  "scripts": {
+    "clean": "git clean -xdf .turbo node_modules",
+    "commitlint": "commitlint"
+  },
+  "dependencies": {
+    "@commitlint/cli": "19.8.1",
+    "@commitlint/config-conventional": "19.8.1"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "extends": "@acme/tsconfig/react-library.json",
+  "compilerOptions": {
+    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+    "baseUrl": ".",
+    "paths": {
+      "@acme/ui/*": ["src/*"]
+    },
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["."],
+  "exclude": ["node_modules"]
+}
