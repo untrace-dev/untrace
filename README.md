@@ -208,7 +208,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Email: team@untrace.io
 - Discord: [Join our community](https://discord.gg/untrace)
-- Twitter: [@untrace_sh](https://twitter.com/untrace_sh)
+- Twitter: [@untrace_dev](https://twitter.com/untrace_dev)
 
 ---
 

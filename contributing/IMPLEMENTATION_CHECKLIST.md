@@ -6,36 +6,36 @@ This checklist provides a step-by-step guide for implementing the Untrace MVP. E
 
 ### 1.1 Project Setup
 - [ ] Initialize monorepo with Turborepo
-  - [ ] Set up workspace structure (apps/, packages/)
-  - [ ] Configure TypeScript, ESLint, Prettier
+  - [X] Set up workspace structure (apps/, packages/)
+  - [X] Configure TypeScript, Biome
   - [ ] Set up shared configs in `packages/config`
 - [ ] Create Docker development environment
-  - [ ] PostgreSQL database
+  - [x] PostgreSQL database
   - [ ] Redis for caching
   - [ ] Kafka/Kinesis for message queue
   - [ ] Docker Compose configuration
 - [ ] Set up CI/CD pipeline
   - [ ] GitHub Actions for testing
-  - [ ] Automated linting and type checking
-  - [ ] Build verification
+  - [x] Automated linting and type checking
+  - [x] Build verification
 
 ### 1.2 Core API Service
 - [ ] Create base API service in `apps/api`
-  - [ ] Express/Fastify setup with TypeScript
+  - [x] Next.js Api Router
   - [ ] Basic health check endpoints
-  - [ ] Request logging middleware
-  - [ ] Error handling middleware
-- [ ] Implement authentication system
+  - [x] Request logging middleware
+  - [x] Error handling middleware
+- [x] Implement authentication system
   - [ ] API key generation and storage
   - [ ] JWT token validation
   - [ ] Rate limiting per API key
 - [ ] Set up database layer
-  - [ ] Prisma/Drizzle ORM setup
+  - [x] Drizzle ORM setup
   - [ ] Customer and API key schemas
-  - [ ] Migration system
+  - [x] Migration system
 
 ### 1.3 Message Queue Infrastructure
-- [ ] Implement Kafka/Kinesis producer
+- [ ] Implement Kafka/Kinesis producer maybe use Ingest service?
   - [ ] Connection pooling
   - [ ] Retry logic
   - [ ] Error handling
