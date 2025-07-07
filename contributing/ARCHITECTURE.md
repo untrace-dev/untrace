@@ -1,15 +1,15 @@
 # Technical Architecture Document
-# TraceRouter - LLM Trace Forwarding Service
+# Untrace - LLM Trace Forwarding Service
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Draft  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Draft
 
 ---
 
 ## 1. System Overview
 
-TraceRouter is a high-performance, distributed system designed to capture, process, and route LLM trace data to multiple observability platforms. The system is built with scalability, reliability, and low latency as core principles.
+Untrace is a high-performance, distributed system designed to capture, process, and route LLM trace data to multiple observability platforms. The system is built with scalability, reliability, and low latency as core principles.
 
 ### 1.1 Key Design Principles
 - **Minimal Latency**: <50ms P95 overhead on LLM calls
@@ -84,11 +84,11 @@ class OpenAIProxy {
   async handleRequest(req: Request): Promise<Response> {
     const traceId = generateTraceId();
     const startTime = Date.now();
-    
+
     try {
       // Forward to OpenAI
       const response = await this.forwardRequest(req);
-      
+
       // Async trace capture (non-blocking)
       this.captureTrace({
         traceId,
@@ -97,7 +97,7 @@ class OpenAIProxy {
         latency: Date.now() - startTime,
         metadata: extractMetadata(req)
       });
-      
+
       return response;
     } catch (error) {
       this.captureError(traceId, error);
@@ -110,21 +110,21 @@ class OpenAIProxy {
 #### 3.1.2 SDK Architecture
 ```python
 # Python SDK Example
-class TraceRouter:
+class Untrace:
     def __init__(self, api_key: str, config: Config = None):
         self.api_key = api_key
         self.config = config or Config()
         self.queue = AsyncQueue(max_size=1000)
         self.worker = BackgroundWorker(self.queue)
-    
+
     def trace(self, event: TraceEvent):
         """Non-blocking trace submission"""
         if self.queue.full():
             # Apply backpressure
             self.queue.evict_oldest()
-        
+
         self.queue.put_nowait(event)
-    
+
     @contextmanager
     def span(self, name: str, **kwargs):
         """Context manager for automatic tracing"""
@@ -149,13 +149,13 @@ kafka:
       retention_ms: 604800000  # 7 days
       compression_type: snappy
       max_message_bytes: 1048576  # 1MB
-    
+
   producers:
     acks: 1  # Leader acknowledgment
     compression_type: snappy
     batch_size: 16384
     linger_ms: 10
-    
+
   consumers:
     group_id: trace-processor-${region}
     enable_auto_commit: false
@@ -187,25 +187,25 @@ interface RoutingRule {
 class RouterEngine {
   private rules: RoutingRule[];
   private ruleEngine: RuleEngine;
-  
+
   async route(trace: Trace): Promise<RoutingDecision[]> {
     // Evaluate rules in priority order
     const applicableRules = await this.ruleEngine.evaluate(trace, this.rules);
-    
+
     const decisions: RoutingDecision[] = [];
     for (const rule of applicableRules) {
       // Apply sampling if configured
       if (rule.sampling && !this.shouldSample(trace, rule.sampling)) {
         continue;
       }
-      
+
       decisions.push({
         destinations: rule.destinations,
         transformations: rule.transformations,
         priority: rule.priority
       });
     }
-    
+
     return decisions;
   }
 }
@@ -220,19 +220,19 @@ interface Transformer {
 
 class TransformationPipeline {
   private transformers: Map<string, Transformer>;
-  
+
   async execute(trace: Trace, transformations: string[]): Promise<Trace> {
     let result = trace;
-    
+
     for (const name of transformations) {
       const transformer = this.transformers.get(name);
       if (!transformer) {
         throw new Error(`Unknown transformer: ${name}`);
       }
-      
+
       result = await transformer.transform(result);
     }
-    
+
     return result;
   }
 }
@@ -255,16 +255,16 @@ class PIIRedactionTransformer implements Transformer {
 ```typescript
 interface DestinationConnector {
   name: string;
-  
+
   // Validate configuration
   validateConfig(config: any): Promise<void>;
-  
+
   // Send single trace
   send(trace: Trace, config: any): Promise<void>;
-  
+
   // Batch send for efficiency
   sendBatch(traces: Trace[], config: any): Promise<BatchResult>;
-  
+
   // Health check
   healthCheck(config: any): Promise<HealthStatus>;
 }
@@ -274,10 +274,10 @@ interface DestinationConnector {
 ```typescript
 class LangSmithConnector implements DestinationConnector {
   name = 'langsmith';
-  
+
   async send(trace: Trace, config: LangSmithConfig): Promise<void> {
     const langsmithFormat = this.transformToLangSmithFormat(trace);
-    
+
     const response = await fetch(`${config.apiUrl}/runs`, {
       method: 'POST',
       headers: {
@@ -286,7 +286,7 @@ class LangSmithConnector implements DestinationConnector {
       },
       body: JSON.stringify(langsmithFormat)
     });
-    
+
     if (!response.ok) {
       throw new DestinationError(
         `LangSmith error: ${response.status}`,
@@ -294,7 +294,7 @@ class LangSmithConnector implements DestinationConnector {
       );
     }
   }
-  
+
   private transformToLangSmithFormat(trace: Trace): LangSmithRun {
     return {
       id: trace.id,
@@ -319,7 +319,7 @@ class LangSmithConnector implements DestinationConnector {
 ```typescript
 class RetryManager {
   private retryQueue: PriorityQueue<RetryItem>;
-  
+
   async scheduleRetry(
     trace: Trace,
     destination: Destination,
@@ -328,7 +328,7 @@ class RetryManager {
   ): Promise<void> {
     const delay = this.calculateBackoff(attempt);
     const priority = this.calculatePriority(trace, attempt);
-    
+
     await this.retryQueue.push({
       trace,
       destination,
@@ -338,7 +338,7 @@ class RetryManager {
       error
     });
   }
-  
+
   private calculateBackoff(attempt: number): number {
     // Exponential backoff with jitter
     const base = Math.min(1000 * Math.pow(2, attempt), 300000); // Max 5 min
@@ -354,7 +354,7 @@ class CircuitBreaker {
   private state: 'CLOSED' | 'OPEN' | 'HALF_OPEN' = 'CLOSED';
   private failures: number = 0;
   private lastFailureTime: number = 0;
-  
+
   async execute<T>(fn: () => Promise<T>): Promise<T> {
     if (this.state === 'OPEN') {
       if (Date.now() - this.lastFailureTime > this.config.resetTimeout) {
@@ -363,7 +363,7 @@ class CircuitBreaker {
         throw new CircuitOpenError();
       }
     }
-    
+
     try {
       const result = await fn();
       this.onSuccess();
@@ -387,15 +387,15 @@ interface Trace {
   id: string;                    // Unique trace ID
   parentId?: string;            // For nested traces
   sessionId?: string;           // Group related traces
-  
+
   // Timing
   startTime: number;            // Unix timestamp ms
-  endTime: number;             
-  
+  endTime: number;
+
   // LLM Details
   provider: string;             // 'openai', 'anthropic', etc.
   model: string;                // 'gpt-4', 'claude-2', etc.
-  
+
   // Request/Response
   request: {
     messages?: Message[];       // Chat format
@@ -406,7 +406,7 @@ interface Trace {
       [key: string]: any;
     };
   };
-  
+
   response: {
     content?: string;
     messages?: Message[];
@@ -417,7 +417,7 @@ interface Trace {
     };
     finish_reason?: string;
   };
-  
+
   // Metadata
   metadata: {
     customerId: string;
@@ -427,7 +427,7 @@ interface Trace {
     tags: Record<string, string>;
     [key: string]: any;
   };
-  
+
   // Metrics
   metrics: {
     latency_ms: number;
@@ -435,7 +435,7 @@ interface Trace {
     tokens_per_second?: number;
     estimated_cost?: number;
   };
-  
+
   // Error handling
   error?: {
     type: string;
@@ -460,13 +460,13 @@ interface RoutingRule {
   description?: string;
   enabled: boolean;
   priority: number;
-  
+
   conditions: {
     all?: Condition[];     // AND
     any?: Condition[];     // OR
     not?: Condition;       // NOT
   };
-  
+
   actions: {
     destinations: Destination[];
     transformations?: string[];
@@ -493,12 +493,12 @@ interface Condition {
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: tracerouter-api
+  name: untrace-api
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: tracerouter-api
+    name: untrace-api
   minReplicas: 3
   maxReplicas: 100
   metrics:
@@ -546,24 +546,24 @@ var httpClient = &http.Client{
 class BatchProcessor {
   private batch: Trace[] = [];
   private timer: NodeJS.Timeout;
-  
+
   async add(trace: Trace): Promise<void> {
     this.batch.push(trace);
-    
+
     if (this.batch.length >= this.config.maxBatchSize) {
       await this.flush();
     } else if (!this.timer) {
       this.timer = setTimeout(() => this.flush(), this.config.maxWaitTime);
     }
   }
-  
+
   private async flush(): Promise<void> {
     if (this.batch.length === 0) return;
-    
+
     const traces = this.batch.splice(0);
     clearTimeout(this.timer);
     this.timer = null;
-    
+
     await this.processBatch(traces);
   }
 }
@@ -610,12 +610,12 @@ encryption:
     ciphers:
       - TLS_AES_256_GCM_SHA384
       - TLS_CHACHA20_POLY1305_SHA256
-  
+
   at_rest:
     algorithm: AES-256-GCM
     key_management: AWS_KMS
     key_rotation: 90_days
-  
+
   field_level:
     sensitive_fields:
       - "request.api_key"
@@ -633,30 +633,30 @@ encryption:
 # Prometheus Metrics
 metrics:
   # API Metrics
-  - name: tracerouter_api_requests_total
+  - name: untrace_api_requests_total
     type: counter
     labels: [method, endpoint, status]
-  
-  - name: tracerouter_api_latency_seconds
+
+  - name: untrace_api_latency_seconds
     type: histogram
     buckets: [0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1.0]
     labels: [method, endpoint]
-  
+
   # Processing Metrics
-  - name: tracerouter_traces_processed_total
+  - name: untrace_traces_processed_total
     type: counter
     labels: [customer_id, destination, status]
-  
-  - name: tracerouter_processing_latency_seconds
+
+  - name: untrace_processing_latency_seconds
     type: histogram
     labels: [stage]
-  
+
   # Destination Metrics
-  - name: tracerouter_destination_requests_total
+  - name: untrace_destination_requests_total
     type: counter
     labels: [destination, status]
-  
-  - name: tracerouter_destination_latency_seconds
+
+  - name: untrace_destination_latency_seconds
     type: histogram
     labels: [destination]
 ```
@@ -667,7 +667,7 @@ metrics:
 // OpenTelemetry Integration
 import { trace, context, SpanStatusCode } from '@opentelemetry/api';
 
-const tracer = trace.getTracer('tracerouter', '1.0.0');
+const tracer = trace.getTracer('untrace', '1.0.0');
 
 async function processTrace(traceData: Trace): Promise<void> {
   const span = tracer.startSpan('process_trace', {
@@ -678,14 +678,14 @@ async function processTrace(traceData: Trace): Promise<void> {
       'llm.provider': traceData.provider
     }
   });
-  
+
   try {
     await context.with(trace.setSpan(context.active(), span), async () => {
       await this.validate(traceData);
       await this.enrich(traceData);
       await this.route(traceData);
     });
-    
+
     span.setStatus({ code: SpanStatusCode.OK });
   } catch (error) {
     span.recordException(error);
@@ -726,20 +726,20 @@ async function processTrace(traceData: Trace): Promise<void> {
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: tracerouter-api
+  name: untrace-api
   labels:
-    app: tracerouter
+    app: untrace
     component: api
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: tracerouter
+      app: untrace
       component: api
   template:
     metadata:
       labels:
-        app: tracerouter
+        app: untrace
         component: api
     spec:
       affinity:
@@ -750,18 +750,18 @@ spec:
               - key: app
                 operator: In
                 values:
-                - tracerouter
+                - untrace
             topologyKey: kubernetes.io/hostname
       containers:
       - name: api
-        image: tracerouter/api:v1.0.0
+        image: untrace/api:v1.0.0
         ports:
         - containerPort: 8080
         env:
         - name: KAFKA_BROKERS
           valueFrom:
             configMapKeyRef:
-              name: tracerouter-config
+              name: untrace-config
               key: kafka.brokers
         resources:
           requests:
@@ -797,16 +797,16 @@ backup:
     retention: 30_days
     type: incremental
     encryption: true
-  
+
   kafka_topics:
     frequency: daily
     retention: 7_days
-    destination: s3://tracerouter-backups/kafka/
-  
+    destination: s3://untrace-backups/kafka/
+
   configuration:
     frequency: on_change
     versioning: enabled
-    destination: s3://tracerouter-backups/config/
+    destination: s3://untrace-backups/config/
 ```
 
 ### 9.2 Recovery Procedures
@@ -821,7 +821,7 @@ aws route53 change-resource-record-sets \
   --change-batch file://failover-to-standby.json
 
 # 2. Scale up standby region
-kubectl scale deployment tracerouter-api --replicas=10 -n production
+kubectl scale deployment untrace-api --replicas=10 -n production
 
 # 3. Restore from backup if needed
 ./restore-from-backup.sh --timestamp $BACKUP_TIMESTAMP
@@ -854,23 +854,23 @@ services:
       - kafka
       - redis
       - postgres
-  
+
   kafka:
     image: confluentinc/cp-kafka:latest
     environment:
       - KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181
       - KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-  
+
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
-  
+
   postgres:
     image: postgres:15
     environment:
-      - POSTGRES_DB=tracerouter
-      - POSTGRES_USER=tracerouter
+      - POSTGRES_DB=untrace
+      - POSTGRES_USER=untrace
       - POSTGRES_PASSWORD=localdev
     ports:
       - "5432:5432"
@@ -880,27 +880,27 @@ services:
 
 ```typescript
 // Integration Test Example
-describe('TraceRouter E2E Tests', () => {
-  let client: TraceRouterClient;
-  
+describe('Untrace E2E Tests', () => {
+  let client: UntraceClient;
+
   beforeAll(async () => {
-    client = new TraceRouterClient({
+    client = new UntraceClient({
       apiKey: process.env.TEST_API_KEY,
       baseUrl: process.env.TEST_API_URL
     });
   });
-  
+
   test('should route trace to multiple destinations', async () => {
     // Arrange
     const trace = createTestTrace();
     const destinations = ['langsmith', 'langfuse'];
-    
+
     // Act
     const result = await client.submitTrace(trace);
-    
+
     // Assert
     expect(result.status).toBe('accepted');
-    
+
     // Verify delivery to destinations
     for (const dest of destinations) {
       const delivered = await waitForDelivery(trace.id, dest);
@@ -923,7 +923,7 @@ describe('TraceRouter E2E Tests', () => {
 
 ### 11.2 Scaling Projections
 - **Year 1**: 1B traces/month, 100 customers
-- **Year 2**: 50B traces/month, 1,000 customers  
+- **Year 2**: 50B traces/month, 1,000 customers
 - **Year 3**: 500B traces/month, 10,000 customers
 
 ---

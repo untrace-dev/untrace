@@ -1,9 +1,9 @@
 # Product Requirements Document (PRD)
-# LLM Trace Forwarding Service - "TraceRouter"
+# LLM Trace Forwarding Service - "Untrace"
 
-**Version:** 1.0  
-**Date:** January 2025  
-**Status:** Draft  
+**Version:** 1.0
+**Date:** January 2025
+**Status:** Draft
 **Author:** Product Team
 
 ---
@@ -11,7 +11,7 @@
 ## 1. Executive Summary
 
 ### 1.1 Product Vision
-TraceRouter is a middleware service that acts as the "Segment.io for LLM observability," enabling developers to capture, route, and manage LLM trace data across multiple observability platforms with a single integration.
+Untrace is a middleware service that acts as the "Segment.io for LLM observability," enabling developers to capture, route, and manage LLM trace data across multiple observability platforms with a single integration.
 
 ### 1.2 Problem Statement
 The LLM observability market is fragmented with 10+ competing platforms (LangSmith, Langfuse, Keywords.ai, etc.). Development teams face several challenges:
@@ -22,7 +22,7 @@ The LLM observability market is fragmented with 10+ competing platforms (LangSmi
 - **Limited flexibility**: Cannot easily route different traces to different platforms based on rules
 
 ### 1.3 Solution Overview
-TraceRouter provides a unified ingestion layer that:
+Untrace provides a unified ingestion layer that:
 - Captures LLM traces through OpenAI-compatible proxy or native SDKs
 - Routes traces to multiple destinations based on configurable rules
 - Transforms data formats between different platform requirements
@@ -69,7 +69,7 @@ TraceRouter provides a unified ingestion layer that:
 ### 3.1 Primary Persona: "Dev Team Lead Dana"
 - **Role**: Engineering Manager / Tech Lead
 - **Company**: 50-500 employee SaaS company
-- **Goals**: 
+- **Goals**:
   - Standardize LLM observability across teams
   - Reduce integration maintenance burden
   - Enable experimentation with different platforms
@@ -254,7 +254,7 @@ TraceRouter provides a unified ingestion layer that:
 ### 6.1 High-Level Architecture
 ```
 ┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│   LLM Apps      │     │  TraceRouter    │     │  Destinations   │
+│   LLM Apps      │     │  Untrace    │     │  Destinations   │
 ├─────────────────┤     ├─────────────────┤     ├─────────────────┤
 │ • OpenAI SDK    │────▶│ • Ingestion API │────▶│ • LangSmith     │
 │ • Custom SDK    │     │ • Queue/Stream  │     │ • Langfuse      │

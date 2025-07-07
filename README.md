@@ -1,4 +1,4 @@
-# TraceRouter 🚀
+# Untrace 🚀
 
 > The Segment.io for LLM Observability - Route your LLM traces to any platform with a single integration
 
@@ -6,11 +6,11 @@
 [![Status](https://img.shields.io/badge/status-planning-yellow.svg)]()
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)]()
 
-## 🎯 What is TraceRouter?
+## 🎯 What is Untrace?
 
-TraceRouter is a middleware service that captures LLM trace events from your applications and intelligently routes them to multiple observability platforms. Think of it as Segment.io, but specifically designed for LLM traces.
+Untrace is a middleware service that captures LLM trace events from your applications and intelligently routes them to multiple observability platforms. Think of it as Segment.io, but specifically designed for LLM traces.
 
-### Why TraceRouter?
+### Why Untrace?
 
 - **🔌 Single Integration**: Integrate once, send traces everywhere
 - **🔀 Intelligent Routing**: Route traces based on model, cost, errors, or custom rules
@@ -22,7 +22,7 @@ TraceRouter is a middleware service that captures LLM trace events from your app
 ## 🏗️ Architecture Overview
 
 ```
-Your LLM App → TraceRouter → Multiple Observability Platforms
+Your LLM App → Untrace → Multiple Observability Platforms
                     ↓
               • LangSmith
               • Langfuse
@@ -41,9 +41,9 @@ from openai import OpenAI
 
 client = OpenAI(
     api_key="your-openai-key",
-    base_url="https://api.tracerouter.io/v1/proxy"  # Add this line
+    base_url="https://api.untrace.io/v1/proxy"  # Add this line
     default_headers={
-        "X-TraceRouter-Key": "your-tracerouter-key"
+        "X-Untrace-Key": "your-untrace-key"
     }
 )
 
@@ -57,10 +57,10 @@ response = client.chat.completions.create(
 ### Using the SDK
 
 ```python
-from tracerouter import TraceRouter
+from untrace import Untrace
 
 # Initialize
-tracer = TraceRouter(api_key="your-api-key")
+tracer = Untrace(api_key="your-api-key")
 
 # Trace any LLM call
 with tracer.trace() as span:
@@ -124,8 +124,8 @@ with tracer.trace() as span:
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/tracerouter.git
-cd tracerouter
+git clone https://github.com/your-org/untrace.git
+cd untrace
 
 # Install dependencies
 npm install
@@ -140,7 +140,7 @@ npm run dev
 ### Project Structure
 
 ```
-tracerouter/
+untrace/
 ├── apps/
 │   ├── api/           # Main API service
 │   ├── dashboard/     # Web dashboard
@@ -206,12 +206,12 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-- Email: team@tracerouter.io
-- Discord: [Join our community](https://discord.gg/tracerouter)
-- Twitter: [@tracerouter_io](https://twitter.com/tracerouter_io)
+- Email: team@untrace.io
+- Discord: [Join our community](https://discord.gg/untrace)
+- Twitter: [@untrace_sh](https://twitter.com/untrace_sh)
 
 ---
 
 **⭐ Star us on GitHub** — it helps us reach more developers and improve the product!
 
-[Report Bug](https://github.com/your-org/tracerouter/issues) · [Request Feature](https://github.com/your-org/tracerouter/issues) · [Documentation](https://docs.tracerouter.io)
+[Report Bug](https://github.com/your-org/untrace/issues) · [Request Feature](https://github.com/your-org/untrace/issues) · [Documentation](https://docs.untrace.io)

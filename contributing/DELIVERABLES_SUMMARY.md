@@ -1,11 +1,11 @@
-# TraceRouter Project Deliverables Summary
+# Untrace Project Deliverables Summary
 
 ## 📄 Documents Created
 
 ### 1. **backlog.md** - Product Backlog
 A comprehensive backlog organized into 10 epics covering:
 - Core infrastructure & architecture
-- Data collection & SDKs  
+- Data collection & SDKs
 - Routing & transformation engine
 - Destination integrations (10+ platforms)
 - Web dashboard & UI
@@ -52,7 +52,7 @@ Developer-friendly README with:
 - Roadmap and project status
 - Contributing guidelines
 
-**Key Info**: Positions TraceRouter as the solution to LLM observability fragmentation.
+**Key Info**: Positions Untrace as the solution to LLM observability fragmentation.
 
 ### 5. **IMPLEMENTATION_CHECKLIST.md** - Step-by-Step Implementation Guide
 Detailed checklist organized by phase:
@@ -80,7 +80,7 @@ Quick reference containing:
 
 ## 🎯 Project Summary
 
-**Product Name**: TraceRouter
+**Product Name**: Untrace
 
 **Vision**: Build a middleware service that acts as "Segment.io for LLM observability" - enabling developers to capture LLM traces once and route them to multiple observability platforms.
 
@@ -91,7 +91,7 @@ Quick reference containing:
 4. Cost optimization through sampling
 5. Privacy-first with PII detection
 
-**Target Market**: 
+**Target Market**:
 - Primary: 50-500 employee SaaS companies using multiple LLM observability tools
 - TAM: $2.5B by 2027
 - SOM: $50M (5% market share in 3 years)
@@ -105,7 +105,7 @@ Quick reference containing:
 
 **Key Technical Decisions Needed**:
 - Message queue: Kafka vs Kinesis
-- ORM: Prisma vs Drizzle  
+- ORM: Prisma vs Drizzle
 - Backend language: Go vs Node.js/TypeScript
 - Deployment: AWS vs GCP
 

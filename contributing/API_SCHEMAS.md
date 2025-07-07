@@ -1,4 +1,4 @@
-# TraceRouter API Schemas & Data Formats
+# Untrace API Schemas & Data Formats
 
 This document provides quick reference for all API endpoints, data schemas, and integration formats.
 
@@ -6,7 +6,7 @@ This document provides quick reference for all API endpoints, data schemas, and 
 
 ### API Key Header
 ```http
-X-TraceRouter-Key: tr_live_1234567890abcdef
+X-Untrace-Key: tr_live_1234567890abcdef
 ```
 
 ### API Key Format
@@ -218,7 +218,7 @@ Add a new destination.
 
 ### Proxy URL
 ```
-https://api.tracerouter.io/v1/proxy/openai
+https://api.untrace.io/v1/proxy/openai
 ```
 
 ### Usage Example
@@ -227,10 +227,10 @@ from openai import OpenAI
 
 client = OpenAI(
     api_key="sk-...",  # Your OpenAI key
-    base_url="https://api.tracerouter.io/v1/proxy/openai",
+    base_url="https://api.untrace.io/v1/proxy/openai",
     default_headers={
-        "X-TraceRouter-Key": "tr_live_...",  # Your TraceRouter key
-        "X-TraceRouter-Metadata": json.dumps({
+        "X-Untrace-Key": "tr_live_...",  # Your Untrace key
+        "X-Untrace-Metadata": json.dumps({
             "userId": "user_123",
             "environment": "production"
         })
@@ -376,11 +376,11 @@ client = OpenAI(
 
 ### TypeScript SDK
 ```typescript
-import { TraceRouter } from '@tracerouter/sdk';
+import { Untrace } from '@untrace/sdk';
 
-const tracer = new TraceRouter({
+const tracer = new Untrace({
   apiKey: 'tr_live_...',
-  baseUrl: 'https://api.tracerouter.io', // optional
+  baseUrl: 'https://api.untrace.io', // optional
   maxRetries: 3, // optional
   timeout: 30000 // optional
 });
@@ -395,7 +395,7 @@ await tracer.trace({
 });
 
 // Automatic OpenAI wrapper
-import { OpenAI } from '@tracerouter/openai';
+import { OpenAI } from '@untrace/openai';
 
 const openai = new OpenAI({
   apiKey: 'sk-...',
@@ -411,11 +411,11 @@ const response = await openai.chat.completions.create({
 
 ### Python SDK
 ```python
-from tracerouter import TraceRouter
+from untrace import Untrace
 
-tracer = TraceRouter(
+tracer = Untrace(
     api_key="tr_live_...",
-    base_url="https://api.tracerouter.io",  # optional
+    base_url="https://api.untrace.io",  # optional
     max_retries=3,  # optional
     timeout=30  # optional
 )
@@ -436,7 +436,7 @@ with tracer.span(name="my-operation") as span:
     span.set_output(response)
 
 # Automatic OpenAI wrapper
-from tracerouter.openai import OpenAI
+from untrace.openai import OpenAI
 
 client = OpenAI(
     api_key="sk-...",
@@ -535,13 +535,13 @@ GET /metrics
 
 Returns Prometheus-formatted metrics:
 ```
-# HELP tracerouter_traces_total Total number of traces processed
-# TYPE tracerouter_traces_total counter
-tracerouter_traces_total{status="success"} 1234567
+# HELP untrace_traces_total Total number of traces processed
+# TYPE untrace_traces_total counter
+untrace_traces_total{status="success"} 1234567
 
-# HELP tracerouter_api_latency_seconds API endpoint latency
-# TYPE tracerouter_api_latency_seconds histogram
-tracerouter_api_latency_seconds_bucket{le="0.005"} 1234
+# HELP untrace_api_latency_seconds API endpoint latency
+# TYPE untrace_api_latency_seconds histogram
+untrace_api_latency_seconds_bucket{le="0.005"} 1234
 ```
 
 ---
@@ -550,15 +550,15 @@ tracerouter_api_latency_seconds_bucket{le="0.005"} 1234
 
 ### Required Headers
 ```http
-X-TraceRouter-Key: tr_live_...
+X-Untrace-Key: tr_live_...
 Content-Type: application/json
 ```
 
 ### Optional Headers
 ```http
-X-TraceRouter-Metadata: {"userId":"123","env":"prod"}
+X-Untrace-Metadata: {"userId":"123","env":"prod"}
 X-Idempotency-Key: unique-request-id
-X-TraceRouter-Dry-Run: true
+X-Untrace-Dry-Run: true
 ```
 
 ---

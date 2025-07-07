@@ -1,6 +1,6 @@
-# TraceRouter Implementation Checklist
+# Untrace Implementation Checklist
 
-This checklist provides a step-by-step guide for implementing the TraceRouter MVP. Each task is designed to be completed independently by the cursor agent.
+This checklist provides a step-by-step guide for implementing the Untrace MVP. Each task is designed to be completed independently by the cursor agent.
 
 ## 🚀 Phase 1: Core Infrastructure (Week 1-2)
 
