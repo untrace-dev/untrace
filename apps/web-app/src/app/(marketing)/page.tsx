@@ -1,10 +1,14 @@
 import { BentoSection } from '~/app/(marketing)/_components/sections/bento-section';
+import { CompanyShowcase } from '~/app/(marketing)/_components/sections/company-showcase';
 import { CTASection } from '~/app/(marketing)/_components/sections/cta-section';
 import { FAQSection } from '~/app/(marketing)/_components/sections/faq-section';
 import { FooterSection } from '~/app/(marketing)/_components/sections/footer-section';
 import { GrowthSection } from '~/app/(marketing)/_components/sections/growth-section';
 import { HeroSection } from '~/app/(marketing)/_components/sections/hero-section';
 import { Navbar } from '~/app/(marketing)/_components/sections/navbar';
+import { PricingSection } from '~/app/(marketing)/_components/sections/pricing-section';
+import { QuoteSection } from '~/app/(marketing)/_components/sections/quote-section';
+import { TestimonialSection } from '~/app/(marketing)/_components/sections/testimonial-section';
 import { siteConfig } from './_lib/config';
 
 export default function Home() {
@@ -15,13 +19,13 @@ export default function Home() {
       <Navbar navs={siteConfig.nav.links} />
       <main className="flex flex-col items-center justify-center divide-y divide-border min-h-screen w-full">
         <HeroSection />
-        {/* <CompanyShowcase /> */}
+        <CompanyShowcase />
         <BentoSection />
-        {/* <QuoteSection /> */}
+        <QuoteSection />
         {/* <FeatureSection /> */}
         <GrowthSection />
-        {/* <PricingSection /> */}
-        {/* <TestimonialSection /> */}
+        <PricingSection />
+        <TestimonialSection />
         <FAQSection />
         <CTASection />
         <FooterSection />

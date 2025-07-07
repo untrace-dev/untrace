@@ -15,23 +15,25 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { env } from '~/env.server';
 
 export const metadata: Metadata = {
-  description: 'Acme is a tool for developers to manage their webhooks',
+  description:
+    'The Segment for LLM traces. Capture once, route everywhere - end vendor lock-in and observability tool sprawl.',
   metadataBase: new URL(
     env.VERCEL_ENV === 'production'
-      ? 'https://acme.sh'
+      ? 'https://untrace.io'
       : 'http://localhost:3000',
   ),
   openGraph: {
-    description: 'Acme is a tool for developers to manage their webhooks',
-    siteName: 'Acme',
-    title: 'Acme',
-    url: 'https://acme.sh',
+    description:
+      'The Segment for LLM traces. Capture once, route everywhere - end vendor lock-in and observability tool sprawl.',
+    siteName: 'Untrace',
+    title: 'Untrace - LLM Observability Routing Platform',
+    url: 'https://untrace.io',
   },
-  title: 'Acme',
+  title: 'Untrace - LLM Observability Routing Platform',
   twitter: {
     card: 'summary_large_image',
-    creator: '@seawatts',
-    site: '@seawatts',
+    creator: '@untrace',
+    site: '@untrace',
   },
 };
 

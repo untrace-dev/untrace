@@ -12,11 +12,11 @@ export function TestimonialSection() {
     >
       <SectionHeader>
         <h2 className="text-3xl md:text-4xl font-medium tracking-tighter text-center text-balance">
-          Empower Your Workflow with AI
+          Trusted by AI Teams Worldwide
         </h2>
         <p className="text-muted-foreground text-center text-balance font-medium">
-          Ask your AI Agent for real-time collaboration, seamless integrations,
-          and actionable insights to streamline your operations.
+          See how engineering teams are simplifying their LLM observability
+          stack and saving time with Untrace.
         </p>
       </SectionHeader>
       <SocialProofTestimonials testimonials={testimonials} />
