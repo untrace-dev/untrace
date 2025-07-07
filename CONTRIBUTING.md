@@ -191,6 +191,163 @@ Configuration is in `lefthook.yml`
 * Follow security best practices
 * Report security vulnerabilities privately to [chris.watts.t@gmail.com](mailto:chris.watts.t@gmail.com)
 
+## Observability and Monitoring
+
+### OpenTelemetry Integration
+
+We use [OpenTelemetry](https://opentelemetry.io/) (OTel) as our standard observability framework for monitoring and tracing across all services. OpenTelemetry provides:
+
+* **Standardized instrumentation** for traces, metrics, and logs
+* **Vendor-neutral** data collection that works with any observability backend
+* **Automatic context propagation** across service boundaries
+* **Semantic conventions** for consistent telemetry data
+
+#### Setting Up OpenTelemetry
+
+1. **Install dependencies**:
+   ```bash
+   bun add @opentelemetry/api @opentelemetry/sdk-node @opentelemetry/auto-instrumentations-node
+   ```
+
+2. **Initialize in your service**:
+   ```typescript
+   import { NodeSDK } from '@opentelemetry/sdk-node';
+   import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
+   
+   const sdk = new NodeSDK({
+     instrumentations: [getNodeAutoInstrumentations()]
+   });
+   
+   sdk.start();
+   ```
+
+3. **Add custom spans**:
+   ```typescript
+   import { trace } from '@opentelemetry/api';
+   
+   const tracer = trace.getTracer('acme-service');
+   const span = tracer.startSpan('operation-name');
+   // ... your code
+   span.end();
+   ```
+
+### OpenLLMetry for LLM Observability
+
+For LLM-specific observability, we use [OpenLLMetry](https://github.com/traceloop/openllmetry), which provides automatic instrumentation for LLM applications built on top of OpenTelemetry.
+
+#### Why OpenLLMetry?
+
+* **Auto-instrumentation** for popular LLM frameworks (LangChain, LlamaIndex, OpenAI, etc.)
+* **LLM-specific metrics**: token usage, costs, latencies, prompt/response pairs
+* **Privacy-first**: Built-in PII detection and redaction capabilities
+* **Zero-code setup**: Minimal configuration required
+
+#### Setting Up OpenLLMetry
+
+1. **Install the SDK**:
+   ```bash
+   # For Python components
+   pip install traceloop-sdk
+   
+   # For TypeScript/JavaScript components
+   bun add @traceloop/node-server-sdk
+   ```
+
+2. **Initialize in Python services**:
+   ```python
+   from traceloop.sdk import Traceloop
+   
+   Traceloop.init(
+       app_name="acme-llm-service",
+       disable_batch=False,
+       api_endpoint="http://localhost:4318"  # Your OTel collector endpoint
+   )
+   ```
+
+3. **Initialize in TypeScript services**:
+   ```typescript
+   import * as traceloop from "@traceloop/node-server-sdk";
+   
+   traceloop.initialize({
+     appName: "acme-llm-service",
+     apiEndpoint: "http://localhost:4318"  // Your OTel collector endpoint
+   });
+   ```
+
+#### Key Metrics to Monitor
+
+When working with LLM applications, ensure you're tracking:
+
+* **Performance Metrics (RED method)**:
+  - **Rate**: Requests per second
+  - **Errors**: Failed LLM API calls, timeouts, rate limits
+  - **Duration**: Response times and latencies
+
+* **LLM-Specific Metrics**:
+  - **Token usage**: Input/output tokens per request
+  - **Costs**: Estimated costs based on token usage
+  - **Model performance**: Response quality metrics
+  - **Context window usage**: Percentage of context used
+
+* **User Experience Metrics**:
+  - **User feedback scores**
+  - **Conversation completion rates**
+  - **Intent recognition accuracy**
+
+#### Best Practices
+
+1. **Sampling Strategy**: For high-volume services, implement intelligent sampling:
+   ```typescript
+   // Sample 10% of successful requests, 100% of errors
+   const sampler = new TraceIdRatioBased(0.1);
+   ```
+
+2. **Privacy Protection**: Always sanitize sensitive data:
+   ```python
+   # Configure PII detection in OpenLLMetry
+   Traceloop.init(
+       app_name="acme-service",
+       disable_batch=False,
+       headers={"x-traceloop-pii-detection": "true"}
+   )
+   ```
+
+3. **Cost Management**: Monitor and alert on token usage:
+   ```typescript
+   // Add cost tracking attributes
+   span.setAttribute('llm.token.total_cost', calculateCost(tokens));
+   span.setAttribute('llm.token.prompt_tokens', promptTokens);
+   span.setAttribute('llm.token.completion_tokens', completionTokens);
+   ```
+
+4. **Debugging**: Use trace context for debugging LLM interactions:
+   ```python
+   from opentelemetry import trace
+   
+   tracer = trace.get_tracer(__name__)
+   with tracer.start_as_current_span("llm_operation") as span:
+       span.set_attribute("prompt", prompt)
+       span.set_attribute("model", model_name)
+       # Your LLM call here
+   ```
+
+### Testing Observability
+
+* Include observability tests in your test suite
+* Verify that traces are properly exported in CI/CD
+* Test error scenarios to ensure they're captured
+* Use the OpenTelemetry Collector's debug exporter during development
+
+### Resources
+
+* [OpenTelemetry Documentation](https://opentelemetry.io/docs/)
+* [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
+* [GenAI Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/gen-ai/)
+* [OpenLLMetry Documentation](https://docs.traceloop.com/openllmetry/introduction)
+* [OTel Collector Configuration](https://opentelemetry.io/docs/collector/configuration/)
+
+For a more detailed guide on implementing observability in the Acme project, see our [Observability Guide](contributing/OBSERVABILITY_GUIDE.md).
+
 ## Questions?
 
 Don't hesitate to ask questions by:
