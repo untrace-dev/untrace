@@ -17,11 +17,6 @@ interface PolicyConfig {
 
 // Common policy conditions
 const policyConditions = {
-  eventOwnership: `EXISTS (
-    SELECT 1 FROM events
-    WHERE events.id = requests."eventId"
-    AND events."userId" = (SELECT auth.jwt()->>'sub')
-  )`,
   orgOwnership: '(SELECT auth.jwt()->>\'org_id\') = ("orgId")::text',
   orgOwnershipById: '(SELECT auth.jwt()->>\'org_id\') = ("id")::text',
   userOwnership: '(SELECT auth.jwt()->>\'sub\') = ("userId")::text',
@@ -100,32 +95,6 @@ const enableRLS = async (tableName: string) => {
 };
 
 const policyConfigs: Record<string, PolicyConfig> = {
-  authCodes: {
-    policies: [
-      createUserOwnershipPolicy('SELECT'),
-      createUserOwnershipPolicy('INSERT'),
-      createUserOwnershipPolicy('UPDATE'),
-      createOrgOwnershipPolicy('ALL'),
-    ],
-    tableName: 'authCodes',
-  },
-  connections: {
-    policies: [
-      createUserOwnershipPolicy('SELECT'),
-      createUserOwnershipPolicy('INSERT'),
-      createUserOwnershipPolicy('UPDATE'),
-      createOrgOwnershipPolicy('ALL'),
-    ],
-    tableName: 'connections',
-  },
-  events: {
-    policies: [
-      createUserOwnershipPolicy('SELECT'),
-      createUserOwnershipPolicy('INSERT'),
-      createOrgOwnershipPolicy('ALL'),
-    ],
-    tableName: 'events',
-  },
   orgMembers: {
     policies: [
       createUserOwnershipPolicy('SELECT'),
@@ -143,34 +112,12 @@ const policyConfigs: Record<string, PolicyConfig> = {
     ],
     tableName: 'orgs',
   },
-  requests: {
-    policies: [
-      createUserOwnershipPolicy('SELECT'),
-      createUserOwnershipPolicy('INSERT'),
-      createOrgOwnershipPolicy('ALL'),
-      {
-        name: 'Users can access requests for their events',
-        operation: 'SELECT',
-        using: policyConditions.eventOwnership,
-      },
-    ],
-    tableName: 'requests',
-  },
-  user: {
+  users: {
     policies: [
       createUserOwnershipPolicy('SELECT', true),
       createUserOwnershipPolicy('UPDATE', true),
     ],
-    tableName: 'user',
-  },
-  webhooks: {
-    policies: [
-      createUserOwnershipPolicy('SELECT'),
-      createUserOwnershipPolicy('INSERT'),
-      createUserOwnershipPolicy('UPDATE'),
-      createOrgOwnershipPolicy('ALL'),
-    ],
-    tableName: 'webhooks',
+    tableName: 'users',
   },
 };
 

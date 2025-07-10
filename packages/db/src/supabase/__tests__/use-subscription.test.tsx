@@ -32,7 +32,7 @@ vi.mock('../client', () => ({
 describe('useSubscription', () => {
   const mockToken = 'test-token';
   const mockUrl = 'https://test.supabase.co';
-  const mockTable: TableName = 'events';
+  const mockTable: TableName = 'events' as TableName;
   const mockCallback = vi.fn();
 
   beforeEach(() => {

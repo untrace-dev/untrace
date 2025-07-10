@@ -1,12 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { db } from '../src/client';
 
-const tablesToEnableRealtime = [
-  'events',
-  'requests',
-  'webhooks',
-  'connections',
-] as const;
+const tablesToEnableRealtime = [] as const;
 
 async function isTableInPublication(tableName: string): Promise<boolean> {
   const result = await db.execute<{ exists: boolean }>(sql`

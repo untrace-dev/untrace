@@ -1,4 +1,3 @@
-'use client';
 import { cn } from '@acme/ui/lib/utils';
 import { Globe } from '@acme/ui/magicui/globe';
 import { FirstBentoAnimation } from '~/app/(marketing)/_components/first-bento-animation';
@@ -29,7 +28,6 @@ export const Highlight = ({
 export const BLUR_FADE_DELAY = 0.15;
 
 const url = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-console.log('url', url);
 export const siteConfig = {
   benefits: [
     {
