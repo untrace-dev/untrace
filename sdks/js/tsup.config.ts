@@ -1,112 +1,39 @@
-import * as fs from 'node:fs';
 import { defineConfig } from 'tsup';
 
-// Read package.json to get version
-const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'));
-
-// Build mode detection (production vs development)
-const isDevBuild =
-  process.argv.includes('--dev') || process.env.NODE_ENV === 'development';
-
-// Environment variables to inject at build time
-const envDefines = {
-  'process.env.NEXT_PUBLIC_API_URL': JSON.stringify(
-    process.env.NEXT_PUBLIC_API_URL || 'https://api.acme.sh',
-  ),
-  'process.env.NEXT_PUBLIC_APP_ENV': JSON.stringify(
-    process.env.NEXT_PUBLIC_APP_ENV || 'production',
-  ),
-  'process.env.NEXT_PUBLIC_APP_TYPE': JSON.stringify(
-    process.env.NEXT_PUBLIC_APP_TYPE || 'cli',
-  ),
-  'process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY': JSON.stringify(
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || '',
-  ),
-  'process.env.NEXT_PUBLIC_CLI_VERSION': JSON.stringify(pkg.version),
-  'process.env.NEXT_PUBLIC_POSTHOG_HOST': JSON.stringify(
-    process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com',
-  ),
-  'process.env.NEXT_PUBLIC_POSTHOG_KEY': JSON.stringify(
-    process.env.NEXT_PUBLIC_POSTHOG_KEY || '',
-  ),
-  'process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY': JSON.stringify(
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
-  ),
-  'process.env.NEXT_PUBLIC_SUPABASE_URL': JSON.stringify(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  ),
-  'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'production'),
-};
-
 export default defineConfig({
-  bundle: true,
-  clean: true, // We handle cleaning in the npm script
-  define: envDefines,
-  entry: ['src/cli.tsx'],
+  clean: true,
+  dts: true,
+  entry: {
+    index: 'src/index.ts',
+    'providers/openai': 'src/providers/openai.ts',
+    // TODO: Add these as they are implemented
+    // 'providers/ai-sdk': 'src/providers/ai-sdk.ts',
+    // 'providers/anthropic': 'src/providers/anthropic.ts',
+    // 'providers/bedrock': 'src/providers/bedrock.ts',
+    // 'providers/cohere': 'src/providers/cohere.ts',
+    // 'providers/langchain': 'src/providers/langchain.ts',
+    // 'providers/llamaindex': 'src/providers/llamaindex.ts',
+    // 'providers/mistral': 'src/providers/mistral.ts',
+    // 'providers/vertex-ai': 'src/providers/vertex-ai.ts',
+  },
   esbuildOptions(options) {
-    // Add shebang for executable
-    // options.banner = {
-    //   js: isDevBuild ? '' : '#!/usr/bin/env node',
-    // };
-
-    // Inject require shim for ESM compatibility and React
-    options.inject = ['./require-shim.js'];
-    options.jsx = 'automatic';
-
-    // Add plugin to handle react-devtools-core import issue
-    options.plugins = options.plugins || [];
-    options.plugins.push({
-      name: 'ignore-react-devtools',
-      setup(build) {
-        build.onResolve({ filter: /^react-devtools-core$/ }, () => ({
-          namespace: 'ignore-devtools',
-          path: 'react-devtools-core',
-        }));
-        build.onLoad({ filter: /.*/, namespace: 'ignore-devtools' }, () => ({
-          contents: 'export default {};',
-          loader: 'js',
-        }));
-      },
-    });
+    options.footer = {
+      js: 'if (module.exports.default) module.exports = module.exports.default;',
+    };
   },
   external: [
-    'keytar', // Native module
-    'posthog-js',
+    'openai',
+    '@anthropic-ai/sdk',
+    'cohere-ai',
+    'ai',
+    'langchain',
+    'llamaindex',
+    '@aws-sdk/client-bedrock-runtime',
+    '@google-cloud/vertexai',
+    '@mistralai/mistralai',
   ],
-  format: ['esm'],
-  minify: !isDevBuild,
-  noExternal: [
-    '@acme/api',
-    '@acme/db',
-    '@acme/id',
-    '@acme/logger',
-    '@acme/zustand',
-  ],
-  onSuccess: async () => {
-    // Make the output file executable
-    const outFile = './bin/cli.js';
-    if (fs.existsSync(outFile)) {
-      fs.chmodSync(outFile, 0o755);
-
-      // Add dev shebang for development builds
-      if (isDevBuild) {
-        const devShebangLine =
-          '#!/usr/bin/env -S NODE_OPTIONS=--enable-source-maps node\n';
-        let code = await fs.promises.readFile(outFile, 'utf8');
-        if (code.startsWith('#!')) {
-          code = code.replace(/^#!.*\n/, devShebangLine);
-          await fs.promises.writeFile(outFile, code, 'utf8');
-        }
-      }
-
-      console.log(`✅ Build complete: ${outFile}`);
-    }
-  },
-  outDir: 'bin',
-  platform: 'node',
-  sourcemap: 'inline',
+  format: ['esm', 'cjs'],
+  sourcemap: true,
   splitting: false,
-  target: 'node18',
   treeshake: true,
-  tsconfig: 'tsconfig.json',
 });
