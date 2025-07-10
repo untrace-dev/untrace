@@ -53,6 +53,26 @@
     "ui-add": "turbo run ui-add",
     "with-env": "infisical run --"
   },
+  "trustedDependencies": [
+    "@biomejs/biome",
+    "@clerk/shared",
+    "@scarf/scarf",
+    "@sentry/cli",
+    "@tailwindcss/oxide",
+    "@vercel/speed-insights",
+    "browser-tabs-lock",
+    "bufferutil",
+    "bun",
+    "core-js",
+    "electron",
+    "esbuild",
+    "keytar",
+    "lefthook",
+    "puppeteer",
+    "sharp",
+    "supabase",
+    "yarn"
+  ],
   "workspaces": [
     "apps/*",
     "packages/*",

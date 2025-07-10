@@ -27,18 +27,18 @@ await seed(db, {
   },
   Orgs: {
     columns: {
-      id: funcs.default({ defaultValue: 'org_2s0lvufAzQgpcvjJisOoTVbcfeP' }),
+      id: funcs.default({ defaultValue: 'org_2zfnD2T4HMRdxf0NcC1v10sY0Ub' }),
     },
     count: 1,
   },
   Users: {
     columns: {
       clerkId: funcs.default({
-        defaultValue: 'user_2s0lvufAzQgpcvjJisOoTVbcfeP',
+        defaultValue: 'user_2zfj0M8ZyrVJVmAc3WO87qHUi0c',
       }),
       email: funcs.email(),
       firstName: funcs.firstName(),
-      id: funcs.default({ defaultValue: 'user_2s0lvufAzQgpcvjJisOoTVbcfeP' }),
+      id: funcs.default({ defaultValue: 'user_2zfj0M8ZyrVJVmAc3WO87qHUi0c' }),
       lastName: funcs.lastName(),
       online: funcs.boolean(),
     },
