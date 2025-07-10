@@ -83,7 +83,7 @@ function determineEvents<T extends TableName>(
 }
 
 async function handleSubscriptionEvent<T extends TableName>(
-  payload: RealtimePostgresChangesPayload<Tables<T>>,
+  payload: RealtimePostgresChangesPayload<T>,
   callbacks: Set<SubscriptionCallbacks<T>>,
 ) {
   try {
@@ -238,11 +238,11 @@ export function SubscriptionProvider({
   const handleStatusChange = useCallback(
     async (status: SubscriptionStatus, error?: Error) => {
       console.log('Subscription status changed:', {
-        status,
         error,
         hasSubscription: !!subscriptionRef.current,
-        previousStatus: subscriptionRef.current?.status,
         isUnmounting: isUnmountingRef.current,
+        previousStatus: subscriptionRef.current?.status,
+        status,
       });
 
       // Don't update status if we're unmounting
@@ -297,10 +297,10 @@ export function SubscriptionProvider({
 
       try {
         const event = determineEvents(config);
-        console.log('Creating channel for:', { table: config.table, event });
+        console.log('Creating channel for:', { event, table: config.table });
         const channel = clientRef.current
           .channel(config.channelName ?? `${String(config.table)}-changes`)
-          .on<Tables<T>>(
+          .on(
             'postgres_changes',
             {
               event: event as '*',
@@ -316,13 +316,16 @@ export function SubscriptionProvider({
               const instance =
                 subscriptionRef.current as SubscriptionInstance<T> | null;
               if (instance) {
-                void handleSubscriptionEvent(payload, instance.callbacks);
+                void handleSubscriptionEvent(
+                  payload as unknown as RealtimePostgresChangesPayload<T>,
+                  instance.callbacks,
+                );
               }
             },
           )
           .subscribe(
             (status: keyof typeof REALTIME_SUBSCRIBE_STATES, error?: Error) => {
-              console.log('Channel status changed:', { status, error });
+              console.log('Channel status changed:', { error, status });
               let newStatus: SubscriptionStatus;
               switch (status) {
                 case 'SUBSCRIBED':
@@ -395,10 +398,10 @@ export function SubscriptionProvider({
   const getStatus = useCallback(() => {
     const status = subscriptionRef.current?.status ?? 'disconnected';
     console.log('Getting subscription status:', {
-      status,
       hasSubscription: !!subscriptionRef.current,
-      subscriptionStatus: subscriptionRef.current?.status,
       isUnmounting: isUnmountingRef.current,
+      status,
+      subscriptionStatus: subscriptionRef.current?.status,
     });
     return status;
   }, []);
@@ -406,9 +409,9 @@ export function SubscriptionProvider({
   const value = useMemo(
     () => ({
       getStatus,
+      isInitialized,
       subscribe,
       unsubscribe,
-      isInitialized,
     }),
     [subscribe, unsubscribe, getStatus, isInitialized],
   );
@@ -496,8 +499,8 @@ export function useSubscription<T extends TableName>(
     const previousStatus = previousStatusRef.current;
 
     console.log('Status changed:', {
-      previous: previousStatus,
       current: currentStatus,
+      previous: previousStatus,
     });
 
     if (previousStatus === 'connected' && currentStatus === 'disconnected') {
@@ -535,14 +538,14 @@ export function useSubscription<T extends TableName>(
   }, [cleanupReconnect]);
 
   return {
+    networkStatus,
     status: getStatus(),
+    subscribe: () => {
+      subscribe(callbacksRef.current);
+    },
     unsubscribe: () => {
       unsubscribe(callbacksRef.current);
       cleanupReconnect();
     },
-    subscribe: () => {
-      subscribe(callbacksRef.current);
-    },
-    networkStatus,
   };
 }

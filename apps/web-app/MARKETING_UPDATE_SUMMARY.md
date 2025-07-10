@@ -20,7 +20,7 @@ Updated the web app marketing pages and configuration to reflect Untrace's produ
 
 ### 2. Layout Metadata (`src/app/layout.tsx`)
 - Updated page title and description
-- Changed domain references to untrace.io
+- Changed domain references to untrace.dev
 - Updated social media handles
 
 ### 3. Footer Section (`src/app/(marketing)/_components/sections/footer-section.tsx`)

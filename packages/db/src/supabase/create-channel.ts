@@ -51,7 +51,7 @@ function determineEvents<T extends TableName>(
 }
 
 async function handleChannelEvent<T extends TableName>(
-  payload: RealtimePostgresChangesPayload<Tables<T>>,
+  payload: RealtimePostgresChangesPayload<T>,
   callbacks: ChannelCallbacks<T>,
 ) {
   try {
@@ -103,7 +103,7 @@ export function createChannel<T extends TableName>(
         schema: 'public',
         table: String(props.table),
       },
-      (payload: RealtimePostgresChangesPayload<Tables<T>>) => {
+      (payload: RealtimePostgresChangesPayload<T>) => {
         console.log('Received payload:', {
           table: props.table,
           type: payload.eventType,
@@ -113,7 +113,7 @@ export function createChannel<T extends TableName>(
     )
     .subscribe(
       (status: keyof typeof REALTIME_SUBSCRIBE_STATES, error?: Error) => {
-        console.log('Channel status changed:', { status, error });
+        console.log('Channel status changed:', { error, status });
         let newStatus: SubscriptionStatus;
         switch (status) {
           case 'SUBSCRIBED':

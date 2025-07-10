@@ -218,7 +218,7 @@ Add a new destination.
 
 ### Proxy URL
 ```
-https://api.untrace.io/v1/proxy/openai
+https://api.untrace.dev/v1/proxy/openai
 ```
 
 ### Usage Example
@@ -227,7 +227,7 @@ from openai import OpenAI
 
 client = OpenAI(
     api_key="sk-...",  # Your OpenAI key
-    base_url="https://api.untrace.io/v1/proxy/openai",
+    base_url="https://api.untrace.dev/v1/proxy/openai",
     default_headers={
         "X-Untrace-Key": "tr_live_...",  # Your Untrace key
         "X-Untrace-Metadata": json.dumps({
@@ -376,11 +376,11 @@ client = OpenAI(
 
 ### TypeScript SDK
 ```typescript
-import { Untrace } from '@untrace/sdk';
+import { Untrace } from '@acme/sdk';
 
 const tracer = new Untrace({
   apiKey: 'tr_live_...',
-  baseUrl: 'https://api.untrace.io', // optional
+  baseUrl: 'https://api.untrace.dev', // optional
   maxRetries: 3, // optional
   timeout: 30000 // optional
 });
@@ -395,7 +395,7 @@ await tracer.trace({
 });
 
 // Automatic OpenAI wrapper
-import { OpenAI } from '@untrace/openai';
+import { OpenAI } from '@acme/openai';
 
 const openai = new OpenAI({
   apiKey: 'sk-...',
@@ -415,7 +415,7 @@ from untrace import Untrace
 
 tracer = Untrace(
     api_key="tr_live_...",
-    base_url="https://api.untrace.io",  # optional
+    base_url="https://api.untrace.dev",  # optional
     max_retries=3,  # optional
     timeout=30  # optional
 )

@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     'The Segment for LLM traces. Capture once, route everywhere - end vendor lock-in and observability tool sprawl.',
   metadataBase: new URL(
     env.VERCEL_ENV === 'production'
-      ? 'https://untrace.io'
+      ? 'https://untrace.dev'
       : 'http://localhost:3000',
   ),
   openGraph: {
@@ -27,7 +27,7 @@ export const metadata: Metadata = {
       'The Segment for LLM traces. Capture once, route everywhere - end vendor lock-in and observability tool sprawl.',
     siteName: 'Untrace',
     title: 'Untrace - LLM Observability Routing Platform',
-    url: 'https://untrace.io',
+    url: 'https://untrace.dev',
   },
   title: 'Untrace - LLM Observability Routing Platform',
   twitter: {

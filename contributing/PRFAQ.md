@@ -35,7 +35,7 @@ Untrace is available immediately with a generous free tier supporting 100,000 tr
 
 "This is just the beginning," added [Founder Name]. "We're building the infrastructure layer that will power the next generation of AI applications. When every company becomes an AI company, they'll need Untrace to manage the complexity."
 
-For more information or to start a free trial, visit untrace.io.
+For more information or to start a free trial, visit untrace.dev.
 
 ---
 
@@ -114,7 +114,7 @@ A: We plan to offer self-hosted options for enterprise customers in Q3 2025. Con
 
 **Q: How do I get started?**
 A: Getting started takes less than 5 minutes:
-1. Sign up at untrace.io
+1. Sign up at untrace.dev
 2. Create an API key
 3. Add Untrace to your code (one line change for OpenAI proxy)
 4. Configure your first destination

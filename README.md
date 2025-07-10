@@ -41,7 +41,7 @@ from openai import OpenAI
 
 client = OpenAI(
     api_key="your-openai-key",
-    base_url="https://api.untrace.io/v1/proxy"  # Add this line
+    base_url="https://api.untrace.dev/v1/proxy"  # Add this line
     default_headers={
         "X-Untrace-Key": "your-untrace-key"
     }
@@ -206,7 +206,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-- Email: team@untrace.io
+- Email: team@untrace.dev
 - Discord: [Join our community](https://discord.gg/untrace)
 - Twitter: [@untrace_dev](https://twitter.com/untrace_dev)
 
@@ -214,4 +214,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **⭐ Star us on GitHub** — it helps us reach more developers and improve the product!
 
-[Report Bug](https://github.com/your-org/untrace/issues) · [Request Feature](https://github.com/your-org/untrace/issues) · [Documentation](https://docs.untrace.io)
+[Report Bug](https://github.com/your-org/untrace/issues) · [Request Feature](https://github.com/your-org/untrace/issues) · [Documentation](https://docs.untrace.dev)
