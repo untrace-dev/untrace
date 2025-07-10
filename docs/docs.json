@@ -85,8 +85,12 @@
             ]
           },
           {
+            "group": "Core Features",
+            "pages": ["dashboard", "cli", "sdk"]
+          },
+          {
             "group": "Reference",
-            "pages": ["cli", "architecture", "essentials/data-model"]
+            "pages": ["architecture", "security", "essentials/data-model"]
           },
           {
             "group": "Development",

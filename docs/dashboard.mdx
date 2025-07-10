@@ -1,0 +1,463 @@
+---
+title: Dashboard
+description: "Monitor, manage, and debug your webhooks in real-time with the Acme dashboard"
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/dashboard-light.png"
+  alt="Acme Dashboard Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/dashboard-dark.png"
+  alt="Acme Dashboard Dark"
+/>
+
+## Overview
+
+The Acme Dashboard provides a powerful web interface for managing your webhooks, monitoring real-time traffic, debugging requests, and collaborating with your team. Access it at [https://acme.sh/app](https://acme.sh/app).
+
+<CardGroup cols={2}>
+  <Card
+    title="Real-time Monitoring"
+    icon="chart-line"
+    href="#real-time-monitoring"
+  >
+    View incoming webhooks as they happen with live updates
+  </Card>
+  <Card
+    title="Request History"
+    icon="clock"
+    href="#request-history"
+  >
+    Search and filter through all your webhook requests
+  </Card>
+  <Card
+    title="Team Management"
+    icon="users"
+    href="#team-management"
+  >
+    Collaborate with your team and manage access controls
+  </Card>
+  <Card
+    title="Integrations"
+    icon="plug"
+    href="#integrations"
+  >
+    Configure webhook providers and manage integrations
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+### Accessing the Dashboard
+
+1. Navigate to [https://acme.sh/app](https://acme.sh/app)
+2. Sign in with your Acme account
+3. You'll land on the main dashboard showing your webhook activity
+
+### Dashboard Layout
+
+The dashboard is organized into several key sections:
+
+- **Navigation Sidebar**: Quick access to all dashboard features
+- **Main Content Area**: Displays your selected view (webhooks, history, settings, etc.)
+- **Activity Feed**: Real-time webhook activity stream
+- **Status Bar**: Connection status and notification indicators
+
+## Real-time Monitoring
+
+### Live Webhook Feed
+
+The live feed shows webhooks as they arrive at your endpoints:
+
+<Tabs>
+  <Tab title="List View">
+    View webhooks in a chronological list with key information:
+    - Timestamp
+    - Provider (Stripe, GitHub, etc.)
+    - Event type
+    - Status code
+    - Response time
+    - Target destination
+  </Tab>
+  <Tab title="Detail View">
+    Click any webhook to see detailed information:
+    - Full request headers
+    - Request body (with JSON formatting)
+    - Response data
+    - Timing breakdown
+    - Error details (if any)
+  </Tab>
+</Tabs>
+
+### Filtering and Search
+
+Filter the live feed to focus on what matters:
+
+```javascript
+// Example filters
+{
+  provider: "stripe",
+  status: "success",
+  destination: "dev-1",
+  timeRange: "last-hour"
+}
+```
+
+Available filter options:
+- **Provider**: Filter by webhook source (Stripe, GitHub, Clerk, etc.)
+- **Status**: Success, Failed, Pending
+- **Destination**: Filter by team member or endpoint
+- **Time Range**: Last hour, 24 hours, 7 days, custom range
+- **Event Type**: Provider-specific event types
+
+## Request History
+
+### Searching Past Webhooks
+
+Access historical webhook data with powerful search capabilities:
+
+1. Navigate to the **History** tab
+2. Use the search bar for text-based searches
+3. Apply filters for precise results
+4. Export results as CSV or JSON
+
+### Request Details
+
+Each historical request includes:
+
+<AccordionGroup>
+  <Accordion title="Request Information">
+    - Unique request ID
+    - Timestamp (with timezone)
+    - Provider and event type
+    - HTTP method and path
+    - Source IP address
+  </Accordion>
+  <Accordion title="Headers">
+    - All HTTP headers
+    - Provider signatures
+    - Content type and encoding
+    - Custom headers
+  </Accordion>
+  <Accordion title="Payload">
+    - Full request body
+    - JSON/XML formatting
+    - Binary data indicators
+    - Payload size
+  </Accordion>
+  <Accordion title="Response">
+    - Status code
+    - Response headers
+    - Response body
+    - Processing time
+    - Error messages
+  </Accordion>
+</AccordionGroup>
+
+### Replay Requests
+
+Replay any webhook request for debugging:
+
+1. Find the request in history
+2. Click the **Replay** button
+3. Optionally modify the payload
+4. Select the destination
+5. Send the replay
+
+<Note>
+Replayed requests are marked with a special indicator to distinguish them from original webhooks.
+</Note>
+
+## Team Management
+
+### Inviting Team Members
+
+1. Go to **Settings** → **Team**
+2. Click **Invite Member**
+3. Enter their email address
+4. Set their role and permissions
+5. Send the invitation
+
+### Roles and Permissions
+
+<Table>
+  <TableHeader>
+    <TableRow>
+      <TableHead>Role</TableHead>
+      <TableHead>View Webhooks</TableHead>
+      <TableHead>Replay Requests</TableHead>
+      <TableHead>Manage Team</TableHead>
+      <TableHead>Billing</TableHead>
+    </TableRow>
+  </TableHeader>
+  <TableBody>
+    <TableRow>
+      <TableCell>Owner</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Admin</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Developer</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+    <TableRow>
+      <TableCell>Viewer</TableCell>
+      <TableCell>✅</TableCell>
+      <TableCell>❌</TableCell>
+      <TableCell>❌</TableCell>
+      <TableCell>❌</TableCell>
+    </TableRow>
+  </TableBody>
+</Table>
+
+### Team Activity
+
+Monitor your team's webhook activity:
+
+- Active team members currently receiving webhooks
+- Webhook distribution across team members
+- Individual activity logs
+- Performance metrics per developer
+
+## Integrations
+
+### Managing Webhook Endpoints
+
+Create and manage your webhook endpoints from the dashboard:
+
+<Steps>
+  <Step title="Create Endpoint">
+    Click **New Webhook** and configure:
+    - Endpoint name
+    - Allowed providers
+    - Security settings
+    - Team access
+  </Step>
+  <Step title="Configure Security">
+    Set up security features:
+    - API key authentication
+    - IP allowlisting
+    - Request signing verification
+    - Rate limiting
+  </Step>
+  <Step title="Test Endpoint">
+    Use the built-in testing tool:
+    - Send test webhooks
+    - Verify connectivity
+    - Check response handling
+  </Step>
+</Steps>
+
+### Provider Configuration
+
+Configure provider-specific settings:
+
+#### Stripe
+- Event type filtering
+- Signature verification
+- Test/Live mode switching
+- Webhook version selection
+
+#### GitHub
+- Repository filtering
+- Event selection
+- Secret configuration
+- Branch filtering
+
+#### Custom Providers
+- Header mapping
+- Authentication setup
+- Payload transformation
+- Response formatting
+
+## Analytics and Insights
+
+### Dashboard Metrics
+
+View key metrics at a glance:
+
+- **Total Requests**: Daily, weekly, monthly counts
+- **Success Rate**: Percentage of successful deliveries
+- **Response Time**: Average, P95, P99 latencies
+- **Error Rate**: Failed requests and error types
+- **Traffic Patterns**: Peak hours and usage trends
+
+### Custom Reports
+
+Generate custom reports:
+
+1. Select metrics to include
+2. Choose date range
+3. Apply filters
+4. Export as PDF or CSV
+
+### Alerts and Notifications
+
+Configure alerts for important events:
+
+<Tabs>
+  <Tab title="Email Alerts">
+    - Failed webhook deliveries
+    - High error rates
+    - Unusual traffic patterns
+    - Quota warnings
+  </Tab>
+  <Tab title="Slack Integration">
+    - Real-time webhook notifications
+    - Daily summaries
+    - Error alerts
+    - Team activity updates
+  </Tab>
+  <Tab title="Webhook Alerts">
+    - Send alerts to your own webhooks
+    - Custom payload formatting
+    - Conditional triggering
+  </Tab>
+</Tabs>
+
+## Advanced Features
+
+### Webhook Transformations
+
+Transform webhook payloads before delivery:
+
+```javascript
+// Example transformation
+{
+  "transform": {
+    "remove": ["sensitive_field"],
+    "rename": {
+      "old_field": "new_field"
+    },
+    "add": {
+      "timestamp": "{{now}}",
+      "environment": "production"
+    }
+  }
+}
+```
+
+### Conditional Routing
+
+Route webhooks based on conditions:
+
+```yaml
+rules:
+  - condition: "payload.amount > 1000"
+    destination: "high-value-processor"
+  - condition: "headers['X-GitHub-Event'] == 'push'"
+    destination: "ci-pipeline"
+  - condition: "default"
+    destination: "standard-processor"
+```
+
+### Bulk Operations
+
+Perform operations on multiple webhooks:
+
+- Bulk replay
+- Bulk export
+- Bulk delete
+- Bulk status updates
+
+## Troubleshooting
+
+### Common Issues
+
+<AccordionGroup>
+  <Accordion title="Webhooks not appearing">
+    - Verify your webhook URL is correct
+    - Check provider configuration
+    - Ensure CLI is running locally
+    - Verify network connectivity
+  </Accordion>
+  <Accordion title="Authentication errors">
+    - Regenerate your API key
+    - Check team permissions
+    - Verify account status
+    - Clear browser cache
+  </Accordion>
+  <Accordion title="Performance issues">
+    - Check your filter settings
+    - Reduce real-time update frequency
+    - Clear old webhook history
+    - Contact support for high-volume accounts
+  </Accordion>
+</AccordionGroup>
+
+### Debug Mode
+
+Enable debug mode for detailed logging:
+
+1. Go to **Settings** → **Advanced**
+2. Toggle **Debug Mode**
+3. View detailed logs in browser console
+4. Share logs with support if needed
+
+## API Access
+
+Access dashboard functionality programmatically:
+
+```bash
+# Get webhook history
+curl -X GET https://api.acme.sh/webhooks \
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# Replay a webhook
+curl -X POST https://api.acme.sh/webhooks/{id}/replay \
+  -H "Authorization: Bearer YOUR_API_KEY"
+
+# Get team statistics
+curl -X GET https://api.acme.sh/stats \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+See the [API Reference](/api-reference/introduction) for complete documentation.
+
+## Next Steps
+
+<CardGroup>
+  <Card
+    title="CLI Usage"
+    icon="terminal"
+    href="/cli"
+  >
+    Learn how to use the Acme CLI
+  </Card>
+  <Card
+    title="SDK Integration"
+    icon="code"
+    href="/sdk"
+  >
+    Integrate the Acme SDK in your applications
+  </Card>
+  <Card
+    title="Security Best Practices"
+    icon="shield"
+    href="/security"
+  >
+    Secure your webhook infrastructure
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api-reference/introduction"
+  >
+    Explore the complete API documentation
+  </Card>
+</CardGroup>

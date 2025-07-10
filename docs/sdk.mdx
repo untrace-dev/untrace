@@ -1,0 +1,774 @@
+---
+title: SDK Reference
+description: "Integrate Acme webhooks directly into your applications with our JavaScript/TypeScript SDK"
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/sdk-light.png"
+  alt="Acme SDK Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/sdk-dark.png"
+  alt="Acme SDK Dark"
+/>
+
+## Overview
+
+The Acme SDK provides a powerful, type-safe way to integrate webhook functionality directly into your JavaScript and TypeScript applications. Build custom webhook receivers, process events programmatically, and create sophisticated webhook workflows.
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="#quick-start"
+  >
+    Get up and running with the SDK in minutes
+  </Card>
+  <Card
+    title="Type Safety"
+    icon="shield-check"
+    href="#typescript-support"
+  >
+    Full TypeScript support with auto-generated types
+  </Card>
+  <Card
+    title="Event Handling"
+    icon="bolt"
+    href="#event-handling"
+  >
+    Process webhook events with powerful handlers
+  </Card>
+  <Card
+    title="Examples"
+    icon="code"
+    href="#examples"
+  >
+    Real-world examples and best practices
+  </Card>
+</CardGroup>
+
+## Installation
+
+Install the Acme SDK using your preferred package manager:
+
+<CodeGroup>
+
+```bash npm
+npm install @acme/sdk
+```
+
+```bash yarn
+yarn add @acme/sdk
+```
+
+```bash pnpm
+pnpm add @acme/sdk
+```
+
+```bash bun
+bun add @acme/sdk
+```
+
+</CodeGroup>
+
+## Quick Start
+
+### Basic Setup
+
+```typescript
+import { AcmeSDK } from '@acme/sdk';
+
+// Initialize the SDK
+const acme = new AcmeSDK({
+  apiKey: 'your-api-key',
+  webhookId: 'wh_your_webhook_id',
+});
+
+// Start receiving webhooks
+acme.listen(3000, () => {
+  console.log('Webhook receiver listening on port 3000');
+});
+```
+
+### Handling Events
+
+```typescript
+// Handle specific event types
+acme.on('stripe.payment_intent.succeeded', async (event) => {
+  console.log('Payment succeeded:', event.data);
+  // Process the payment
+});
+
+acme.on('github.push', async (event) => {
+  console.log('New push to repository:', event.data.repository.name);
+  // Trigger CI/CD pipeline
+});
+
+// Handle all events
+acme.on('*', async (event) => {
+  console.log(`Received ${event.type} from ${event.provider}`);
+});
+```
+
+## Configuration
+
+### SDK Options
+
+```typescript
+interface AcmeSDKOptions {
+  // Required
+  apiKey: string;              // Your Acme API key
+  webhookId: string;           // Your webhook endpoint ID
+
+  // Optional
+  baseUrl?: string;            // Custom API endpoint (default: https://api.acme.sh)
+  timeout?: number;            // Request timeout in ms (default: 30000)
+  retries?: number;            // Number of retries (default: 3)
+  
+  // Security
+  verifySignatures?: boolean;  // Verify webhook signatures (default: true)
+  allowedIPs?: string[];       // IP whitelist
+  
+  // Behavior
+  autoReconnect?: boolean;     // Auto-reconnect on disconnect (default: true)
+  maxReconnectAttempts?: number; // Max reconnection attempts (default: 10)
+  reconnectInterval?: number;  // Reconnect interval in ms (default: 5000)
+  
+  // Logging
+  debug?: boolean;             // Enable debug logging (default: false)
+  logger?: Logger;             // Custom logger instance
+}
+```
+
+### Environment Variables
+
+The SDK supports configuration via environment variables:
+
+```bash
+ACME_API_KEY=your-api-key
+ACME_WEBHOOK_ID=wh_your_webhook_id
+ACME_BASE_URL=https://api.acme.sh
+ACME_DEBUG=true
+```
+
+## Event Handling
+
+### Event Structure
+
+All webhook events follow this structure:
+
+```typescript
+interface WebhookEvent {
+  id: string;                  // Unique event ID
+  type: string;                // Event type (e.g., 'stripe.payment_intent.succeeded')
+  provider: string;            // Provider name (e.g., 'stripe', 'github')
+  timestamp: Date;             // Event timestamp
+  data: any;                   // Event payload (provider-specific)
+  headers: Record<string, string>; // HTTP headers
+  metadata?: Record<string, any>;  // Additional metadata
+}
+```
+
+### Event Handlers
+
+Register handlers for specific events:
+
+```typescript
+// Single event handler
+acme.on('stripe.customer.created', async (event) => {
+  const customer = event.data;
+  await createUserAccount(customer);
+});
+
+// Multiple events
+acme.on(['stripe.charge.succeeded', 'stripe.charge.failed'], async (event) => {
+  await logPaymentEvent(event);
+});
+
+// Pattern matching
+acme.on('github.*', async (event) => {
+  console.log('GitHub event:', event.type);
+});
+
+// Error handling
+acme.on('stripe.payment_intent.failed', async (event) => {
+  try {
+    await handleFailedPayment(event.data);
+  } catch (error) {
+    console.error('Error handling failed payment:', error);
+    // The SDK will automatically retry based on configuration
+    throw error;
+  }
+});
+```
+
+### Middleware
+
+Use middleware for cross-cutting concerns:
+
+```typescript
+// Logging middleware
+acme.use(async (event, next) => {
+  console.log(`[${new Date().toISOString()}] ${event.type}`);
+  await next();
+});
+
+// Authentication middleware
+acme.use(async (event, next) => {
+  if (!isAuthenticated(event.headers)) {
+    throw new Error('Unauthorized');
+  }
+  await next();
+});
+
+// Timing middleware
+acme.use(async (event, next) => {
+  const start = Date.now();
+  await next();
+  const duration = Date.now() - start;
+  console.log(`Processed ${event.type} in ${duration}ms`);
+});
+```
+
+## TypeScript Support
+
+### Type-Safe Event Handlers
+
+The SDK provides full TypeScript support with auto-generated types:
+
+```typescript
+import { AcmeSDK, StripeEvents, GitHubEvents } from '@acme/sdk';
+
+const acme = new AcmeSDK({
+  apiKey: 'your-api-key',
+  webhookId: 'wh_your_webhook_id',
+});
+
+// Type-safe Stripe events
+acme.on<StripeEvents.PaymentIntentSucceeded>('stripe.payment_intent.succeeded', async (event) => {
+  // event.data is fully typed as Stripe.PaymentIntent
+  console.log(event.data.amount); // TypeScript knows this exists
+});
+
+// Type-safe GitHub events
+acme.on<GitHubEvents.PushEvent>('github.push', async (event) => {
+  // event.data is fully typed as GitHub push event
+  event.data.commits.forEach(commit => {
+    console.log(commit.message); // Full IntelliSense support
+  });
+});
+```
+
+### Custom Event Types
+
+Define your own event types:
+
+```typescript
+interface CustomPaymentEvent {
+  orderId: string;
+  amount: number;
+  currency: string;
+  customer: {
+    id: string;
+    email: string;
+  };
+}
+
+acme.on<CustomPaymentEvent>('custom.payment.processed', async (event) => {
+  // event.data is typed as CustomPaymentEvent
+  await updateOrder(event.data.orderId, event.data.amount);
+});
+```
+
+## Advanced Features
+
+### Webhook Verification
+
+The SDK automatically verifies webhook signatures:
+
+```typescript
+// Manual verification
+const isValid = await acme.verifySignature(
+  payload,
+  signature,
+  'stripe' // provider
+);
+
+// Disable verification for testing
+const acme = new AcmeSDK({
+  apiKey: 'your-api-key',
+  webhookId: 'wh_your_webhook_id',
+  verifySignatures: false, // Only for testing!
+});
+```
+
+### Event Replay
+
+Replay events for testing or recovery:
+
+```typescript
+// Replay a specific event
+await acme.replayEvent('evt_1234567890');
+
+// Replay events within a time range
+await acme.replayEvents({
+  from: new Date('2024-01-01'),
+  to: new Date('2024-01-02'),
+  providers: ['stripe'],
+  eventTypes: ['payment_intent.succeeded'],
+});
+```
+
+### Batching and Queuing
+
+Process events in batches:
+
+```typescript
+const queue = acme.createQueue({
+  batchSize: 10,
+  batchTimeout: 5000, // Process batch after 5 seconds
+  concurrency: 3,     // Process 3 batches concurrently
+});
+
+queue.on('batch', async (events) => {
+  // Process multiple events together
+  await bulkProcessEvents(events);
+});
+
+// Add events to queue
+acme.on('*', (event) => {
+  queue.add(event);
+});
+```
+
+### Metrics and Monitoring
+
+Track webhook processing metrics:
+
+```typescript
+// Enable metrics collection
+const metrics = acme.enableMetrics();
+
+// Access metrics
+const stats = await metrics.getStats();
+console.log('Events processed:', stats.totalEvents);
+console.log('Success rate:', stats.successRate);
+console.log('Average processing time:', stats.avgProcessingTime);
+
+// Custom metrics
+metrics.increment('custom.metric');
+metrics.timing('processing.duration', 150);
+```
+
+## SDK Methods
+
+### Core Methods
+
+```typescript
+// Initialize connection
+await acme.connect();
+
+// Start listening for webhooks
+acme.listen(port: number, callback?: () => void);
+
+// Stop receiving webhooks
+await acme.disconnect();
+
+// Check connection status
+const isConnected = acme.isConnected();
+```
+
+### Event Methods
+
+```typescript
+// Register event handler
+acme.on(event: string | string[], handler: EventHandler);
+
+// Register one-time event handler
+acme.once(event: string, handler: EventHandler);
+
+// Remove event handler
+acme.off(event: string, handler: EventHandler);
+
+// Remove all handlers for an event
+acme.removeAllListeners(event?: string);
+
+// Get registered events
+const events = acme.eventNames();
+```
+
+### Utility Methods
+
+```typescript
+// Verify webhook signature
+await acme.verifySignature(payload: string, signature: string, provider: string);
+
+// Get webhook history
+const history = await acme.getHistory({
+  limit: 100,
+  offset: 0,
+  providers: ['stripe'],
+  startDate: new Date('2024-01-01'),
+  endDate: new Date('2024-12-31'),
+});
+
+// Get webhook statistics
+const stats = await acme.getStatistics();
+
+// Test webhook connection
+const status = await acme.testConnection();
+```
+
+## Examples
+
+### Express.js Integration
+
+```typescript
+import express from 'express';
+import { AcmeSDK } from '@acme/sdk';
+
+const app = express();
+const acme = new AcmeSDK({
+  apiKey: process.env.ACME_API_KEY!,
+  webhookId: process.env.ACME_WEBHOOK_ID!,
+});
+
+// Mount webhook endpoint
+app.use('/webhooks', acme.express());
+
+// Or handle manually
+app.post('/webhooks/custom', express.raw({ type: '*/*' }), async (req, res) => {
+  try {
+    const event = await acme.parseWebhook(req.body, req.headers);
+    await acme.processEvent(event);
+    res.sendStatus(200);
+  } catch (error) {
+    console.error('Webhook error:', error);
+    res.sendStatus(400);
+  }
+});
+
+app.listen(3000);
+```
+
+### Next.js API Route
+
+```typescript
+// pages/api/webhooks/acme.ts or app/api/webhooks/acme/route.ts
+import { AcmeSDK } from '@acme/sdk';
+
+const acme = new AcmeSDK({
+  apiKey: process.env.ACME_API_KEY!,
+  webhookId: process.env.ACME_WEBHOOK_ID!,
+});
+
+// Pages Router
+export default acme.nextjs();
+
+// App Router
+export const POST = acme.nextjsApp();
+```
+
+### Error Handling
+
+```typescript
+import { AcmeSDK, WebhookError, SignatureError } from '@acme/sdk';
+
+acme.on('stripe.payment_intent.failed', async (event) => {
+  try {
+    await processFailedPayment(event.data);
+  } catch (error) {
+    if (error instanceof SignatureError) {
+      console.error('Invalid webhook signature');
+      // Don't retry - signature won't become valid
+      return;
+    }
+    
+    if (error instanceof WebhookError) {
+      console.error('Webhook processing error:', error.message);
+      // Will retry based on SDK configuration
+      throw error;
+    }
+    
+    // Unknown error
+    console.error('Unexpected error:', error);
+    throw error;
+  }
+});
+
+// Global error handler
+acme.on('error', (error) => {
+  console.error('SDK error:', error);
+  // Send to error tracking service
+});
+```
+
+### Testing
+
+```typescript
+import { AcmeSDK, MockWebhookServer } from '@acme/sdk/testing';
+
+describe('Webhook handlers', () => {
+  let acme: AcmeSDK;
+  let mockServer: MockWebhookServer;
+
+  beforeEach(() => {
+    mockServer = new MockWebhookServer();
+    acme = new AcmeSDK({
+      apiKey: 'test-key',
+      webhookId: 'test-webhook',
+      baseUrl: mockServer.url,
+    });
+  });
+
+  afterEach(async () => {
+    await acme.disconnect();
+    await mockServer.close();
+  });
+
+  test('handles payment success', async () => {
+    const handler = jest.fn();
+    acme.on('stripe.payment_intent.succeeded', handler);
+
+    await mockServer.sendWebhook({
+      type: 'stripe.payment_intent.succeeded',
+      data: { amount: 1000 },
+    });
+
+    expect(handler).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'stripe.payment_intent.succeeded',
+        data: { amount: 1000 },
+      })
+    );
+  });
+});
+```
+
+## Best Practices
+
+### Security
+
+1. **Always verify signatures in production**
+   ```typescript
+   const acme = new AcmeSDK({
+     apiKey: process.env.ACME_API_KEY!,
+     webhookId: process.env.ACME_WEBHOOK_ID!,
+     verifySignatures: true, // Default
+   });
+   ```
+
+2. **Use environment variables for sensitive data**
+   ```typescript
+   // Good
+   const apiKey = process.env.ACME_API_KEY!;
+   
+   // Bad
+   const apiKey = 'sk_live_abc123'; // Never hardcode!
+   ```
+
+3. **Implement IP allowlisting for additional security**
+   ```typescript
+   const acme = new AcmeSDK({
+     apiKey: process.env.ACME_API_KEY!,
+     webhookId: process.env.ACME_WEBHOOK_ID!,
+     allowedIPs: ['192.168.1.0/24', '10.0.0.0/8'],
+   });
+   ```
+
+### Performance
+
+1. **Use event-specific handlers instead of wildcards**
+   ```typescript
+   // Good - specific handlers
+   acme.on('stripe.payment_intent.succeeded', handlePayment);
+   
+   // Less efficient - processes all events
+   acme.on('*', (event) => {
+     if (event.type === 'stripe.payment_intent.succeeded') {
+       handlePayment(event);
+     }
+   });
+   ```
+
+2. **Implement proper error handling and retries**
+   ```typescript
+   acme.on('critical.event', async (event) => {
+     try {
+       await processEvent(event);
+     } catch (error) {
+       // Log error
+       await logger.error('Event processing failed', { event, error });
+       
+       // Retry logic handled by SDK
+       throw error;
+     }
+   });
+   ```
+
+3. **Use batching for high-volume scenarios**
+   ```typescript
+   const queue = acme.createQueue({
+     batchSize: 100,
+     batchTimeout: 10000,
+   });
+   
+   queue.on('batch', async (events) => {
+     await bulkInsertEvents(events);
+   });
+   ```
+
+### Monitoring
+
+1. **Enable metrics collection**
+   ```typescript
+   const metrics = acme.enableMetrics();
+   
+   // Expose metrics endpoint
+   app.get('/metrics', async (req, res) => {
+     const stats = await metrics.getStats();
+     res.json(stats);
+   });
+   ```
+
+2. **Set up alerts for failures**
+   ```typescript
+   acme.on('error', async (error) => {
+     await alerting.send({
+       level: 'error',
+       message: 'Webhook processing error',
+       error: error.message,
+     });
+   });
+   ```
+
+## Troubleshooting
+
+### Common Issues
+
+<AccordionGroup>
+  <Accordion title="Connection timeouts">
+    ```typescript
+    // Increase timeout
+    const acme = new AcmeSDK({
+      apiKey: 'your-api-key',
+      webhookId: 'wh_your_webhook_id',
+      timeout: 60000, // 60 seconds
+    });
+    ```
+  </Accordion>
+  <Accordion title="Signature verification failures">
+    - Ensure your API key is correct
+    - Check that the webhook secret hasn't changed
+    - Verify the raw request body is being used
+    - Confirm headers are being passed correctly
+  </Accordion>
+  <Accordion title="Missing events">
+    - Check your event handler registration
+    - Verify the webhook is active in the dashboard
+    - Ensure your server is publicly accessible
+    - Check firewall and security group settings
+  </Accordion>
+  <Accordion title="Memory leaks">
+    - Remove unused event listeners
+    - Implement proper cleanup in handlers
+    - Use the SDK's built-in connection management
+    - Monitor memory usage with metrics
+  </Accordion>
+</AccordionGroup>
+
+### Debug Mode
+
+Enable debug mode for detailed logging:
+
+```typescript
+const acme = new AcmeSDK({
+  apiKey: 'your-api-key',
+  webhookId: 'wh_your_webhook_id',
+  debug: true,
+});
+
+// Or set via environment variable
+// ACME_DEBUG=true
+```
+
+## Migration Guide
+
+### From Webhook URLs to SDK
+
+```typescript
+// Before: Direct webhook endpoint
+app.post('/webhooks/stripe', (req, res) => {
+  const event = req.body;
+  // Manual processing
+});
+
+// After: Using SDK
+acme.on('stripe.*', async (event) => {
+  // Automatic signature verification
+  // Built-in error handling
+  // Retry logic included
+});
+```
+
+### From v1 to v2
+
+```typescript
+// v1
+const acme = new AcmeWebhook({
+  apiKey: 'key',
+  webhookId: 'id',
+});
+
+// v2
+const acme = new AcmeSDK({
+  apiKey: 'key',
+  webhookId: 'id',
+});
+```
+
+## API Reference
+
+For complete API documentation, see our [API Reference](/api-reference/introduction).
+
+## Support
+
+- **Documentation**: [https://docs.acme.sh](https://docs.acme.sh)
+- **GitHub Issues**: [https://github.com/acme-sh/sdk-js/issues](https://github.com/acme-sh/sdk-js/issues)
+- **Discord Community**: [Join our Discord](https://discord.gg/acme)
+- **Email Support**: support@acme.sh
+
+## Next Steps
+
+<CardGroup>
+  <Card
+    title="Dashboard Guide"
+    icon="gauge"
+    href="/dashboard"
+  >
+    Learn to use the Acme dashboard
+  </Card>
+  <Card
+    title="Provider Setup"
+    icon="plug"
+    href="/providers"
+  >
+    Configure webhook providers
+  </Card>
+  <Card
+    title="Security Guide"
+    icon="shield"
+    href="/security"
+  >
+    Best practices for webhook security
+  </Card>
+  <Card
+    title="Examples"
+    icon="code"
+    href="https://github.com/acme-sh/examples"
+  >
+    Browse example implementations
+  </Card>
+</CardGroup>

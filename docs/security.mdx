@@ -1,0 +1,505 @@
+---
+title: Security
+description: "Best practices and security features for protecting your webhook infrastructure"
+---
+
+<img
+  className="block dark:hidden"
+  src="/images/security-light.png"
+  alt="Acme Security Light"
+/>
+<img
+  className="hidden dark:block"
+  src="/images/security-dark.png"
+  alt="Acme Security Dark"
+/>
+
+## Overview
+
+Security is paramount when handling webhooks. Acme provides multiple layers of security to ensure your webhook infrastructure remains protected from common threats and vulnerabilities.
+
+<CardGroup cols={2}>
+  <Card
+    title="Signature Verification"
+    icon="signature"
+    href="#signature-verification"
+  >
+    Cryptographically verify webhook authenticity
+  </Card>
+  <Card
+    title="Access Control"
+    icon="lock"
+    href="#access-control"
+  >
+    Fine-grained permissions and API key management
+  </Card>
+  <Card
+    title="Network Security"
+    icon="shield"
+    href="#network-security"
+  >
+    IP allowlisting and SSL/TLS encryption
+  </Card>
+  <Card
+    title="Threat Protection"
+    icon="shield-exclamation"
+    href="#threat-protection"
+  >
+    Rate limiting and DDoS protection
+  </Card>
+</CardGroup>
+
+## Signature Verification
+
+### How It Works
+
+Acme automatically verifies webhook signatures to ensure requests are authentic:
+
+1. **Provider sends webhook** with signature header
+2. **Acme verifies signature** using shared secret
+3. **Invalid signatures rejected** before forwarding
+4. **Valid webhooks forwarded** to your endpoint
+
+### Provider-Specific Signatures
+
+Each provider uses different signature methods:
+
+<Tabs>
+  <Tab title="Stripe">
+    ```javascript
+    // Stripe signature header: stripe-signature
+    const signature = request.headers['stripe-signature'];
+    const isValid = verifyStripeSignature(payload, signature, secret);
+    ```
+  </Tab>
+  <Tab title="GitHub">
+    ```javascript
+    // GitHub signature header: x-hub-signature-256
+    const signature = request.headers['x-hub-signature-256'];
+    const isValid = verifyGitHubSignature(payload, signature, secret);
+    ```
+  </Tab>
+  <Tab title="Clerk">
+    ```javascript
+    // Clerk signature header: svix-signature
+    const signature = request.headers['svix-signature'];
+    const isValid = verifyClerkSignature(payload, signature, secret);
+    ```
+  </Tab>
+</Tabs>
+
+### Manual Verification
+
+While Acme handles verification automatically, you can also verify manually:
+
+```javascript
+import crypto from 'crypto';
+
+function verifyWebhookSignature(payload, signature, secret) {
+  const expectedSignature = crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+  
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
+```
+
+<Warning>
+Always use timing-safe comparison to prevent timing attacks when verifying signatures.
+</Warning>
+
+## Access Control
+
+### API Key Management
+
+Acme uses API keys for authentication:
+
+- **Unique per webhook**: Each webhook has its own API key
+- **Rotatable**: Rotate keys regularly for security
+- **Scoped permissions**: Keys have specific permissions
+- **Audited**: All key usage is logged
+
+#### Generating API Keys
+
+```bash
+# Generate a new API key
+acme keys create --name "production-key" --permissions "read,write"
+
+# List all API keys
+acme keys list
+
+# Rotate an API key
+acme keys rotate --key-id "key_123"
+
+# Revoke an API key
+acme keys revoke --key-id "key_123"
+```
+
+### Team Permissions
+
+Configure granular permissions for team members:
+
+| Permission | Description |
+|------------|-------------|
+| `webhooks.read` | View webhook traffic and history |
+| `webhooks.write` | Create and modify webhooks |
+| `webhooks.replay` | Replay webhook requests |
+| `team.manage` | Manage team members and roles |
+| `billing.manage` | Access billing and subscriptions |
+| `settings.manage` | Modify organization settings |
+
+### Role-Based Access Control (RBAC)
+
+Predefined roles with specific permission sets:
+
+```yaml
+roles:
+  owner:
+    - "*"  # All permissions
+  
+  admin:
+    - webhooks.*
+    - team.manage
+    - settings.manage
+  
+  developer:
+    - webhooks.read
+    - webhooks.write
+    - webhooks.replay
+  
+  viewer:
+    - webhooks.read
+```
+
+## Network Security
+
+### SSL/TLS Encryption
+
+All webhook traffic is encrypted:
+
+- **TLS 1.3**: Latest encryption standards
+- **Certificate pinning**: Optional for enhanced security
+- **HSTS enabled**: Enforces HTTPS connections
+- **Forward secrecy**: Protects past sessions
+
+### IP Allowlisting
+
+Restrict webhook sources by IP:
+
+```yaml
+# acme.config.yaml
+security:
+  allowedIPs:
+    - 192.168.1.0/24     # Internal network
+    - 52.89.214.238/32   # Stripe webhooks
+    - 140.82.112.0/20    # GitHub webhooks
+    - 35.191.0.0/16      # Google Cloud
+```
+
+### Private Webhooks
+
+Create private webhooks accessible only within your network:
+
+```bash
+# Create a private webhook
+acme webhook create \
+  --name "internal-processor" \
+  --private \
+  --allowed-ips "10.0.0.0/8"
+```
+
+## Threat Protection
+
+### Rate Limiting
+
+Protect against abuse with configurable rate limits:
+
+```yaml
+rateLimits:
+  global:
+    requests: 10000
+    window: "1h"
+  
+  perIP:
+    requests: 1000
+    window: "1h"
+  
+  perWebhook:
+    requests: 5000
+    window: "1h"
+```
+
+### DDoS Protection
+
+Built-in DDoS mitigation:
+
+- **Automatic scaling**: Handles traffic spikes
+- **Global edge network**: Distributed protection
+- **Challenge mechanisms**: Bot detection
+- **Traffic filtering**: Blocks malicious patterns
+
+### Request Validation
+
+Validate incoming webhooks:
+
+```javascript
+const validationRules = {
+  maxPayloadSize: 5 * 1024 * 1024, // 5MB
+  allowedMethods: ['POST'],
+  requiredHeaders: ['content-type'],
+  contentTypes: ['application/json'],
+  timeout: 30000, // 30 seconds
+};
+```
+
+## Data Protection
+
+### Encryption at Rest
+
+All webhook data is encrypted:
+
+- **AES-256 encryption**: Industry standard
+- **Key rotation**: Automatic key management
+- **Secure key storage**: Hardware security modules
+- **Compliance**: SOC 2, GDPR compliant
+
+### Data Retention
+
+Configure data retention policies:
+
+```yaml
+retention:
+  webhookHistory: "30d"      # Keep for 30 days
+  failedWebhooks: "90d"      # Keep failures longer
+  personalData: "7d"         # Minimize PII retention
+  auditLogs: "1y"           # Compliance requirement
+```
+
+### PII Handling
+
+Protect sensitive information:
+
+```javascript
+// Automatic PII redaction
+const redactedPayload = acme.redactPII(webhookPayload, {
+  fields: ['ssn', 'creditCard', 'email'],
+  patterns: [/\b\d{3}-\d{2}-\d{4}\b/], // SSN pattern
+});
+```
+
+## Security Headers
+
+Acme automatically adds security headers:
+
+```http
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+X-XSS-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Security-Policy: default-src 'self'
+Referrer-Policy: strict-origin-when-cross-origin
+```
+
+## Audit Logging
+
+### Comprehensive Logging
+
+Track all security-relevant events:
+
+- **Authentication attempts**: Success and failures
+- **API key usage**: Track key activity
+- **Configuration changes**: Audit trail
+- **Access patterns**: Detect anomalies
+
+### Log Format
+
+```json
+{
+  "timestamp": "2024-01-15T10:30:00Z",
+  "event": "webhook.received",
+  "userId": "user_123",
+  "ipAddress": "192.168.1.100",
+  "userAgent": "Stripe/1.0",
+  "webhookId": "wh_abc123",
+  "provider": "stripe",
+  "status": "success",
+  "metadata": {
+    "signatureValid": true,
+    "payloadSize": 1024
+  }
+}
+```
+
+### Security Monitoring
+
+Set up alerts for security events:
+
+```yaml
+alerts:
+  - name: "Failed Authentication"
+    condition: "event.type == 'auth.failed' && count > 5"
+    window: "5m"
+    action: "email"
+  
+  - name: "Suspicious IP Activity"
+    condition: "unique_ips > 100"
+    window: "1h"
+    action: "slack"
+```
+
+## Best Practices
+
+### Development Security
+
+1. **Use separate environments**
+   ```bash
+   # Development
+   ACME_API_KEY=test_key_development
+   ACME_WEBHOOK_URL=https://dev.example.com
+   
+   # Production
+   ACME_API_KEY=live_key_production
+   ACME_WEBHOOK_URL=https://api.example.com
+   ```
+
+2. **Never commit secrets**
+   ```gitignore
+   # .gitignore
+   .env
+   .env.local
+   *.key
+   secrets/
+   ```
+
+3. **Use environment variables**
+   ```javascript
+   const apiKey = process.env.ACME_API_KEY;
+   if (!apiKey) {
+     throw new Error('ACME_API_KEY is required');
+   }
+   ```
+
+### Production Security
+
+1. **Enable all security features**
+   ```yaml
+   production:
+     verifySignatures: true
+     requireHTTPS: true
+     ipAllowlist: true
+     rateLimiting: true
+   ```
+
+2. **Regular security audits**
+   - Review access logs monthly
+   - Rotate API keys quarterly
+   - Update dependencies regularly
+   - Conduct penetration testing
+
+3. **Incident response plan**
+   - Document response procedures
+   - Set up monitoring alerts
+   - Regular drills and training
+   - Post-incident reviews
+
+### Compliance
+
+Acme helps meet compliance requirements:
+
+<AccordionGroup>
+  <Accordion title="GDPR Compliance">
+    - Data minimization
+    - Right to erasure
+    - Data portability
+    - Privacy by design
+    - Audit trails
+  </Accordion>
+  <Accordion title="PCI DSS">
+    - Encrypted transmission
+    - Access controls
+    - Regular testing
+    - Secure development
+    - Incident response
+  </Accordion>
+  <Accordion title="SOC 2">
+    - Security policies
+    - Access management
+    - Change control
+    - Risk assessment
+    - Monitoring
+  </Accordion>
+  <Accordion title="HIPAA">
+    - Encryption
+    - Access controls
+    - Audit logs
+    - Data integrity
+    - BAA available
+  </Accordion>
+</AccordionGroup>
+
+## Security Checklist
+
+Use this checklist to ensure your webhook security:
+
+- [ ] **API keys stored securely** (environment variables, secret manager)
+- [ ] **Signature verification enabled** for all webhooks
+- [ ] **HTTPS enforced** for all endpoints
+- [ ] **IP allowlisting configured** where applicable
+- [ ] **Rate limiting enabled** to prevent abuse
+- [ ] **Audit logging active** for security events
+- [ ] **Regular key rotation** scheduled
+- [ ] **Data retention policies** configured
+- [ ] **Security headers** properly set
+- [ ] **Monitoring alerts** configured
+- [ ] **Incident response plan** documented
+- [ ] **Regular security reviews** scheduled
+
+## Vulnerability Disclosure
+
+Found a security issue? Please report it responsibly:
+
+1. **Email**: security@acme.sh
+2. **PGP Key**: Available on our website
+3. **Response Time**: Within 24 hours
+4. **Bug Bounty**: Available for critical issues
+
+<Note>
+Please do not disclose security vulnerabilities publicly until we've had a chance to address them.
+</Note>
+
+## Resources
+
+<CardGroup>
+  <Card
+    title="Security Updates"
+    icon="bell"
+    href="https://status.acme.sh"
+  >
+    Subscribe to security advisories
+  </Card>
+  <Card
+    title="Security Whitepaper"
+    icon="file-shield"
+    href="/security-whitepaper.pdf"
+  >
+    Detailed security architecture
+  </Card>
+  <Card
+    title="Compliance Docs"
+    icon="certificate"
+    href="/compliance"
+  >
+    SOC 2, GDPR, and more
+  </Card>
+  <Card
+    title="Contact Security"
+    icon="envelope"
+    href="mailto:security@acme.sh"
+  >
+    Report security concerns
+  </Card>
+</CardGroup>
