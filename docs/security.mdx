@@ -1,468 +1,646 @@
 ---
 title: Security
-description: "Best practices and security features for protecting your webhook infrastructure"
+description: "Security features and best practices for protecting your LLM trace data"
 ---
 
 <img
   className="block dark:hidden"
   src="/images/security-light.png"
-  alt="Acme Security Light"
+  alt="Untrace Security Light"
 />
 <img
   className="hidden dark:block"
   src="/images/security-dark.png"
-  alt="Acme Security Dark"
+  alt="Untrace Security Dark"
 />
 
 ## Overview
 
-Security is paramount when handling webhooks. Acme provides multiple layers of security to ensure your webhook infrastructure remains protected from common threats and vulnerabilities.
+Security and privacy are paramount when handling LLM traces that may contain sensitive data. Untrace provides multiple layers of security to protect your AI application data, ensure compliance, and maintain user privacy.
 
 <CardGroup cols={2}>
   <Card
-    title="Signature Verification"
-    icon="signature"
-    href="#signature-verification"
+    title="PII Protection"
+    icon="user-shield"
+    href="#pii-protection"
   >
-    Cryptographically verify webhook authenticity
+    Automatic detection and redaction of sensitive data
+  </Card>
+  <Card
+    title="Data Encryption"
+    icon="lock"
+    href="#data-encryption"
+  >
+    End-to-end encryption for traces in transit and at rest
   </Card>
   <Card
     title="Access Control"
-    icon="lock"
+    icon="key"
     href="#access-control"
   >
     Fine-grained permissions and API key management
   </Card>
   <Card
-    title="Network Security"
-    icon="shield"
-    href="#network-security"
+    title="Compliance"
+    icon="certificate"
+    href="#compliance"
   >
-    IP allowlisting and SSL/TLS encryption
-  </Card>
-  <Card
-    title="Threat Protection"
-    icon="shield-exclamation"
-    href="#threat-protection"
-  >
-    Rate limiting and DDoS protection
+    GDPR, SOC2, HIPAA compliant infrastructure
   </Card>
 </CardGroup>
 
-## Signature Verification
+## PII Protection
 
-### How It Works
+### Automatic PII Detection
 
-Acme automatically verifies webhook signatures to ensure requests are authentic:
+Untrace automatically scans LLM traces for personally identifiable information:
 
-1. **Provider sends webhook** with signature header
-2. **Acme verifies signature** using shared secret
-3. **Invalid signatures rejected** before forwarding
-4. **Valid webhooks forwarded** to your endpoint
+```typescript
+// PII patterns detected by default
+const defaultPatterns = {
+  email: /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/,
+  phone: /\b\d{3}[-.]?\d{3}[-.]?\d{4}\b/,
+  ssn: /\b\d{3}-\d{2}-\d{4}\b/,
+  creditCard: /\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b/,
+  ipAddress: /\b(?:\d{1,3}\.){3}\d{1,3}\b/,
+};
+```
 
-### Provider-Specific Signatures
+### Redaction Methods
 
-Each provider uses different signature methods:
+Choose how sensitive data is handled:
 
 <Tabs>
-  <Tab title="Stripe">
-    ```javascript
-    // Stripe signature header: stripe-signature
-    const signature = request.headers['stripe-signature'];
-    const isValid = verifyStripeSignature(payload, signature, secret);
+  <Tab title="Hash">
+    ```typescript
+    // Original: "Contact john.doe@example.com"
+    // Redacted: "Contact [EMAIL_HASH:a1b2c3d4]"
+    
+    init({
+      piiDetection: {
+        enabled: true,
+        redactionMethod: 'hash'
+      }
+    });
     ```
   </Tab>
-  <Tab title="GitHub">
-    ```javascript
-    // GitHub signature header: x-hub-signature-256
-    const signature = request.headers['x-hub-signature-256'];
-    const isValid = verifyGitHubSignature(payload, signature, secret);
+  <Tab title="Mask">
+    ```typescript
+    // Original: "SSN: 123-45-6789"
+    // Redacted: "SSN: XXX-XX-XXXX"
+    
+    init({
+      piiDetection: {
+        enabled: true,
+        redactionMethod: 'mask'
+      }
+    });
     ```
   </Tab>
-  <Tab title="Clerk">
-    ```javascript
-    // Clerk signature header: svix-signature
-    const signature = request.headers['svix-signature'];
-    const isValid = verifyClerkSignature(payload, signature, secret);
+  <Tab title="Remove">
+    ```typescript
+    // Original: "Call me at 555-123-4567"
+    // Redacted: "Call me at [REDACTED]"
+    
+    init({
+      piiDetection: {
+        enabled: true,
+        redactionMethod: 'remove'
+      }
+    });
     ```
   </Tab>
 </Tabs>
 
-### Manual Verification
+### Custom PII Patterns
 
-While Acme handles verification automatically, you can also verify manually:
+Define your own sensitive data patterns:
 
-```javascript
-import crypto from 'crypto';
-
-function verifyWebhookSignature(payload, signature, secret) {
-  const expectedSignature = crypto
-    .createHmac('sha256', secret)
-    .update(payload)
-    .digest('hex');
-  
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expectedSignature)
-  );
-}
+```typescript
+const untrace = init({
+  apiKey: 'your-api-key',
+  piiDetection: {
+    enabled: true,
+    customPatterns: [
+      // API Keys
+      { name: 'api_key', pattern: /sk_[a-zA-Z0-9]{32}/ },
+      // Internal IDs
+      { name: 'user_id', pattern: /user_[0-9]{8}/ },
+      // Custom tokens
+      { name: 'auth_token', pattern: /Bearer [A-Za-z0-9\-._~+\/]+=*/ }
+    ]
+  }
+});
 ```
 
-<Warning>
-Always use timing-safe comparison to prevent timing attacks when verifying signatures.
-</Warning>
+### Allowlisting
+
+Specify patterns that should never be redacted:
+
+```typescript
+init({
+  piiDetection: {
+    enabled: true,
+    allowlist: [
+      // Public email domains
+      /@company\.com$/,
+      // Test data
+      /test@example\.com/,
+      // Documentation examples
+      /lorem\.ipsum/
+    ]
+  }
+});
+```
+
+## Data Encryption
+
+### Encryption in Transit
+
+All trace data is encrypted during transmission:
+
+- **TLS 1.3**: Latest encryption standards
+- **Certificate Pinning**: Prevent MITM attacks
+- **Perfect Forward Secrecy**: Protect past sessions
+- **HSTS**: Enforce HTTPS connections
+
+```typescript
+// SDK automatically uses secure connections
+const untrace = init({
+  apiKey: 'your-api-key',
+  baseUrl: 'https://api.untrace.dev', // HTTPS enforced
+  tlsConfig: {
+    minVersion: 'TLSv1.3',
+    cipherSuites: ['TLS_AES_128_GCM_SHA256']
+  }
+});
+```
+
+### Encryption at Rest
+
+Trace data is encrypted when stored:
+
+- **AES-256-GCM**: Military-grade encryption
+- **Key Rotation**: Automatic key management
+- **HSM Storage**: Hardware security modules for keys
+- **Encrypted Backups**: Secure disaster recovery
+
+### Field-Level Encryption
+
+Encrypt specific sensitive fields:
+
+```typescript
+init({
+  fieldEncryption: {
+    enabled: true,
+    fields: [
+      'user.email',
+      'metadata.api_key',
+      'context.session_token'
+    ],
+    algorithm: 'AES-256-GCM'
+  }
+});
+```
 
 ## Access Control
 
 ### API Key Management
 
-Acme uses API keys for authentication:
+Secure API key practices:
 
-- **Unique per webhook**: Each webhook has its own API key
-- **Rotatable**: Rotate keys regularly for security
-- **Scoped permissions**: Keys have specific permissions
-- **Audited**: All key usage is logged
-
-#### Generating API Keys
-
-```bash
-# Generate a new API key
-acme keys create --name "production-key" --permissions "read,write"
-
-# List all API keys
-acme keys list
-
-# Rotate an API key
-acme keys rotate --key-id "key_123"
-
-# Revoke an API key
-acme keys revoke --key-id "key_123"
+```typescript
+// Generate scoped API keys
+const apiKey = await untrace.createApiKey({
+  name: 'production-ingest',
+  permissions: ['trace:write'],
+  expiresIn: '90d',
+  allowedIPs: ['10.0.0.0/8'],
+  rateLimit: {
+    requests: 10000,
+    window: '1h'
+  }
+});
 ```
 
-### Team Permissions
+### Key Rotation
 
-Configure granular permissions for team members:
+Implement regular key rotation:
 
-| Permission | Description |
-|------------|-------------|
-| `webhooks.read` | View webhook traffic and history |
-| `webhooks.write` | Create and modify webhooks |
-| `webhooks.replay` | Replay webhook requests |
-| `team.manage` | Manage team members and roles |
-| `billing.manage` | Access billing and subscriptions |
-| `settings.manage` | Modify organization settings |
+```bash
+# Rotate API keys via CLI
+untrace keys rotate --key-id key_123 --grace-period 7d
 
-### Role-Based Access Control (RBAC)
+# Or programmatically
+await untrace.rotateApiKey('key_123', {
+  gracePeriod: '7d',
+  notifyEmail: 'security@company.com'
+});
+```
 
-Predefined roles with specific permission sets:
+### Role-Based Access Control
 
-```yaml
-roles:
-  owner:
-    - "*"  # All permissions
-  
-  admin:
-    - webhooks.*
-    - team.manage
-    - settings.manage
-  
-  developer:
-    - webhooks.read
-    - webhooks.write
-    - webhooks.replay
-  
-  viewer:
-    - webhooks.read
+Configure granular permissions:
+
+| Role | View Traces | Configure Routing | Manage Keys | Access PII |
+|------|-------------|-------------------|-------------|------------|
+| Admin | ✅ | ✅ | ✅ | ✅ |
+| Developer | ✅ | ✅ | ❌ | ❌ |
+| Analyst | ✅ | ❌ | ❌ | ❌ |
+| Viewer | ✅ (redacted) | ❌ | ❌ | ❌ |
+
+### OAuth Integration
+
+Support for enterprise SSO:
+
+```typescript
+// Configure OAuth providers
+const untrace = init({
+  auth: {
+    providers: ['google', 'github', 'okta'],
+    oauth: {
+      clientId: process.env.OAUTH_CLIENT_ID,
+      redirectUri: 'https://app.untrace.dev/auth/callback',
+      scopes: ['read:traces', 'write:config']
+    }
+  }
+});
 ```
 
 ## Network Security
 
-### SSL/TLS Encryption
-
-All webhook traffic is encrypted:
-
-- **TLS 1.3**: Latest encryption standards
-- **Certificate pinning**: Optional for enhanced security
-- **HSTS enabled**: Enforces HTTPS connections
-- **Forward secrecy**: Protects past sessions
-
 ### IP Allowlisting
 
-Restrict webhook sources by IP:
+Restrict access by IP address:
 
 ```yaml
-# acme.config.yaml
+# untrace.config.yaml
 security:
   allowedIPs:
-    - 192.168.1.0/24     # Internal network
-    - 52.89.214.238/32   # Stripe webhooks
-    - 140.82.112.0/20    # GitHub webhooks
-    - 35.191.0.0/16      # Google Cloud
-```
-
-### Private Webhooks
-
-Create private webhooks accessible only within your network:
-
-```bash
-# Create a private webhook
-acme webhook create \
-  --name "internal-processor" \
-  --private \
-  --allowed-ips "10.0.0.0/8"
-```
-
-## Threat Protection
-
-### Rate Limiting
-
-Protect against abuse with configurable rate limits:
-
-```yaml
-rateLimits:
-  global:
-    requests: 10000
-    window: "1h"
+    - 10.0.0.0/8      # Internal network
+    - 172.16.0.0/12   # Private subnet
+    - 52.44.0.0/16    # AWS region
   
-  perIP:
-    requests: 1000
-    window: "1h"
+  # Per-environment configuration
+  production:
+    allowedIPs:
+      - 10.1.0.0/16   # Production VPC
   
-  perWebhook:
-    requests: 5000
-    window: "1h"
+  development:
+    allowedIPs:
+      - 0.0.0.0/0     # Allow all (dev only!)
 ```
 
-### DDoS Protection
+### VPC Peering
 
-Built-in DDoS mitigation:
+Connect securely via private networks:
 
-- **Automatic scaling**: Handles traffic spikes
-- **Global edge network**: Distributed protection
-- **Challenge mechanisms**: Bot detection
-- **Traffic filtering**: Blocks malicious patterns
-
-### Request Validation
-
-Validate incoming webhooks:
-
-```javascript
-const validationRules = {
-  maxPayloadSize: 5 * 1024 * 1024, // 5MB
-  allowedMethods: ['POST'],
-  requiredHeaders: ['content-type'],
-  contentTypes: ['application/json'],
-  timeout: 30000, // 30 seconds
-};
-```
-
-## Data Protection
-
-### Encryption at Rest
-
-All webhook data is encrypted:
-
-- **AES-256 encryption**: Industry standard
-- **Key rotation**: Automatic key management
-- **Secure key storage**: Hardware security modules
-- **Compliance**: SOC 2, GDPR compliant
-
-### Data Retention
-
-Configure data retention policies:
-
-```yaml
-retention:
-  webhookHistory: "30d"      # Keep for 30 days
-  failedWebhooks: "90d"      # Keep failures longer
-  personalData: "7d"         # Minimize PII retention
-  auditLogs: "1y"           # Compliance requirement
-```
-
-### PII Handling
-
-Protect sensitive information:
-
-```javascript
-// Automatic PII redaction
-const redactedPayload = acme.redactPII(webhookPayload, {
-  fields: ['ssn', 'creditCard', 'email'],
-  patterns: [/\b\d{3}-\d{2}-\d{4}\b/], // SSN pattern
+```typescript
+// Configure VPC endpoint
+const untrace = init({
+  apiKey: 'your-api-key',
+  endpoint: {
+    type: 'vpc',
+    vpcEndpointId: 'vpce-1234567890abcdef0',
+    privateDns: true
+  }
 });
 ```
 
-## Security Headers
+### Rate Limiting
 
-Acme automatically adds security headers:
+Protect against abuse:
 
-```http
-X-Content-Type-Options: nosniff
-X-Frame-Options: DENY
-X-XSS-Protection: 1; mode=block
-Strict-Transport-Security: max-age=31536000; includeSubDomains
-Content-Security-Policy: default-src 'self'
-Referrer-Policy: strict-origin-when-cross-origin
+```typescript
+// SDK-level rate limiting
+init({
+  rateLimit: {
+    enabled: true,
+    maxRequests: 1000,
+    windowMs: 60000, // 1 minute
+    keyGenerator: (req) => req.apiKey
+  }
+});
 ```
 
-## Audit Logging
+## Data Privacy
 
-### Comprehensive Logging
+### Data Residency
 
-Track all security-relevant events:
+Control where your data is stored:
 
-- **Authentication attempts**: Success and failures
-- **API key usage**: Track key activity
-- **Configuration changes**: Audit trail
-- **Access patterns**: Detect anomalies
+```typescript
+const untrace = init({
+  apiKey: 'your-api-key',
+  dataResidency: {
+    region: 'eu-west-1', // EU data residency
+    restrictCrossRegion: true
+  }
+});
+```
 
-### Log Format
+Available regions:
+- **US**: us-east-1, us-west-2
+- **EU**: eu-west-1, eu-central-1
+- **APAC**: ap-southeast-1, ap-northeast-1
+
+### Data Retention
+
+Configure retention policies:
+
+```yaml
+retention:
+  traces:
+    default: 30d
+    byEnvironment:
+      production: 90d
+      development: 7d
+  
+  # Automatic deletion rules
+  rules:
+    - condition: "contains_pii"
+      retention: 24h
+    - condition: "error_traces"
+      retention: 60d
+```
+
+### Right to Erasure
+
+GDPR-compliant data deletion:
+
+```typescript
+// Delete user data
+await untrace.deleteUserData({
+  userId: 'user_123',
+  includeTraces: true,
+  includeMetadata: true,
+  confirmation: 'DELETE-USER-123'
+});
+
+// Bulk deletion
+await untrace.bulkDelete({
+  filter: {
+    dateRange: { start: '2024-01-01', end: '2024-02-01' },
+    tags: ['test-data']
+  }
+});
+```
+
+## Compliance
+
+### GDPR Compliance
+
+Untrace helps you meet GDPR requirements:
+
+<AccordionGroup>
+  <Accordion title="Data Minimization">
+    - Automatic PII redaction
+    - Configurable data collection
+    - Field-level exclusion
+    - Sampling strategies
+  </Accordion>
+  <Accordion title="Purpose Limitation">
+    - Explicit data usage policies
+    - Purpose-based retention
+    - Access controls by purpose
+    - Audit trails
+  </Accordion>
+  <Accordion title="Data Subject Rights">
+    - Right to access (data export)
+    - Right to rectification
+    - Right to erasure
+    - Right to data portability
+  </Accordion>
+  <Accordion title="Security Measures">
+    - Encryption at rest and in transit
+    - Access controls
+    - Regular security audits
+    - Breach notification
+  </Accordion>
+</AccordionGroup>
+
+### SOC2 Compliance
+
+Our SOC2 Type II certification covers:
+
+- **Security**: Encryption, access controls, monitoring
+- **Availability**: 99.9% uptime SLA, redundancy
+- **Processing Integrity**: Data validation, error handling
+- **Confidentiality**: Data classification, encryption
+- **Privacy**: PII handling, consent management
+
+### HIPAA Compliance
+
+For healthcare applications:
+
+```typescript
+// Enable HIPAA-compliant mode
+const untrace = init({
+  compliance: {
+    hipaa: {
+      enabled: true,
+      baaRequired: true,
+      phiRedaction: 'aggressive',
+      auditLevel: 'detailed'
+    }
+  }
+});
+```
+
+Features:
+- Business Associate Agreement (BAA)
+- PHI detection and redaction
+- Audit logging
+- Access controls
+- Encryption standards
+
+## Security Monitoring
+
+### Audit Logging
+
+Comprehensive security audit trail:
 
 ```json
 {
   "timestamp": "2024-01-15T10:30:00Z",
-  "event": "webhook.received",
-  "userId": "user_123",
-  "ipAddress": "192.168.1.100",
-  "userAgent": "Stripe/1.0",
-  "webhookId": "wh_abc123",
-  "provider": "stripe",
-  "status": "success",
+  "event": "api_key.accessed",
+  "actor": {
+    "id": "user_123",
+    "ip": "10.0.0.50",
+    "userAgent": "untrace-sdk/1.0.0"
+  },
+  "resource": {
+    "type": "trace",
+    "id": "trace_abc123"
+  },
+  "outcome": "success",
   "metadata": {
-    "signatureValid": true,
-    "payloadSize": 1024
+    "dataAccessed": ["model", "tokens"],
+    "piiRedacted": true
   }
 }
 ```
 
-### Security Monitoring
+### Anomaly Detection
 
-Set up alerts for security events:
+Automatic detection of suspicious activity:
 
-```yaml
-alerts:
-  - name: "Failed Authentication"
-    condition: "event.type == 'auth.failed' && count > 5"
-    window: "5m"
-    action: "email"
-  
-  - name: "Suspicious IP Activity"
-    condition: "unique_ips > 100"
-    window: "1h"
-    action: "slack"
+```typescript
+// Configure anomaly detection
+init({
+  security: {
+    anomalyDetection: {
+      enabled: true,
+      rules: [
+        { type: 'unusual_volume', threshold: 10000 },
+        { type: 'new_ip_location', notify: true },
+        { type: 'api_key_abuse', action: 'block' }
+      ]
+    }
+  }
+});
 ```
+
+### Security Alerts
+
+Real-time security notifications:
+
+<Tabs>
+  <Tab title="Email Alerts">
+    - Failed authentication attempts
+    - New IP addresses
+    - API key usage anomalies
+    - Data export requests
+  </Tab>
+  <Tab title="Webhook Alerts">
+    ```json
+    {
+      "alert": "suspicious_activity",
+      "severity": "high",
+      "details": {
+        "type": "unusual_data_access",
+        "apiKey": "key_***123",
+        "volume": "10x normal"
+      }
+    }
+    ```
+  </Tab>
+  <Tab title="SIEM Integration">
+    - Splunk connector
+    - Datadog integration
+    - CloudWatch logs
+    - Custom SIEM support
+  </Tab>
+</Tabs>
 
 ## Best Practices
 
 ### Development Security
 
-1. **Use separate environments**
+1. **Use separate API keys for each environment**
    ```bash
-   # Development
-   ACME_API_KEY=test_key_development
-   ACME_WEBHOOK_URL=https://dev.example.com
-   
    # Production
-   ACME_API_KEY=live_key_production
-   ACME_WEBHOOK_URL=https://api.example.com
+   UNTRACE_API_KEY=utr_prod_xxx
+   
+   # Staging
+   UNTRACE_API_KEY=utr_stage_xxx
+   
+   # Development
+   UNTRACE_API_KEY=utr_dev_xxx
    ```
 
-2. **Never commit secrets**
+2. **Never commit credentials**
    ```gitignore
    # .gitignore
    .env
    .env.local
    *.key
-   secrets/
+   credentials/
    ```
 
-3. **Use environment variables**
-   ```javascript
-   const apiKey = process.env.ACME_API_KEY;
-   if (!apiKey) {
-     throw new Error('ACME_API_KEY is required');
-   }
+3. **Use secret management**
+   ```typescript
+   // Use secret manager
+   const apiKey = await secretManager.getSecret('untrace-api-key');
+   init({ apiKey });
    ```
 
 ### Production Security
 
 1. **Enable all security features**
-   ```yaml
-   production:
-     verifySignatures: true
-     requireHTTPS: true
-     ipAllowlist: true
-     rateLimiting: true
+   ```typescript
+   init({
+     apiKey: process.env.UNTRACE_API_KEY,
+     piiDetection: { enabled: true },
+     encryption: { fieldLevel: true },
+     audit: { level: 'detailed' }
+   });
    ```
 
-2. **Regular security audits**
-   - Review access logs monthly
-   - Rotate API keys quarterly
-   - Update dependencies regularly
-   - Conduct penetration testing
+2. **Regular security reviews**
+   - Monthly API key rotation
+   - Quarterly access reviews
+   - Annual security audits
+   - Penetration testing
 
 3. **Incident response plan**
-   - Document response procedures
-   - Set up monitoring alerts
-   - Regular drills and training
-   - Post-incident reviews
+   - Security team contacts
+   - Escalation procedures
+   - Communication templates
+   - Recovery procedures
 
-### Compliance
+### Data Handling
 
-Acme helps meet compliance requirements:
+1. **Minimize sensitive data in traces**
+   ```typescript
+   // Bad: Including full user object
+   span.setAttribute('user', userObject);
+   
+   // Good: Only necessary fields
+   span.setAttribute('user.id', user.id);
+   span.setAttribute('user.tier', user.subscriptionTier);
+   ```
 
-<AccordionGroup>
-  <Accordion title="GDPR Compliance">
-    - Data minimization
-    - Right to erasure
-    - Data portability
-    - Privacy by design
-    - Audit trails
-  </Accordion>
-  <Accordion title="PCI DSS">
-    - Encrypted transmission
-    - Access controls
-    - Regular testing
-    - Secure development
-    - Incident response
-  </Accordion>
-  <Accordion title="SOC 2">
-    - Security policies
-    - Access management
-    - Change control
-    - Risk assessment
-    - Monitoring
-  </Accordion>
-  <Accordion title="HIPAA">
-    - Encryption
-    - Access controls
-    - Audit logs
-    - Data integrity
-    - BAA available
-  </Accordion>
-</AccordionGroup>
+2. **Use structured logging**
+   ```typescript
+   // Structured data is easier to redact
+   span.setAttributes({
+     'request.path': '/api/chat',
+     'request.method': 'POST',
+     'user.id': userId,
+     // PII fields will be auto-redacted
+   });
+   ```
+
+3. **Implement data classification**
+   ```typescript
+   span.setAttribute('data.classification', 'internal');
+   span.setAttribute('data.sensitivity', 'high');
+   span.setAttribute('data.retention', '30d');
+   ```
 
 ## Security Checklist
 
-Use this checklist to ensure your webhook security:
+Use this checklist to ensure your Untrace implementation is secure:
 
+- [ ] **PII detection enabled** in production
 - [ ] **API keys stored securely** (environment variables, secret manager)
-- [ ] **Signature verification enabled** for all webhooks
-- [ ] **HTTPS enforced** for all endpoints
-- [ ] **IP allowlisting configured** where applicable
-- [ ] **Rate limiting enabled** to prevent abuse
-- [ ] **Audit logging active** for security events
-- [ ] **Regular key rotation** scheduled
+- [ ] **Separate API keys** for each environment
+- [ ] **IP allowlisting configured** for production
+- [ ] **Field-level encryption** for sensitive data
+- [ ] **Audit logging enabled** for compliance
 - [ ] **Data retention policies** configured
-- [ ] **Security headers** properly set
-- [ ] **Monitoring alerts** configured
+- [ ] **Access controls** properly set up
+- [ ] **Regular key rotation** scheduled
+- [ ] **Security alerts** configured
 - [ ] **Incident response plan** documented
-- [ ] **Regular security reviews** scheduled
+- [ ] **Compliance requirements** identified and met
 
 ## Vulnerability Disclosure
 
 Found a security issue? Please report it responsibly:
 
-1. **Email**: security@acme.sh
+1. **Email**: security@untrace.dev
 2. **PGP Key**: Available on our website
 3. **Response Time**: Within 24 hours
 4. **Bug Bounty**: Available for critical issues
@@ -477,7 +655,7 @@ Please do not disclose security vulnerabilities publicly until we've had a chanc
   <Card
     title="Security Updates"
     icon="bell"
-    href="https://status.acme.sh"
+    href="https://status.untrace.dev"
   >
     Subscribe to security advisories
   </Card>
@@ -493,13 +671,13 @@ Please do not disclose security vulnerabilities publicly until we've had a chanc
     icon="certificate"
     href="/compliance"
   >
-    SOC 2, GDPR, and more
+    SOC2, GDPR, HIPAA documentation
   </Card>
   <Card
-    title="Contact Security"
-    icon="envelope"
-    href="mailto:security@acme.sh"
+    title="Privacy Policy"
+    icon="user-shield"
+    href="/privacy"
   >
-    Report security concerns
+    How we handle your data
   </Card>
 </CardGroup>

@@ -1,14 +1,14 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "banner": {
-    "content": "Acme is currently in beta."
+    "content": "Untrace is currently in beta - Route LLM traces to any observability platform."
   },
   "colors": {
-    "dark": "#009689",
-    "light": "#009689",
-    "primary": "#009689"
+    "dark": "#6366f1",
+    "light": "#6366f1",
+    "primary": "#6366f1"
   },
-  "description": "Acme is a simple, secure, and reliable webhook service that allows you to create and manage webhooks for your applications.",
+  "description": "Untrace is the Segment.io for LLM Observability - capture LLM traces once and route them to any observability platform.",
   "favicon": "/logo/favicon.png",
   "fonts": {
     "family": "Geist",
@@ -18,7 +18,9 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/acme-sh/acme"
+      "github": "https://github.com/untrace-dev/untrace",
+      "discord": "https://discord.gg/untrace",
+      "twitter": "https://twitter.com/untrace_dev"
     }
   },
   "icons": {
@@ -34,21 +36,21 @@
     "dark": "/logo/logo-dark.svg",
     "light": "/logo/logo-light.svg"
   },
-  "name": "Acme",
+  "name": "Untrace",
   "navbar": {
     "links": [
       {
-        "href": "mailto:chris.watts.t@gmail.com",
+        "href": "mailto:support@untrace.dev",
         "label": "Support"
       },
       {
-        "href": "https://acme.sh/app",
+        "href": "https://app.untrace.dev",
         "label": "Dashboard"
       }
     ],
     "primary": {
-      "href": "https://acme.sh/app/webhooks/create?utm_source=docs",
-      "label": "Create Webhook URL",
+      "href": "https://app.untrace.dev/signup?utm_source=docs",
+      "label": "Start Free Trial",
       "type": "button"
     }
   },
@@ -57,17 +59,17 @@
       "anchors": [
         {
           "anchor": "Github",
-          "href": "https://github.com/acme-sh",
+          "href": "https://github.com/untrace-dev/untrace",
           "icon": "github"
         },
         {
           "anchor": "Changelog",
-          "href": "https://github.com/acme-sh/acme/releases",
+          "href": "https://github.com/untrace-dev/untrace/releases",
           "icon": "newspaper"
         },
         {
           "anchor": "Community",
-          "href": "https://discord.gg/qRZzTCK6MZ",
+          "href": "https://discord.gg/untrace",
           "icon": "discord"
         }
       ]
@@ -80,24 +82,37 @@
             "pages": [
               "introduction",
               "quickstart",
-              "configuration",
               "providers"
             ]
           },
           {
             "group": "Core Features",
-            "pages": ["dashboard", "cli", "sdk"]
+            "pages": [
+              "dashboard",
+              "sdk"
+            ]
+          },
+          {
+            "group": "Advanced",
+            "pages": [
+              "routing",
+              "security",
+              "configuration"
+            ]
           },
           {
             "group": "Reference",
-            "pages": ["architecture", "security", "essentials/data-model"]
+            "pages": [
+              "architecture",
+              "essentials/data-model"
+            ]
           },
           {
             "group": "Development",
             "pages": ["contributing"]
           }
         ],
-        "tab": "Guides"
+        "tab": "Documentation"
       },
       {
         "groups": [
@@ -106,12 +121,18 @@
             "pages": ["api-reference/introduction"]
           },
           {
-            "group": "Endpoint Examples",
+            "group": "Trace Management",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api-reference/endpoint/send-trace",
+              "api-reference/endpoint/get-traces",
+              "api-reference/endpoint/get-trace"
+            ]
+          },
+          {
+            "group": "Configuration",
+            "pages": [
+              "api-reference/endpoint/routing-rules",
+              "api-reference/endpoint/integrations"
             ]
           }
         ],

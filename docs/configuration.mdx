@@ -1,254 +1,512 @@
 ---
 title: 'Configuration'
-description: 'Configure Acme for your development environment'
+description: 'Configure Untrace for your LLM observability needs'
 ---
+
+## Configuration Overview
+
+Untrace can be configured through multiple methods:
+- Configuration files (`untrace.config.yaml`)
+- Environment variables
+- SDK initialization parameters
+- Dashboard UI
 
 ## Configuration File
 
-The `acme.config.yaml` file is the primary way to configure Acme. It supports the following options:
+The `untrace.config.yaml` file provides comprehensive configuration:
+
+```yaml
+# untrace.config.yaml
+version: "1.0"
+
+# Service identification
+service:
+  name: "my-llm-app"
+  version: "1.0.0"
+  environment: "production"
+
+# Untrace API configuration
+api:
+  key: "${UNTRACE_API_KEY}"  # Use environment variable
+  baseUrl: "https://api.untrace.dev"
+  timeout: 30000
+
+# Routing configuration
+routing:
+  defaultDestination: "langfuse"
+  rules:
+    - name: "Production GPT-4"
+      condition:
+        model: "gpt-4*"
+        environment: "production"
+      destination: "langsmith"
+      
+    - name: "Development"
+      condition:
+        environment: "development"
+      destination: "langfuse"
+
+# Integrations
+integrations:
+  langsmith:
+    apiKey: "${LANGSMITH_API_KEY}"
+    project: "main"
+    
+  langfuse:
+    publicKey: "${LANGFUSE_PUBLIC_KEY}"
+    secretKey: "${LANGFUSE_SECRET_KEY}"
+    
+  webhook:
+    url: "https://your-api.com/traces"
+    headers:
+      Authorization: "Bearer ${WEBHOOK_TOKEN}"
+
+# Sampling configuration
+sampling:
+  default: 0.1  # 10% default sampling
+  rules:
+    - condition: { error: true }
+      rate: 1.0  # 100% for errors
+    - condition: { cost: "> 0.50" }
+      rate: 0.5  # 50% for expensive requests
+
+# Privacy configuration
+privacy:
+  piiDetection:
+    enabled: true
+    redactionMethod: "hash"
+    patterns:
+      - email
+      - phone
+      - ssn
+      - creditCard
+```
+
+## SDK Configuration
+
+### JavaScript/TypeScript
 
 ```typescript
-interface WebhookConfig {
-  webhookId: string;  // Your unique webhook ID
-  debug?: boolean;    // Enable debug mode
-  telemetry?: boolean; // Enable telemetry
-  destination: Array<{
-    name: string;     // Name of the endpoint
-    url: string | URL | {  // Local URL to deliver requests to
-      protocol?: 'http' | 'https';
-      hostname: string;
-      port?: string;
-      pathname?: string;
-      search?: string;
-    };
-    ping?: boolean | string | URL; // Health check configuration
-  }>;
-  source?: Array<{
-    name: string;     // Name of the source
-  }>;
-  delivery: Array<{
-    source?: string;  // Source of the webhook (defaults to '*')
-    destination: string; // Name of the destination to deliver to
-  }>;
-}
+import { init } from '@untrace/sdk';
+
+const untrace = init({
+  // Required
+  apiKey: process.env.UNTRACE_API_KEY,
+  
+  // Service identification
+  serviceName: 'my-llm-app',
+  environment: process.env.NODE_ENV,
+  version: '1.0.0',
+  
+  // Routing
+  routing: {
+    defaultDestination: 'langfuse',
+    rules: [
+      {
+        name: 'High Cost Analysis',
+        condition: (trace) => trace.cost > 0.10,
+        destination: 'langsmith'
+      }
+    ]
+  },
+  
+  // Sampling
+  samplingRate: 0.1,  // 10%
+  
+  // Privacy
+  piiDetection: {
+    enabled: true,
+    redactionMethod: 'mask'
+  },
+  
+  // Performance
+  maxBatchSize: 100,
+  exportIntervalMs: 5000,
+  
+  // Debug
+  debug: process.env.NODE_ENV === 'development'
+});
 ```
 
-## Basic Configuration
+### Python
 
-Here's a basic configuration example:
+```python
+from untrace import Untrace
 
-```yaml
-webhookId: "wh_your_webhook_id"
-debug: false
-telemetry: true
-destination:
-  - name: "your-endpoint"
-    url: "http://localhost:3000/api/webhooks"
-source:
-  - name: "stripe"
-  - name: "github"
-delivery:
-  - source: "stripe"
-    destination: "your-endpoint"
-  - source: "github"
-    destination: "your-endpoint"
-```
-
-## Advanced Configuration
-
-### Multiple Destinations
-
-Configure multiple endpoints for different webhook types:
-
-```yaml
-webhookId: "wh_your_webhook_id"
-destination:
-  - name: "stripe-endpoint"
-    url: "http://localhost:3000/api/webhooks/stripe"
-  - name: "github-endpoint"
-    url: "http://localhost:3000/api/webhooks/github"
-  - name: "clerk-endpoint"
-    url: "http://localhost:3000/api/webhooks/clerk"
-source:
-  - name: "stripe"
-  - name: "github"
-  - name: "clerk"
-delivery:
-  - source: "stripe"
-    destination: "stripe-endpoint"
-  - source: "github"
-    destination: "github-endpoint"
-  - source: "clerk"
-    destination: "clerk-endpoint"
-```
-
-### Health Checks
-
-Configure health checks for your endpoints:
-
-```yaml
-webhookId: "wh_your_webhook_id"
-destination:
-  - name: "your-endpoint"
-    url: "http://localhost:3000/api/webhooks"
-    ping: true  # Enable default health check
-  - name: "custom-endpoint"
-    url: "http://localhost:3001/api/webhooks"
-    ping: "http://localhost:3001/health"  # Custom health check URL
-```
-
-### URL Configuration
-
-Configure URLs with different formats:
-
-```yaml
-webhookId: "wh_your_webhook_id"
-destination:
-  - name: "simple-url"
-    url: "http://localhost:3000/api/webhooks"
-  - name: "detailed-url"
-    url:
-      protocol: "https"
-      hostname: "localhost"
-      port: "3000"
-      pathname: "/api/webhooks"
-      search: "?debug=true"
+untrace = Untrace(
+    # Required
+    api_key=os.getenv("UNTRACE_API_KEY"),
+    
+    # Service identification
+    service_name="my-llm-app",
+    environment=os.getenv("ENVIRONMENT", "production"),
+    version="1.0.0",
+    
+    # Routing
+    routing={
+        "default_destination": "langfuse",
+        "rules": [
+            {
+                "name": "High Cost Analysis",
+                "condition": lambda trace: trace.cost > 0.10,
+                "destination": "langsmith"
+            }
+        ]
+    },
+    
+    # Sampling
+    sampling_rate=0.1,  # 10%
+    
+    # Privacy
+    pii_detection={
+        "enabled": True,
+        "redaction_method": "mask"
+    }
+)
 ```
 
 ## Environment Variables
 
-All configuration options can be set via environment variables:
+All configuration can be set via environment variables:
 
 ```bash
-# Core settings
-WEBHOOK_ID=wh_your_webhook_id
-WEBHOOK_DEBUG=true
-WEBHOOK_TELEMETRY=true
+# Core configuration
+UNTRACE_API_KEY=utr_your_api_key
+UNTRACE_BASE_URL=https://api.untrace.dev
+UNTRACE_SERVICE_NAME=my-llm-app
+UNTRACE_ENVIRONMENT=production
+UNTRACE_VERSION=1.0.0
 
-# Destination settings
-WEBHOOK_DESTINATION_0_NAME=your-endpoint
-WEBHOOK_DESTINATION_0_URL=http://localhost:3000/api/webhooks
-WEBHOOK_DESTINATION_0_PING=true
+# Debug and logging
+UNTRACE_DEBUG=false
+UNTRACE_LOG_LEVEL=info
 
-# Source settings
-WEBHOOK_SOURCE_0_NAME=stripe
-WEBHOOK_SOURCE_1_NAME=github
+# Sampling
+UNTRACE_SAMPLING_RATE=0.1
+UNTRACE_SAMPLE_ERRORS=1.0
 
-# Delivery settings
-WEBHOOK_DELIVERY_0_SOURCE=stripe
-WEBHOOK_DELIVERY_0_DESTINATION=your-endpoint
+# Privacy
+UNTRACE_PII_DETECTION=true
+UNTRACE_PII_REDACTION_METHOD=hash
+
+# Performance
+UNTRACE_MAX_BATCH_SIZE=100
+UNTRACE_EXPORT_INTERVAL_MS=5000
+
+# Integration credentials
+LANGSMITH_API_KEY=ls_...
+LANGFUSE_PUBLIC_KEY=pk_...
+LANGFUSE_SECRET_KEY=sk_...
 ```
 
-## Team Configuration
+## Integration Configuration
 
-### Shared Configuration
-
-Teams can share a single webhook configuration:
+### LangSmith
 
 ```yaml
-webhookId: "wh_team_webhook_id"
-destination:
-  - name: "dev1"
-    url: "http://localhost:3000/api/webhooks"
-    ping: true
-  - name: "dev2"
-    url: "http://localhost:3001/api/webhooks"
-    ping: true
-source:
-  - name: "clerk"
-  - name: "stripe"
-delivery:
-  - source: "clerk"
-    destination: "dev1"
-  - source: "stripe"
-    destination: "dev2"
+integrations:
+  langsmith:
+    platform: "langsmith"
+    apiKey: "${LANGSMITH_API_KEY}"
+    project: "production"
+    dataset: "main"
+    config:
+      batchSize: 50
+      flushInterval: 10000
+      retryAttempts: 3
 ```
 
-### Individual Configuration
-
-Each developer can have their own configuration:
+### Langfuse
 
 ```yaml
-webhookId: "wh_your_webhook_id"
-clientId: "dev1"  # Unique client ID
-destination:
-  - name: "local"
-    url: "http://localhost:3000/api/webhooks"
-source:
-  - name: "stripe"
-delivery:
-  - source: "stripe"
-    destination: "local"
+integrations:
+  langfuse:
+    platform: "langfuse"
+    publicKey: "${LANGFUSE_PUBLIC_KEY}"
+    secretKey: "${LANGFUSE_SECRET_KEY}"
+    host: "https://cloud.langfuse.com"  # or self-hosted URL
+    config:
+      sessionTracking: true
+      userIdentification: true
+      publicLinkGeneration: false
 ```
 
-## Security Configuration
-
-### API Key Authentication
-
-Configure API key authentication for private webhooks:
+### Custom Webhook
 
 ```yaml
-webhookId: "wh_your_webhook_id"
-apiKey: "your_api_key"  # Required for private webhooks
-destination:
-  - name: "secure-endpoint"
-    url: "http://localhost:3000/api/webhooks"
+integrations:
+  custom:
+    platform: "webhook"
+    url: "${WEBHOOK_URL}"
+    headers:
+      Authorization: "Bearer ${WEBHOOK_TOKEN}"
+      X-Custom-Header: "value"
+    config:
+      timeout: 30000
+      retryAttempts: 3
+      retryDelay: 1000
+      payloadFormat: "opentelemetry"  # or "custom"
 ```
 
-### Method Restrictions
+## Advanced Configuration
 
-Restrict allowed HTTP methods:
+### Multi-Environment Setup
 
 ```yaml
-webhookId: "wh_your_webhook_id"
-methods: ["POST", "PUT"]  # Only allow POST and PUT requests
-destination:
-  - name: "restricted-endpoint"
-    url: "http://localhost:3000/api/webhooks"
+# untrace.config.yaml with environment overrides
+defaults:
+  sampling: 0.1
+  piiDetection: true
+
+environments:
+  development:
+    routing:
+      defaultDestination: "langfuse"
+    sampling: 1.0  # 100% in dev
+    debug: true
+    
+  staging:
+    routing:
+      defaultDestination: "langfuse"
+    sampling: 0.5  # 50% in staging
+    
+  production:
+    routing:
+      defaultDestination: "langsmith"
+    sampling: 0.1  # 10% in production
+    piiDetection:
+      enabled: true
+      aggressive: true
 ```
 
-### Source Restrictions
-
-Restrict allowed webhook sources:
+### Provider-Specific Settings
 
 ```yaml
-webhookId: "wh_your_webhook_id"
-source:
-  - name: "stripe"
-    allowed: true
-  - name: "github"
-    allowed: false
+providers:
+  openai:
+    captureStreaming: true
+    captureTools: true
+    captureImages: false  # Don't capture image inputs
+    
+  anthropic:
+    captureSystemPrompts: true
+    maxPromptLength: 10000  # Truncate long prompts
+    
+  langchain:
+    captureIntermediateSteps: true
+    captureMemory: true
+    captureTools: true
 ```
+
+### Performance Tuning
+
+```yaml
+performance:
+  # Batching
+  batching:
+    enabled: true
+    maxBatchSize: 500
+    maxWaitTime: 10000  # 10 seconds
+    
+  # Compression
+  compression:
+    enabled: true
+    algorithm: "gzip"
+    level: 6
+    
+  # Connection pooling
+  connections:
+    maxConcurrent: 10
+    keepAlive: true
+    timeout: 30000
+    
+  # Caching
+  cache:
+    enabled: true
+    ttl: 3600  # 1 hour
+    maxSize: 1000  # entries
+```
+
+### Security Configuration
+
+```yaml
+security:
+  # API key rotation
+  apiKey:
+    primary: "${UNTRACE_API_KEY}"
+    secondary: "${UNTRACE_API_KEY_SECONDARY}"  # For rotation
+    
+  # Network security
+  network:
+    allowedIPs:
+      - "10.0.0.0/8"
+      - "172.16.0.0/12"
+    tlsVersion: "1.3"
+    certificatePinning: true
+    
+  # Data security
+  data:
+    encryptionAtRest: true
+    encryptionInTransit: true
+    fieldEncryption:
+      - "user.email"
+      - "metadata.apiKey"
+```
+
+## Configuration Precedence
+
+Configuration is applied in this order (later overrides earlier):
+
+1. Default values
+2. Configuration file (`untrace.config.yaml`)
+3. Environment variables
+4. SDK initialization parameters
+5. Runtime API calls
+
+Example:
+```typescript
+// 1. Default: samplingRate = 1.0
+
+// 2. Config file sets: samplingRate = 0.5
+
+// 3. Environment variable: UNTRACE_SAMPLING_RATE=0.3
+
+// 4. SDK initialization:
+const untrace = init({
+  samplingRate: 0.1  // This wins
+});
+
+// 5. Runtime override:
+untrace.setSamplingRate(0.2);  // This is now active
+```
+
+## Validation
+
+Untrace validates configuration on startup:
+
+```typescript
+// Enable strict validation
+const untrace = init({
+  apiKey: 'your-key',
+  validateConfig: true,  // Throws on invalid config
+  configSchema: 'strict' // or 'permissive'
+});
+```
+
+Common validation errors:
+- Missing required fields (apiKey)
+- Invalid routing rules
+- Unreachable integration endpoints
+- Invalid sampling rates (must be 0.0-1.0)
 
 ## Best Practices
 
-1. **Use Meaningful Names**: Choose descriptive names for your endpoints
-2. **Enable Health Checks**: Configure health checks for all endpoints
-3. **Use Environment Variables**: Store sensitive information in environment variables
-4. **Version Control**: Keep your configuration in version control
-5. **Documentation**: Document your configuration for team members
+1. **Use Environment Variables for Secrets**
+   ```yaml
+   # Good
+   apiKey: "${UNTRACE_API_KEY}"
+   
+   # Bad
+   apiKey: "utr_abc123..."  # Never commit!
+   ```
+
+2. **Separate Configs by Environment**
+   ```
+   config/
+     untrace.config.yaml      # Base config
+     untrace.dev.yaml        # Development overrides
+     untrace.prod.yaml       # Production overrides
+   ```
+
+3. **Version Your Configuration**
+   ```yaml
+   version: "1.0"  # Always include version
+   ```
+
+4. **Document Custom Settings**
+   ```yaml
+   # Route high-value enterprise customers to premium monitoring
+   # Contact: platform-team@company.com
+   routing:
+     rules:
+       - name: "Enterprise Tier"
+         condition:
+           tags.tier: "enterprise"
+         destination: "premium-monitoring"
+   ```
+
+5. **Monitor Configuration Changes**
+   ```typescript
+   untrace.on('configChanged', (changes) => {
+     logger.info('Configuration updated', changes);
+   });
+   ```
 
 ## Troubleshooting
 
-### Common Issues
+### Configuration Not Loading
 
-1. **Configuration Loading**
-   - Check file permissions
-   - Verify YAML syntax
-   - Ensure required fields are present
+```bash
+# Check configuration path
+export UNTRACE_CONFIG_PATH=/path/to/untrace.config.yaml
 
-2. **URL Configuration**
-   - Verify URL format
-   - Check port availability
-   - Test endpoint accessibility
+# Enable debug mode
+export UNTRACE_DEBUG=true
 
-3. **Health Checks**
-   - Verify health check endpoint
-   - Check response format
-   - Monitor health check logs
+# Validate configuration
+npx @untrace/cli validate-config
+```
 
-## Support
+### Integration Connection Issues
 
-- [Documentation](https://docs.acme.sh)
-- [GitHub Issues](https://github.com/acme-sh/acme/issues)
-- [Discord Community](https://discord.gg/acme)
+```typescript
+// Test integration connectivity
+const status = await untrace.testIntegration('langsmith');
+console.log('Integration status:', status);
+```
+
+### Performance Issues
+
+```yaml
+# Optimize for high volume
+performance:
+  batching:
+    maxBatchSize: 1000  # Increase batch size
+  compression:
+    enabled: true       # Enable compression
+  sampling:
+    default: 0.01      # Sample 1% if volume is high
+```
+
+## Next Steps
+
+<CardGroup>
+  <Card
+    title="Routing Rules"
+    icon="route"
+    href="/routing"
+  >
+    Configure intelligent trace routing
+  </Card>
+  <Card
+    title="SDK Reference"
+    icon="code"
+    href="/sdk"
+  >
+    SDK configuration options
+  </Card>
+  <Card
+    title="Security"
+    icon="shield"
+    href="/security"
+  >
+    Security configuration guide
+  </Card>
+  <Card
+    title="Dashboard"
+    icon="gauge"
+    href="/dashboard"
+  >
+    Configure via web interface
+  </Card>
+</CardGroup>
