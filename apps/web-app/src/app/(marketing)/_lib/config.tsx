@@ -169,7 +169,7 @@ export const siteConfig = {
   ctaSection: {
     backgroundImage: '/agent-cta-background.png',
     button: {
-      href: '/signup?utm_source=marketing-site&utm_medium=cta-button',
+      href: '/app/?utm_source=marketing-site&utm_medium=cta-button',
       text: 'Start Your Free Trial',
     },
     id: 'cta',
@@ -352,7 +352,7 @@ export const siteConfig = {
     ),
     cta: {
       primary: {
-        href: '/signup?utm_source=marketing-site&utm_medium=hero-cta',
+        href: '/app?utm_source=marketing-site&utm_medium=hero-cta',
         text: 'Start Free Trial',
       },
       secondary: {
