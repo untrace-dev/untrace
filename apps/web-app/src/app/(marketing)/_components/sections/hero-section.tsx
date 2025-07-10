@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react';
 import Link from 'next/link';
-import { HeroTerminalSection } from '~/app/(marketing)/_components/sections/hero-terminal-section';
+import { HeroCodeSection } from '~/app/(marketing)/_components/sections/hero-code-section';
 import { siteConfig } from '~/app/(marketing)/_lib/config';
 
 const fadeInUpVariants = {
@@ -97,7 +97,7 @@ export function HeroSection() {
         initial="hidden"
         variants={terminalVariants}
       >
-        <HeroTerminalSection />
+        <HeroCodeSection />
       </motion.div>
     </section>
   );
