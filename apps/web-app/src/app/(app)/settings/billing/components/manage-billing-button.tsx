@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@acme/ui/button';
+import { Button } from '@untrace/ui/button';
 import { useAction } from 'next-safe-action/hooks';
 import { useState } from 'react';
 import { getStripePortalLink } from '../actions';

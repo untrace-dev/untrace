@@ -1,4 +1,4 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@acme/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@untrace/ui/card';
 
 export default function CliTokenSuccessPage() {
   return (

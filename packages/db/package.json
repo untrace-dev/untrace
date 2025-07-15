@@ -1,12 +1,12 @@
 {
   "dependencies": {
-    "@acme/id": "workspace:*",
-    "@acme/logger": "workspace:*",
-    "@acme/zustand": "workspace:*",
     "@clerk/nextjs": "6.24.0",
     "@supabase/ssr": "0.6.1",
     "@supabase/supabase-js": "2.50.3",
     "@t3-oss/env-core": "0.13.8",
+    "@untrace/id": "workspace:*",
+    "@untrace/logger": "workspace:*",
+    "@untrace/zustand": "workspace:*",
     "@vercel/postgres": "0.10.0",
     "date-fns": "4.1.0",
     "drizzle-orm": "0.44.2",
@@ -21,13 +21,13 @@
     "zustand": "5.0.6"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
     "@t3-oss/env-core": "0.13.8",
     "@t3-oss/env-nextjs": "0.13.8",
     "@types/lodash-es": "4.17.12",
     "@types/pg": "8.15.4",
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.6",
+    "@untrace/tsconfig": "workspace:*",
     "chokidar": "4.0.3",
     "drizzle-kit": "0.31.4",
     "supabase": "2.30.4",
@@ -74,7 +74,7 @@
     }
   },
   "license": "MIT",
-  "name": "@acme/db",
+  "name": "@untrace/db",
   "private": true,
   "scripts": {
     "build.skip": "bun gen-supabase-types",

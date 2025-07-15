@@ -1,17 +1,17 @@
 'use client';
-import { Icons } from '@acme/ui/custom/icons';
+import { Icons } from '@untrace/ui/custom/icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@acme/ui/dropdown-menu';
+} from '@untrace/ui/dropdown-menu';
 import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from '@acme/ui/sidebar';
+} from '@untrace/ui/sidebar';
 import { ChevronDown } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';

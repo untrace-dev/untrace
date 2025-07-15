@@ -15,9 +15,9 @@ Untrace automatically captures traces from all major LLM providers. No special c
       <h4 className="text-lg font-semibold">OpenAI</h4>
       <Badge variant="success">Fully Supported</Badge>
     </div>
-    
+
     **Supported Models**: GPT-4, GPT-3.5, Embeddings, DALL-E, Whisper
-    
+
     **Integration**:
     ```python
     # Option 1: Proxy
@@ -25,13 +25,13 @@ Untrace automatically captures traces from all major LLM providers. No special c
         base_url="https://api.untrace.dev/v1/proxy",
         default_headers={"X-Untrace-Key": "your-key"}
     )
-    
+
     # Option 2: SDK auto-instrumentation
     from untrace import init
     init(api_key="your-key")
     import openai  # Automatically instrumented
     ```
-    
+
     **Captured Data**:
     - Model name and parameters
     - Token usage (prompt, completion, total)
@@ -49,19 +49,19 @@ Untrace automatically captures traces from all major LLM providers. No special c
       <h4 className="text-lg font-semibold">Anthropic</h4>
       <Badge variant="success">Fully Supported</Badge>
     </div>
-    
+
     **Supported Models**: Claude 3 (Opus, Sonnet, Haiku), Claude 2
-    
+
     **Integration**:
     ```python
     # SDK auto-instrumentation
     from untrace import init
     init(api_key="your-key")
-    
+
     from anthropic import Anthropic
     client = Anthropic()  # Automatically instrumented
     ```
-    
+
     **Captured Data**:
     - Model version and parameters
     - Token usage and costs
@@ -79,18 +79,18 @@ Untrace automatically captures traces from all major LLM providers. No special c
       <h4 className="text-lg font-semibold">Google AI</h4>
       <Badge variant="success">Fully Supported</Badge>
     </div>
-    
+
     **Supported Models**: Gemini Pro, Gemini Ultra, PaLM
-    
+
     **Integration**:
     ```python
     from untrace import init
     init(api_key="your-key")
-    
+
     import google.generativeai as genai
     # Automatically instrumented
     ```
-    
+
     **Captured Data**:
     - Model configurations
     - Safety settings
@@ -135,17 +135,17 @@ Untrace automatically captures traces from all major LLM providers. No special c
 <Card>
   <CardContent>
     **Auto-instrumentation** for all LangChain components:
-    
+
     ```python
     from untrace import init
     init(api_key="your-key")
-    
+
     # All automatically traced
     from langchain.chat_models import ChatOpenAI
     from langchain.chains import LLMChain
     from langchain.agents import initialize_agent
     ```
-    
+
     **Captured**:
     - Chain execution flow
     - Agent decisions and tool usage
@@ -160,15 +160,15 @@ Untrace automatically captures traces from all major LLM providers. No special c
 <Card>
   <CardContent>
     **Full support** for LlamaIndex workflows:
-    
+
     ```python
     from untrace import init
     init(api_key="your-key")
-    
+
     from llama_index import VectorStoreIndex
     # RAG pipeline automatically traced
     ```
-    
+
     **Captured**:
     - Index operations
     - Query transformations
@@ -183,11 +183,11 @@ Untrace automatically captures traces from all major LLM providers. No special c
 <Card>
   <CardContent>
     **Edge-ready** instrumentation:
-    
+
     ```typescript
     import { init } from '@untrace/sdk';
     init({ apiKey: 'your-key' });
-    
+
     // Automatically traced
     import { openai } from '@ai-sdk/openai';
     ```
@@ -206,7 +206,7 @@ Configure where Untrace sends your traces:
       <h4 className="text-lg font-semibold">LangSmith</h4>
       <Badge>Official Integration</Badge>
     </div>
-    
+
     **Setup**:
     ```json
     {
@@ -218,7 +218,7 @@ Configure where Untrace sends your traces:
       }
     }
     ```
-    
+
     **Features**:
     - Full trace visualization
     - Dataset management
@@ -236,7 +236,7 @@ Configure where Untrace sends your traces:
       <h4 className="text-lg font-semibold">Langfuse</h4>
       <Badge>Official Integration</Badge>
     </div>
-    
+
     **Setup**:
     ```json
     {
@@ -248,7 +248,7 @@ Configure where Untrace sends your traces:
       }
     }
     ```
-    
+
     **Features**:
     - Open source option
     - Session tracking
@@ -266,7 +266,7 @@ Configure where Untrace sends your traces:
       <h4 className="text-lg font-semibold">Keywords.ai</h4>
       <Badge>Official Integration</Badge>
     </div>
-    
+
     **Setup**:
     ```json
     {
@@ -277,7 +277,7 @@ Configure where Untrace sends your traces:
       }
     }
     ```
-    
+
     **Features**:
     - LLM analytics
     - Cost optimization
@@ -343,19 +343,19 @@ interface TracePayload {
     model: string;
     provider: string;
     operation: 'chat' | 'completion' | 'embedding';
-    
+
     input: {
       messages?: Message[];
       prompt?: string;
       parameters: Record<string, any>;
     };
-    
+
     output: {
       content?: string;
       choices?: Choice[];
       embedding?: number[];
     };
-    
+
     metrics: {
       latencyMs: number;
       promptTokens: number;
@@ -368,7 +368,7 @@ interface TracePayload {
         currency: string;
       };
     };
-    
+
     metadata?: Record<string, any>;
     error?: {
       type: string;
@@ -393,14 +393,14 @@ routing:
       condition:
         environment: "development"
       destination: "langfuse"
-    
+
     # Production GPT-4 to LangSmith
     - name: "Prod GPT-4"
       condition:
         environment: "production"
         model: "gpt-4*"
       destination: "langsmith"
-    
+
     # Errors to custom webhook
     - name: "Error Handler"
       condition:
@@ -464,6 +464,6 @@ const client = untrace.instrument('openai', openaiClient);
 
 ### Need Help?
 
-- 📚 [Full Documentation](https://docs.untrace.dev)
+- 📚 [Full Documentation](https://docs.untrace.com)
 - 💬 [Discord Community](https://discord.gg/untrace)
 - 📧 [Support Email](mailto:support@untrace.dev)

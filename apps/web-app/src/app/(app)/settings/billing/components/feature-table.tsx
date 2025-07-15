@@ -7,7 +7,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@acme/ui/table';
+} from '@untrace/ui/table';
 
 export function FeatureTable() {
   return (

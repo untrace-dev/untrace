@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@acme/ui/lib/utils';
+import { cn } from '@untrace/ui/lib/utils';
 import type { MotionProps } from 'motion/react';
 import { motion } from 'motion/react';
 import type React from 'react';

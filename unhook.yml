@@ -1,5 +1,5 @@
-# Acme Webhook Configuration
-# For more information, visit: https://docs.acme.sh/configuration
+# Untrace Webhook Configuration
+# For more information, visit: https://docs.untrace.sh/configuration
 #
 # Schema:
 #   webhookId: string                    # Unique identifier for your webhook
@@ -18,7 +18,7 @@
 #   pathname?: string                    # URL pathname
 #   search?: string                      # URL search params
 
-webhookId: wh_r3hr3iaz4dtxbbmk4s6rdjk6
+webhookId: wh_internal
 delivery:
   - source: clerk
     destination: localhost

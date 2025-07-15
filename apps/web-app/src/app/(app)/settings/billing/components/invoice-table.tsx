@@ -1,8 +1,8 @@
 'use client';
 
-import { Button } from '@acme/ui/button';
-import { Icons } from '@acme/ui/custom/icons';
-import { P } from '@acme/ui/custom/typography';
+import { Button } from '@untrace/ui/button';
+import { Icons } from '@untrace/ui/custom/icons';
+import { P } from '@untrace/ui/custom/typography';
 import {
   Table,
   TableBody,
@@ -10,7 +10,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@acme/ui/table';
+} from '@untrace/ui/table';
 import type Stripe from 'stripe';
 
 interface InvoiceTableProps {

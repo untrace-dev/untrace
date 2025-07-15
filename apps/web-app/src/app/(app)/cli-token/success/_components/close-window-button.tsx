@@ -1,5 +1,5 @@
 'use client';
-import { Button } from '@acme/ui/components/button';
+import { Button } from '@untrace/ui/components/button';
 
 export function CloseWindowButton() {
   return (

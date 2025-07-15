@@ -1,7 +1,7 @@
 'use client';
 
-import { Icons } from '@acme/ui/custom/icons';
-import { cn } from '@acme/ui/lib/utils';
+import { Icons } from '@untrace/ui/custom/icons';
+import { cn } from '@untrace/ui/lib/utils';
 import {
   Sidebar,
   SidebarContent,
@@ -15,7 +15,7 @@ import {
   SidebarMenuItem,
   SidebarMenuSkeleton,
   SidebarTrigger,
-} from '@acme/ui/sidebar';
+} from '@untrace/ui/sidebar';
 import {
   BookOpen,
   Code,
@@ -131,7 +131,7 @@ export function AppSidebar({
             <SidebarMenuButton asChild>
               <a
                 className="flex items-center justify-between"
-                href="https://docs.acme.com"
+                href="https://docs.untrace.com"
                 rel="noreferrer"
                 target="_blank"
               >
@@ -147,7 +147,7 @@ export function AppSidebar({
             <SidebarMenuButton asChild>
               <a
                 className="flex items-center justify-between"
-                href="https://docs.acme.com/ref/overview"
+                href="https://docs.untrace.com/ref/overview"
                 rel="noreferrer"
                 target="_blank"
               >
@@ -179,7 +179,7 @@ export function AppSidebar({
             <SidebarMenuButton asChild>
               <a
                 className="flex items-center justify-between"
-                href="https://github.com/acme-ai/acme/blob/canary/CHANGELOG.md"
+                href="https://github.com/untrace-ai/untrace/blob/canary/CHANGELOG.md"
                 rel="noreferrer"
                 target="_blank"
               >

@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@acme/ui/button';
-import { H2, P } from '@acme/ui/custom/typography';
+import { Button } from '@untrace/ui/button';
+import { H2, P } from '@untrace/ui/custom/typography';
 import { useEffect } from 'react';
 
 export default function GlobalError({

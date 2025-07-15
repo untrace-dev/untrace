@@ -1,10 +1,10 @@
 'use client';
 
-import { Button } from '@acme/ui/components/button';
-import { GitHubStarsButtonWrapper } from '@acme/ui/custom/github-stars-button/button-wrapper';
-import { ThemeToggle } from '@acme/ui/custom/theme';
-import { cn } from '@acme/ui/lib/utils';
 import { SignedIn, SignedOut } from '@clerk/nextjs';
+import { Button } from '@untrace/ui/components/button';
+import { GitHubStarsButtonWrapper } from '@untrace/ui/custom/github-stars-button/button-wrapper';
+import { ThemeToggle } from '@untrace/ui/custom/theme';
+import { cn } from '@untrace/ui/lib/utils';
 import { Menu, X } from 'lucide-react';
 import { AnimatePresence, motion, useScroll } from 'motion/react';
 import Link from 'next/link';
@@ -119,7 +119,7 @@ export function Navbar({ navs }: { navs?: NavItem[] }) {
           <div className="flex h-[56px] items-center justify-between pl-1 md:pl-2 pr-4">
             <Link className="flex items-center gap-1" href="/">
               <Icons.logo className="size-12" />
-              <p className="text-lg font-semibold text-primary">Acme</p>
+              <p className="text-lg font-semibold text-primary">Untrace</p>
             </Link>
 
             <NavMenu navs={navs} />
@@ -157,7 +157,7 @@ export function Navbar({ navs }: { navs?: NavItem[] }) {
               </div>
               <GitHubStarsButtonWrapper
                 className="rounded-full"
-                repo="acme-sh/acme"
+                repo="untrace-sh/untrace"
               />
               <ThemeToggle className="rounded-full" mode="toggle" />
               <button
@@ -202,7 +202,9 @@ export function Navbar({ navs }: { navs?: NavItem[] }) {
                 <div className="flex items-center justify-between">
                   <Link className="flex items-center gap-3" href="/">
                     <Icons.logo className="size-7 md:size-10" />
-                    <p className="text-lg font-semibold text-primary">Acme</p>
+                    <p className="text-lg font-semibold text-primary">
+                      Untrace
+                    </p>
                   </Link>
                   <button
                     className="border border-border rounded-md p-1 cursor-pointer"

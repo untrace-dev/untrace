@@ -1,8 +1,8 @@
 'use client';
 
-import { Icons } from '@acme/ui/custom/icons';
-import { cn } from '@acme/ui/lib/utils';
-import { AnimatedBeam } from '@acme/ui/magicui/animated-beam';
+import { Icons } from '@untrace/ui/custom/icons';
+import { cn } from '@untrace/ui/lib/utils';
+import { AnimatedBeam } from '@untrace/ui/magicui/animated-beam';
 import type React from 'react';
 import { forwardRef, useRef } from 'react';
 import { Icons as MarketingIcons } from './icons';

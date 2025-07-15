@@ -1,4 +1,4 @@
-import { cn } from '@acme/ui/lib/utils';
+import { cn } from '@untrace/ui/lib/utils';
 import type { CSSProperties, FC, ReactNode } from 'react';
 
 interface AnimatedShinyTextProps {

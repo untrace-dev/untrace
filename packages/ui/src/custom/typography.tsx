@@ -1,4 +1,4 @@
-import { cn, twx } from '@acme/ui/lib/utils';
+import { cn, twx } from '@untrace/ui/lib/utils';
 import type { VariantProps } from 'class-variance-authority';
 import { cva } from 'class-variance-authority';
 import type { TwcComponentProps } from 'react-twc';

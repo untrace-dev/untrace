@@ -33,7 +33,7 @@
     }
   },
   "license": "MIT",
-  "name": "@acme/logger",
+  "name": "@untrace/logger",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules dist",

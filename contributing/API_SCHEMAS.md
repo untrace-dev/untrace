@@ -376,7 +376,7 @@ client = OpenAI(
 
 ### TypeScript SDK
 ```typescript
-import { Untrace } from '@acme/sdk';
+import { Untrace } from '@untrace/sdk';
 
 const tracer = new Untrace({
   apiKey: 'tr_live_...',
@@ -395,7 +395,7 @@ await tracer.trace({
 });
 
 // Automatic OpenAI wrapper
-import { OpenAI } from '@acme/openai';
+import { OpenAI } from '@untrace/openai';
 
 const openai = new OpenAI({
   apiKey: 'sk-...',

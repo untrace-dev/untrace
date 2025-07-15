@@ -1,7 +1,7 @@
 'use client';
 
-import { cn } from '@acme/ui/lib/utils';
-import { colorWithOpacity, getRGBA } from '@acme/ui/magicui/utils';
+import { cn } from '@untrace/ui/lib/utils';
+import { colorWithOpacity, getRGBA } from '@untrace/ui/magicui/utils';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 

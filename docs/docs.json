@@ -18,8 +18,8 @@
   },
   "footer": {
     "socials": {
-      "github": "https://github.com/untrace-dev/untrace",
       "discord": "https://discord.gg/untrace",
+      "github": "https://github.com/untrace-dev/untrace",
       "twitter": "https://twitter.com/untrace_dev"
     }
   },
@@ -79,33 +79,19 @@
         "groups": [
           {
             "group": "Get Started",
-            "pages": [
-              "introduction",
-              "quickstart",
-              "providers"
-            ]
+            "pages": ["introduction", "quickstart", "providers"]
           },
           {
             "group": "Core Features",
-            "pages": [
-              "dashboard",
-              "sdk"
-            ]
+            "pages": ["dashboard", "sdk"]
           },
           {
             "group": "Advanced",
-            "pages": [
-              "routing",
-              "security",
-              "configuration"
-            ]
+            "pages": ["routing", "security", "configuration"]
           },
           {
             "group": "Reference",
-            "pages": [
-              "architecture",
-              "essentials/data-model"
-            ]
+            "pages": ["architecture", "essentials/data-model"]
           },
           {
             "group": "Development",

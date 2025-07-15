@@ -1,5 +1,5 @@
-import { type Button, buttonVariants } from '@acme/ui/components/button';
-import { cn } from '@acme/ui/lib/utils';
+import { type Button, buttonVariants } from '@untrace/ui/components/button';
+import { cn } from '@untrace/ui/lib/utils';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,

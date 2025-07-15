@@ -1,6 +1,6 @@
 'use server';
 
-import { getApi } from '@acme/api/server';
+import { getApi } from '@untrace/api/server';
 import { createSafeActionClient } from 'next-safe-action';
 import Stripe from 'stripe';
 import { z } from 'zod';

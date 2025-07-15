@@ -1,6 +1,6 @@
 'use client';
 
-import { Button } from '@acme/ui/button';
+import { Button } from '@untrace/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -8,15 +8,15 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@acme/ui/dialog';
-import { Input } from '@acme/ui/input';
+} from '@untrace/ui/dialog';
+import { Input } from '@untrace/ui/input';
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@acme/ui/select';
+} from '@untrace/ui/select';
 import { useState } from 'react';
 import type { Role } from '../types';
 

@@ -1,4 +1,4 @@
-import { SidebarInset, SidebarProvider } from '@acme/ui/sidebar';
+import { SidebarInset, SidebarProvider } from '@untrace/ui/sidebar';
 import { cookies } from 'next/headers';
 import { AppSidebar } from '~/app/(app)/_components/app-sidebar';
 

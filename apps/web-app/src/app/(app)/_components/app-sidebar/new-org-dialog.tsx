@@ -1,10 +1,11 @@
 'use client';
 
-import { Button } from '@acme/ui/button';
-import { Checkbox } from '@acme/ui/checkbox';
-import { Label } from '@acme/ui/components/label';
-import { Icons } from '@acme/ui/custom/icons';
-import { P } from '@acme/ui/custom/typography';
+import { useUser } from '@clerk/nextjs';
+import { Button } from '@untrace/ui/button';
+import { Checkbox } from '@untrace/ui/checkbox';
+import { Label } from '@untrace/ui/components/label';
+import { Icons } from '@untrace/ui/custom/icons';
+import { P } from '@untrace/ui/custom/typography';
 import {
   Dialog,
   DialogClose,
@@ -12,9 +13,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@acme/ui/dialog';
-import { Input } from '@acme/ui/input';
-import { useUser } from '@clerk/nextjs';
+} from '@untrace/ui/dialog';
+import { Input } from '@untrace/ui/input';
 import { useRouter } from 'next/navigation';
 import { useAction } from 'next-safe-action/hooks';
 import { useState } from 'react';
@@ -109,7 +109,7 @@ export function NewOrgDialog({ open, onOpenChange }: NewOrgDialogProps) {
               autoFocus
               id="org-name"
               onChange={(e) => setName(e.target.value)}
-              placeholder="Acme Inc"
+              placeholder="Untrace Inc"
               required
               value={name}
             />

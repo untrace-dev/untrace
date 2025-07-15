@@ -1,4 +1,4 @@
-import { Separator } from '@acme/ui/separator';
+import { Separator } from '@untrace/ui/separator';
 import { MembersSection } from './_components/members-section';
 
 export default function Page() {

@@ -1,7 +1,7 @@
 'use client';
 
-import { Icons } from '@acme/ui/custom/icons';
-import { cn } from '@acme/ui/lib/utils';
+import { Icons } from '@untrace/ui/custom/icons';
+import { cn } from '@untrace/ui/lib/utils';
 
 export function GitHubStarsButtonClient({
   className,

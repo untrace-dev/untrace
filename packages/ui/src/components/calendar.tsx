@@ -1,7 +1,7 @@
 'use client';
 
-import { buttonVariants } from '@acme/ui/components/button';
-import { cn } from '@acme/ui/lib/utils';
+import { buttonVariants } from '@untrace/ui/components/button';
+import { cn } from '@untrace/ui/lib/utils';
 import {
   ChevronDownIcon,
   ChevronLeftIcon,

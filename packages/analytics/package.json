@@ -14,11 +14,11 @@
     "zod": "3.25.76"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
     "@types/aws-lambda": "8.10.150",
     "@types/chrome": "0.0.331",
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.6",
+    "@untrace/tsconfig": "workspace:*",
     "next": "15.3.5",
     "typescript": "5.8.3"
   },
@@ -28,7 +28,7 @@
     "./posthog/server": "./src/posthog/server.ts"
   },
   "license": "MIT",
-  "name": "@acme/analytics",
+  "name": "@untrace/analytics",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules dist",

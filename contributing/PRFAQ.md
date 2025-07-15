@@ -21,7 +21,7 @@ Untrace acts as intelligent middleware that:
 - **Reduces costs** through intelligent sampling and filtering
 - **Ensures reliability** with 99.95% uptime and zero data loss guarantees
 
-Early customer Acme Corp reduced their observability integration time from 3 weeks to 30 minutes while cutting monitoring costs by 60% through intelligent sampling. "Untrace gave us the freedom to experiment with different platforms without the integration tax," said Dana Chen, Engineering Manager at Acme Corp. "We can now route high-value traces to premium platforms and everything else to cost-effective alternatives."
+Early customer Untrace Corp reduced their observability integration time from 3 weeks to 30 minutes while cutting monitoring costs by 60% through intelligent sampling. "Untrace gave us the freedom to experiment with different platforms without the integration tax," said Dana Chen, Engineering Manager at Untrace Corp. "We can now route high-value traces to premium platforms and everything else to cost-effective alternatives."
 
 The platform launches with support for 10+ destinations including:
 - LangSmith

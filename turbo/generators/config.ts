@@ -15,9 +15,9 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         if (
           'name' in answers &&
           typeof answers.name === 'string' &&
-          answers.name.startsWith('@acme/')
+          answers.name.startsWith('@untrace/')
         ) {
-          answers.name = answers.name.replace('@acme/', '');
+          answers.name = answers.name.replace('@untrace/', '');
         }
         return 'Config sanitized';
       },
@@ -71,11 +71,11 @@ export default function generator(plop: PlopTypes.NodePlopAPI): void {
         return 'Package not scaffolded';
       },
     ],
-    description: 'Generate a new package for the Acme Monorepo',
+    description: 'Generate a new package for the Untrace Monorepo',
     prompts: [
       {
         message:
-          'What is the name of the package? (You can skip the `@acme/` prefix)',
+          'What is the name of the package? (You can skip the `@untrace/` prefix)',
         name: 'name',
         type: 'input',
       },

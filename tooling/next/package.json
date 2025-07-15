@@ -6,14 +6,14 @@
     "next": "15.3.5"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@untrace/tsconfig": "workspace:*",
     "typescript": "5.8.3"
   },
   "exports": {
     "./base": "./base.mjs"
   },
   "license": "MIT",
-  "name": "@acme/next-config",
+  "name": "@untrace/next-config",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules",

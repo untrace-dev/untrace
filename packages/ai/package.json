@@ -3,7 +3,7 @@
     "@boundaryml/baml": "0.201.0"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@untrace/tsconfig": "workspace:*",
     "typescript": "5.8.3"
   },
   "exports": {
@@ -17,7 +17,7 @@
     }
   },
   "license": "MIT",
-  "name": "@acme/ai",
+  "name": "@untrace/ai",
   "private": true,
   "scripts": {
     "build": "bun generate",

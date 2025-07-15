@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@acme/ui/lib/utils';
+import { cn } from '@untrace/ui/lib/utils';
 import { motion } from 'motion/react';
 import type { RefObject } from 'react';
 import { useEffect, useId, useState } from 'react';

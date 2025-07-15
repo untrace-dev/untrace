@@ -1,7 +1,7 @@
-import { db } from '@acme/db/client';
-import { AuthCodes, OrgMembers, Orgs, Users } from '@acme/db/schema';
 import { clerkClient } from '@clerk/nextjs/server';
 import type { TRPCRouterRecord } from '@trpc/server';
+import { db } from '@untrace/db/client';
+import { AuthCodes, OrgMembers, Orgs, Users } from '@untrace/db/schema';
 import { and, eq, gte, isNull } from 'drizzle-orm';
 import { z } from 'zod';
 import { protectedProcedure, publicProcedure } from '../trpc';

@@ -1,6 +1,6 @@
 ---
 title: 'Contributing'
-description: 'Contribute to Acme and run it locally'
+description: 'Contribute to Untrace and run it locally'
 ---
 
 <Info>
@@ -14,25 +14,25 @@ description: 'Contribute to Acme and run it locally'
 
 ### Clone the Repository
 
-First, clone the Acme repository and install dependencies:
+First, clone the Untrace repository and install dependencies:
 
 <CodeGroup>
 
 ```bash npm
-git clone https://github.com/acme-sh/acme.git
-cd acme
+git clone https://github.com/untrace-sh/untrace.git
+cd untrace
 npm install
 ```
 
 ```bash yarn
-git clone https://github.com/acme-sh/acme.git
-cd acme
+git clone https://github.com/untrace-sh/untrace.git
+cd untrace
 yarn install
 ```
 
 ```bash pnpm
-git clone https://github.com/acme-sh/acme.git
-cd acme
+git clone https://github.com/untrace-sh/untrace.git
+cd untrace
 pnpm install
 ```
 
@@ -54,7 +54,7 @@ This will start:
 ## Project Structure
 
 ```plaintext
-acme/
+untrace/
 ├── packages/
 │   ├── cli/          # Command line interface
 │   ├── core/         # Core webhook processing logic
@@ -107,7 +107,7 @@ npm run build
 To build a specific package:
 
 ```bash
-npm run build --workspace=@acme/cli
+npm run build --workspace=@untrace/cli
 ```
 
 ## Running Examples
@@ -203,7 +203,7 @@ We welcome contributions! Here's how you can help:
     icon="diagram-project"
     href="/architecture"
   >
-    Learn about Acme's internal architecture
+    Learn about Untrace's internal architecture
   </Card>
   <Card
     title="API Reference"

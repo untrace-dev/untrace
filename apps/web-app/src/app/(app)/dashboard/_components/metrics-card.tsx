@@ -1,4 +1,4 @@
-import { Card } from '@acme/ui/card';
+import { Card } from '@untrace/ui/card';
 import { ArrowUpRight } from 'lucide-react';
 import type React from 'react'; // Added import for React
 

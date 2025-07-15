@@ -1,7 +1,8 @@
 'use client';
 
-import { usePostHog } from '@acme/analytics/posthog/client';
-import { Button } from '@acme/ui/button';
+import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
+import { usePostHog } from '@untrace/analytics/posthog/client';
+import { Button } from '@untrace/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -9,11 +10,10 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from '@acme/ui/command';
-import { Icons } from '@acme/ui/custom/icons';
-import { cn } from '@acme/ui/lib/utils';
-import { Popover, PopoverContent, PopoverTrigger } from '@acme/ui/popover';
-import { useOrganization, useOrganizationList, useUser } from '@clerk/nextjs';
+} from '@untrace/ui/command';
+import { Icons } from '@untrace/ui/custom/icons';
+import { cn } from '@untrace/ui/lib/utils';
+import { Popover, PopoverContent, PopoverTrigger } from '@untrace/ui/popover';
 import { ChevronsUpDown, Plus } from 'lucide-react';
 import * as React from 'react';
 import { upsertOrg } from '../actions';

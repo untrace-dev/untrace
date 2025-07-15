@@ -1,6 +1,7 @@
 'use client';
 
-import { Icons } from '@acme/ui/custom/icons';
+import { SignOutButton, useUser } from '@clerk/nextjs';
+import { Icons } from '@untrace/ui/custom/icons';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,10 +11,9 @@ import {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
-} from '@acme/ui/dropdown-menu';
-import { SidebarMenuButton } from '@acme/ui/sidebar';
-import { ToggleGroup, ToggleGroupItem } from '@acme/ui/toggle-group';
-import { SignOutButton, useUser } from '@clerk/nextjs';
+} from '@untrace/ui/dropdown-menu';
+import { SidebarMenuButton } from '@untrace/ui/sidebar';
+import { ToggleGroup, ToggleGroupItem } from '@untrace/ui/toggle-group';
 
 import {
   ArrowLeftFromLine,

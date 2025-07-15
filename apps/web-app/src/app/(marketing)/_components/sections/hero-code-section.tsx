@@ -1,7 +1,7 @@
 'use client';
 
-import { CodeComparison } from '@acme/ui/magicui/code-comparison';
-import { ScriptCopyBtn } from '@acme/ui/magicui/script-copy-btn';
+import { CodeComparison } from '@untrace/ui/magicui/code-comparison';
+import { ScriptCopyBtn } from '@untrace/ui/magicui/script-copy-btn';
 import { motion } from 'motion/react';
 
 const beforeCode = `// Without Untrace - flying blind 🙈
@@ -11,6 +11,7 @@ const response = await openai.chat.completions.create({
 });
 
 // ❌ No visibility into:
+// - Only one LLM Observability tool
 // - Token usage & costs
 // - Response latency
 // - Error rates
@@ -56,16 +57,18 @@ export function HeroCodeSection() {
           </div>
           <div className="flex justify-center">
             <ScriptCopyBtn
+              className="max-w-md"
               codeLanguage="bash"
               commandMap={{
-                npm: 'npm install @untrace/sdk',
-                yarn: 'yarn add @untrace/sdk',
-                pnpm: 'pnpm add @untrace/sdk',
                 bun: 'bun add @untrace/sdk',
+                npm: 'npm install @untrace/sdk',
+                pip: 'pip install @untrace/sdk',
+                pnpm: 'pnpm add @untrace/sdk',
+                uv: 'uv add @untrace/sdk',
+                yarn: 'yarn add @untrace/sdk',
               }}
               darkTheme="github-dark"
               lightTheme="github-light"
-              className="max-w-md"
             />
           </div>
         </motion.div>
@@ -90,6 +93,7 @@ export function HeroCodeSection() {
             beforeCode={beforeCode}
             darkTheme="github-dark"
             filename="your-app.ts"
+            highlightColor="rgba(101, 117, 133, 0.16)"
             language="typescript"
             lightTheme="github-light"
           />
@@ -104,8 +108,8 @@ export function HeroCodeSection() {
         >
           <motion.div
             className="text-center space-y-3 p-6 rounded-lg bg-muted/30 border border-border"
+            transition={{ stiffness: 300, type: 'spring' }}
             whileHover={{ scale: 1.02 }}
-            transition={{ type: 'spring', stiffness: 300 }}
           >
             <div className="text-5xl font-bold bg-gradient-to-br from-secondary to-secondary/60 bg-clip-text text-transparent">
               0ms
@@ -117,8 +121,8 @@ export function HeroCodeSection() {
           </motion.div>
           <motion.div
             className="text-center space-y-3 p-6 rounded-lg bg-muted/30 border border-border"
+            transition={{ stiffness: 300, type: 'spring' }}
             whileHover={{ scale: 1.02 }}
-            transition={{ type: 'spring', stiffness: 300 }}
           >
             <div className="text-5xl font-bold bg-gradient-to-br from-secondary to-secondary/60 bg-clip-text text-transparent">
               30+
@@ -130,8 +134,8 @@ export function HeroCodeSection() {
           </motion.div>
           <motion.div
             className="text-center space-y-3 p-6 rounded-lg bg-muted/30 border border-border"
+            transition={{ stiffness: 300, type: 'spring' }}
             whileHover={{ scale: 1.02 }}
-            transition={{ type: 'spring', stiffness: 300 }}
           >
             <div className="text-5xl font-bold bg-gradient-to-br from-secondary to-secondary/60 bg-clip-text text-transparent">
               100%

@@ -1,5 +1,5 @@
-import { posthog } from '@acme/analytics/posthog/server';
 import type { WebhookEvent } from '@clerk/nextjs/server';
+import { posthog } from '@untrace/analytics/posthog/server';
 import { headers } from 'next/headers';
 import { Webhook } from 'svix';
 

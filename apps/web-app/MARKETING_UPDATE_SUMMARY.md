@@ -6,7 +6,7 @@ Updated the web app marketing pages and configuration to reflect Untrace's produ
 ## Changes Made
 
 ### 1. Site Configuration (`src/app/(marketing)/_lib/config.tsx`)
-- **Product Name**: Changed from "Acme" to "Untrace"
+- **Product Name**: Changed from "Untrace" to "Untrace"
 - **Tagline**: "The Segment for LLM traces"
 - **Hero Section**: Updated to emphasize LLM observability routing
 - **Keywords**: Updated to focus on LLM observability, trace routing, LangSmith, Langfuse
@@ -27,7 +27,7 @@ Updated the web app marketing pages and configuration to reflect Untrace's produ
 - Changed brand name to "Untrace"
 - Updated background grid text
 
-### 4. Blog Content (`content/introducing-acme-ai.mdx`)
+### 4. Blog Content (`content/introducing-untrace-ai.mdx`)
 - Renamed to introduce Untrace
 - Updated content to explain the LLM observability problem and solution
 - Added comparison table and getting started guide

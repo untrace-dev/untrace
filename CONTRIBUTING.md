@@ -1,6 +1,6 @@
-# Contributing to Acme
+# Contributing to Untrace
 
-First off, thank you for considering contributing to Acme! It's people like you that make Acme such a great tool.
+First off, thank you for considering contributing to Untrace! It's people like you that make Untrace such a great tool.
 
 ## Code of Conduct
 
@@ -11,7 +11,7 @@ By participating in this project, you are expected to uphold our Code of Conduct
 This is a monorepo using [Turborepo](https://turbo.build/) and bun workspaces. The project is organized into several main components:
 
 ```
-acme/
+untrace/
 ├── apps/                   # Application packages
 │   ├── cli/               # Command-line interface
 │   ├── web-app/           # Main web application
@@ -46,8 +46,8 @@ acme/
 
 2. Clone the repository:
    ```bash
-   git clone https://github.com/acme-sh/acme.git
-   cd acme
+   git clone https://github.com/untrace-sh/untrace.git
+   cd untrace
    ```
 
 3. Install dependencies:
@@ -103,7 +103,7 @@ Enhancement suggestions are tracked as GitHub issues. When creating an enhanceme
 
 * A clear and descriptive title
 * A detailed description of the proposed functionality
-* Explain why this enhancement would be useful to most Acme users
+* Explain why this enhancement would be useful to most Untrace users
 * List any additional context or screenshots
 
 ### Pull Requests
@@ -213,19 +213,19 @@ We use [OpenTelemetry](https://opentelemetry.io/) (OTel) as our standard observa
    ```typescript
    import { NodeSDK } from '@opentelemetry/sdk-node';
    import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
-   
+
    const sdk = new NodeSDK({
      instrumentations: [getNodeAutoInstrumentations()]
    });
-   
+
    sdk.start();
    ```
 
 3. **Add custom spans**:
    ```typescript
    import { trace } from '@opentelemetry/api';
-   
-   const tracer = trace.getTracer('acme-service');
+
+   const tracer = trace.getTracer('untrace-service');
    const span = tracer.startSpan('operation-name');
    // ... your code
    span.end();
@@ -248,7 +248,7 @@ For LLM-specific observability, we use [OpenLLMetry](https://github.com/traceloo
    ```bash
    # For Python components
    pip install traceloop-sdk
-   
+
    # For TypeScript/JavaScript components
    bun add @traceloop/node-server-sdk
    ```
@@ -256,9 +256,9 @@ For LLM-specific observability, we use [OpenLLMetry](https://github.com/traceloo
 2. **Initialize in Python services**:
    ```python
    from traceloop.sdk import Traceloop
-   
+
    Traceloop.init(
-       app_name="acme-llm-service",
+       app_name="untrace-llm-service",
        disable_batch=False,
        api_endpoint="http://localhost:4318"  # Your OTel collector endpoint
    )
@@ -267,9 +267,9 @@ For LLM-specific observability, we use [OpenLLMetry](https://github.com/traceloo
 3. **Initialize in TypeScript services**:
    ```typescript
    import * as traceloop from "@traceloop/node-server-sdk";
-   
+
    traceloop.initialize({
-     appName: "acme-llm-service",
+     appName: "untrace-llm-service",
      apiEndpoint: "http://localhost:4318"  // Your OTel collector endpoint
    });
    ```
@@ -306,7 +306,7 @@ When working with LLM applications, ensure you're tracking:
    ```python
    # Configure PII detection in OpenLLMetry
    Traceloop.init(
-       app_name="acme-service",
+       app_name="untrace-service",
        disable_batch=False,
        headers={"x-traceloop-pii-detection": "true"}
    )
@@ -323,7 +323,7 @@ When working with LLM applications, ensure you're tracking:
 4. **Debugging**: Use trace context for debugging LLM interactions:
    ```python
    from opentelemetry import trace
-   
+
    tracer = trace.get_tracer(__name__)
    with tracer.start_as_current_span("llm_operation") as span:
        span.set_attribute("prompt", prompt)
@@ -346,15 +346,15 @@ When working with LLM applications, ensure you're tracking:
 * [OpenLLMetry Documentation](https://docs.traceloop.com/openllmetry/introduction)
 * [OTel Collector Configuration](https://opentelemetry.io/docs/collector/configuration/)
 
-For a more detailed guide on implementing observability in the Acme project, see our [Observability Guide](contributing/OBSERVABILITY_GUIDE.md).
+For a more detailed guide on implementing observability in the Untrace project, see our [Observability Guide](contributing/OBSERVABILITY_GUIDE.md).
 
 ## Questions?
 
 Don't hesitate to ask questions by:
 * Opening an issue
-* Joining our [Discord community](https://discord.gg/acme)
-* Checking our [documentation](https://docs.acme.sh)
+* Joining our [Discord community](https://discord.gg/untrace)
+* Checking our [documentation](https://docs.untrace.sh)
 
 ## License
 
-By contributing to Acme, you agree that your contributions will be licensed under its MIT License.
+By contributing to Untrace, you agree that your contributions will be licensed under its MIT License.

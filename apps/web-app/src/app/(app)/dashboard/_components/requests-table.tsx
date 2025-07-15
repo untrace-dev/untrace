@@ -1,4 +1,4 @@
-import { Avatar } from '@acme/ui/avatar';
+import { Avatar } from '@untrace/ui/avatar';
 import {
   Table,
   TableBody,
@@ -6,7 +6,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@acme/ui/table';
+} from '@untrace/ui/table';
 import { MoreHorizontal } from 'lucide-react';
 import Image from 'next/image';
 

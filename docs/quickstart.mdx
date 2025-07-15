@@ -26,11 +26,11 @@ description: 'Start routing LLM traces to any observability platform in under 5 
   </Step>
   <Step title="Choose Integration Method">
     Select how you want to integrate Untrace:
-    
+
     **Option 1: OpenAI Proxy** (Easiest)
     ```python
     from openai import OpenAI
-    
+
     client = OpenAI(
         base_url="https://api.untrace.dev/v1/proxy",
         default_headers={
@@ -38,7 +38,7 @@ description: 'Start routing LLM traces to any observability platform in under 5 
         }
     )
     ```
-    
+
     **Option 2: SDK** (Most flexible)
     ```bash
     npm install @untrace/sdk
@@ -246,13 +246,13 @@ Configure how traces are routed:
   condition:
     model: "gpt-4*"
   destination: "langsmith"
-  
+
 # Route errors for debugging
 - name: "Errors to Langfuse"
   condition:
     status: "error"
   destination: "langfuse"
-  
+
 # Cost-based routing
 - name: "Expensive requests"
   condition:
@@ -301,13 +301,13 @@ init({
 const untrace = init({
   apiKey: process.env.UNTRACE_API_KEY,
   environment: process.env.NODE_ENV,
-  
+
   // Sample less in production
   samplingRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-  
+
   // Different routing per environment
-  routingRules: process.env.NODE_ENV === 'production' 
-    ? productionRules 
+  routingRules: process.env.NODE_ENV === 'production'
+    ? productionRules
     : developmentRules
 });
 ```
@@ -436,4 +436,4 @@ chain = ConversationChain(llm=llm)
 ### Need help?
 - 📧 Email: support@untrace.dev
 - 💬 Discord: [Join our community](https://discord.gg/untrace)
-- 📚 Docs: [Full documentation](https://docs.untrace.dev)
+- 📚 Docs: [Full documentation](https://docs.untrace.com)

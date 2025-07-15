@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@acme/ui/lib/utils';
+import { cn } from '@untrace/ui/lib/utils';
 import { GripVerticalIcon } from 'lucide-react';
 import type * as React from 'react';
 import * as ResizablePrimitive from 'react-resizable-panels';

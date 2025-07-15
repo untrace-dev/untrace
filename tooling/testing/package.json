@@ -1,10 +1,10 @@
 {
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
     "@happy-dom/global-registrator": "18.0.1",
     "@testing-library/dom": "10.4.0",
     "@testing-library/jest-dom": "6.6.3",
     "@testing-library/react": "16.3.0",
+    "@untrace/tsconfig": "workspace:*",
     "typescript": "5.8.3"
   },
   "exports": {
@@ -14,7 +14,7 @@
     }
   },
   "license": "MIT",
-  "name": "@acme/tooling-testing",
+  "name": "@untrace/tooling-testing",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules dist",

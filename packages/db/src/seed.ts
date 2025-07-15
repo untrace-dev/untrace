@@ -1,4 +1,4 @@
-import { createId } from '@acme/id';
+import { createId } from '@untrace/id';
 import { seed } from 'drizzle-seed';
 
 import { db } from './client';

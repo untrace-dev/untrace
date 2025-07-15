@@ -4,7 +4,7 @@
     "ulid": "3.0.1"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
+    "@untrace/tsconfig": "workspace:*",
     "typescript": "5.8.3"
   },
   "exports": {
@@ -14,7 +14,7 @@
     }
   },
   "license": "MIT",
-  "name": "@acme/id",
+  "name": "@untrace/id",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules dist",

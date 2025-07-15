@@ -13,15 +13,17 @@
   "files": {
     "ignoreUnknown": false,
     "includes": [
-      "!dist/**",
       "**",
+      "!dist/**",
       "!**/dist/**",
       "!node_modules/**",
       "!**/node_modules/**",
+      "!**/.next/**",
+      "!**/.react-email/**",
       "!**/baml_client/**",
-      "!biome.json",
-      "!**/debug-output/**",
-      "!**/*.min.*"
+      "!**/.turbo/**",
+      "!**/*.min.*",
+      "!bun.lock"
     ]
   },
   "formatter": {

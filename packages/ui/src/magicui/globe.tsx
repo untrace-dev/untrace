@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@acme/ui/lib/utils';
+import { cn } from '@untrace/ui/lib/utils';
 import createGlobe, { type COBEOptions } from 'cobe';
 import { useMotionValue, useSpring } from 'motion/react';
 import { useTheme } from 'next-themes';

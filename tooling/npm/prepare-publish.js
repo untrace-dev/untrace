@@ -43,34 +43,34 @@ try {
   process.exit(1);
 }
 
-// Get all @acme/* dependencies from both dependencies and devDependencies
-const acmeDeps = [
+// Get all @untrace/* dependencies from both dependencies and devDependencies
+const untraceDeps = [
   ...Object.keys(packageJson.dependencies || {}).filter(
-    (dep) => dep.startsWith('@acme/') && dep !== '@acme/ui',
+    (dep) => dep.startsWith('@untrace/') && dep !== '@untrace/ui',
   ),
   ...Object.keys(packageJson.devDependencies || {}).filter(
-    (dep) => dep.startsWith('@acme/') && dep !== '@acme/ui',
+    (dep) => dep.startsWith('@untrace/') && dep !== '@untrace/ui',
   ),
 ];
 
 // Remove workspace dependencies from both sections
-for (const dep of acmeDeps) {
+for (const dep of untraceDeps) {
   delete packageJson.dependencies?.[dep];
   delete packageJson.devDependencies?.[dep];
 }
 
-// Replace @acme/client workspace dependency with actual version
-if (packageJson.dependencies?.['@acme/ui'] === 'workspace:*') {
-  packageJson.dependencies['@acme/ui'] = uiPackageJson.version;
+// Replace @untrace/client workspace dependency with actual version
+if (packageJson.dependencies?.['@untrace/ui'] === 'workspace:*') {
+  packageJson.dependencies['@untrace/ui'] = uiPackageJson.version;
   console.log(
-    `✅ Updated @acme/ui dependency to version ${uiPackageJson.version}`,
+    `✅ Updated @untrace/ui dependency to version ${uiPackageJson.version}`,
   );
 }
 
-if (packageJson.devDependencies?.['@acme/ui'] === 'workspace:*') {
-  packageJson.devDependencies['@acme/ui'] = uiPackageJson.version;
+if (packageJson.devDependencies?.['@untrace/ui'] === 'workspace:*') {
+  packageJson.devDependencies['@untrace/ui'] = uiPackageJson.version;
   console.log(
-    `✅ Updated @acme/ui devDependency to version ${uiPackageJson.version}`,
+    `✅ Updated @untrace/ui devDependency to version ${uiPackageJson.version}`,
   );
 }
 
@@ -83,6 +83,6 @@ execSync('bun biome check --write', { stdio: 'inherit' });
 console.log('✅ Formatted package.json');
 
 console.log(
-  `✅ Removed ${acmeDeps.length} workspace dependencies from package.json:`,
-  acmeDeps.join(', '),
+  `✅ Removed ${untraceDeps.length} workspace dependencies from package.json:`,
+  untraceDeps.join(', '),
 );

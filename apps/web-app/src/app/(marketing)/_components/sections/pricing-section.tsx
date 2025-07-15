@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@acme/ui/lib/utils';
+import { cn } from '@untrace/ui/lib/utils';
 import { motion } from 'motion/react';
 import { useState } from 'react';
 import { SectionHeader } from '~/app/(marketing)/_components/section-header';

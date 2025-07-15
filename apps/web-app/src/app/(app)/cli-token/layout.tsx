@@ -10,14 +10,14 @@ export default async function Layout({
       <div className="flex w-full max-w-md flex-col items-center gap-8">
         <div className="flex items-center flex-col">
           <Image
-            alt="Acme Logo"
+            alt="Untrace Logo"
             className="h-32 w-auto"
             height={40}
             priority
             src="/logo.svg"
             width={120}
           />
-          <div className="text-2xl font-bold">Acme</div>
+          <div className="text-2xl font-bold">Untrace</div>
         </div>
         {children}
       </div>

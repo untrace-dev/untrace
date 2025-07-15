@@ -1,15 +1,15 @@
-import { AcmeLogger } from './logger';
+import { UntraceLogger } from './logger';
 
 // Create and export a default logger instance
-export const defaultLogger = new AcmeLogger({
-  defaultNamespace: 'acme',
+export const defaultLogger = new UntraceLogger({
+  defaultNamespace: 'untrace',
 });
 
 // Export a debug function that uses the default logger
 export const debug = (namespace: string) => defaultLogger.debug(namespace);
 
 // Export everything else
-export { AcmeLogger };
+export { UntraceLogger };
 export type { LoggerProps } from './logger';
 
 // Enable debug namespaces based on environment variable (similar to debug package)

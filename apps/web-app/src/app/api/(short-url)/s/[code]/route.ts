@@ -1,4 +1,4 @@
-import { db } from '@acme/db/client';
+import { db } from '@untrace/db/client';
 import { redirect } from 'next/navigation';
 
 export async function GET(

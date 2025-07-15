@@ -13,7 +13,7 @@
     "VERCEL_TOKEN"
   ],
   "tasks": {
-    "@acme/web-app#build": {
+    "@untrace/web-app#build": {
       "env": [
         "NEXT_PUBLIC_*",
         "CLERK_*",

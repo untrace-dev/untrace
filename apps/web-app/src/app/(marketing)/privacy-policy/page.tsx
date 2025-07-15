@@ -1,4 +1,4 @@
-import { SphereMask } from '@acme/ui/magicui/sphere-mask';
+import { SphereMask } from '@untrace/ui/magicui/sphere-mask';
 
 import { CTASection } from '../_components/sections/cta-section';
 import { FooterSection } from '../_components/sections/footer-section';

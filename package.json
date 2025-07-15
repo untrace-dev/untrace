@@ -1,11 +1,10 @@
 {
   "commitlint": {
     "extends": [
-      "@acme/commitlint-config"
+      "@untrace/commitlint-config"
     ]
   },
   "devDependencies": {
-    "@acme/commitlint-config": "workspace:*",
     "@biomejs/biome": "2.1.1",
     "@changesets/changelog-github": "0.5.1",
     "@changesets/cli": "2.29.5",
@@ -13,6 +12,7 @@
     "@testing-library/react": "16.3.0",
     "@turbo/gen": "2.5.4",
     "@types/bun": "1.2.18",
+    "@untrace/commitlint-config": "workspace:*",
     "bun": "1.2.18",
     "checkly": "6.0.1",
     "knip": "5.61.3",
@@ -25,7 +25,7 @@
   "engines": {
     "node": ">=20.12.0"
   },
-  "name": "@acme/root",
+  "name": "@untrace/root",
   "packageManager": "bun@1.2.18",
   "private": true,
   "scripts": {
@@ -33,20 +33,20 @@
     "bump-versions": "changeset version && bun install",
     "clean": "git clean -xdf node_modules",
     "clean:ws": "turbo run clean",
-    "db:gen-migration": "turbo -F @acme/db gen-migration",
-    "db:migrate": "turbo -F @acme/db migrate",
-    "db:push": "turbo -F @acme/db push",
-    "db:seed": "turbo -F @acme/db seed",
-    "db:studio": "turbo -F @acme/db studio",
+    "db:gen-migration": "turbo -F @untrace/db gen-migration",
+    "db:migrate": "turbo -F @untrace/db migrate",
+    "db:push": "turbo -F @untrace/db push",
+    "db:seed": "turbo -F @untrace/db seed",
+    "db:studio": "turbo -F @untrace/db studio",
     "dev": "turbo watch dev --concurrency 20",
-    "dev:next": "turbo watch dev -F @acme/web-app...",
+    "dev:next": "turbo watch dev -F @untrace/web-app...",
     "docs": "cd docs && mintlify dev",
     "format": "biome check",
     "format:ci": "biome ci",
     "format:fix": "biome check --write",
     "knip": "knip --include files,dependencies",
     "lint:ws": "bunx sherif@latest",
-    "postinstall": "bun lint:ws",
+    "postinstall.skip": "bun lint:ws",
     "publish": "turbo run build --filter=./apps/cli... && changeset publish",
     "test": "bun test",
     "typecheck": "turbo run typecheck",

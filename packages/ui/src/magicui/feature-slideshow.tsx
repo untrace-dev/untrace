@@ -1,7 +1,7 @@
 'use client';
 
-import { cn } from '@acme/ui/lib/utils';
 import * as Accordion from '@radix-ui/react-accordion';
+import { cn } from '@untrace/ui/lib/utils';
 import { motion, useInView } from 'motion/react';
 import type React from 'react';
 import { forwardRef, type ReactNode, useEffect, useRef, useState } from 'react';

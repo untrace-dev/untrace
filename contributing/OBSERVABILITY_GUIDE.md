@@ -1,8 +1,8 @@
-# Observability Guide for Acme
+# Observability Guide for Untrace
 
 ## Overview
 
-This guide provides comprehensive information on implementing observability in the Acme project using OpenTelemetry (OTel) and OpenLLMetry. As our platform deals with LLM observability routing, it's crucial that we practice what we preach by implementing robust observability in our own services.
+This guide provides comprehensive information on implementing observability in the Untrace project using OpenTelemetry (OTel) and OpenLLMetry. As our platform deals with LLM observability routing, it's crucial that we practice what we preach by implementing robust observability in our own services.
 
 ## Table of Contents
 
@@ -53,11 +53,11 @@ processors:
   batch:
     timeout: 1s
     send_batch_size: 1024
-  
+
   memory_limiter:
     check_interval: 1s
     limit_mib: 512
-  
+
   # Filter sensitive data
   attributes:
     actions:
@@ -74,13 +74,13 @@ exporters:
   # Development
   logging:
     loglevel: debug
-  
+
   # Production
   otlp/jaeger:
     endpoint: jaeger:4317
     tls:
       insecure: true
-  
+
   prometheusremotewrite:
     endpoint: "http://prometheus:9090/api/v1/write"
 
@@ -90,12 +90,12 @@ service:
       receivers: [otlp]
       processors: [memory_limiter, attributes, batch]
       exporters: [logging, otlp/jaeger]
-    
+
     metrics:
       receivers: [otlp]
       processors: [memory_limiter, batch]
       exporters: [prometheusremotewrite]
-    
+
     logs:
       receivers: [otlp]
       processors: [memory_limiter, batch]
@@ -181,7 +181,7 @@ def init_telemetry(service_name: str):
         "service.version": os.getenv("SERVICE_VERSION", "1.0.0"),
         "deployment.environment": os.getenv("ENVIRONMENT", "development")
     })
-    
+
     # Setup tracing
     trace_provider = TracerProvider(resource=resource)
     trace_exporter = OTLPSpanExporter(
@@ -190,7 +190,7 @@ def init_telemetry(service_name: str):
     )
     trace_provider.add_span_processor(BatchSpanProcessor(trace_exporter))
     trace.set_tracer_provider(trace_provider)
-    
+
     # Setup metrics
     metric_reader = PeriodicExportingMetricReader(
         exporter=OTLPMetricExporter(
@@ -227,7 +227,7 @@ import os
 
 # Initialize OpenLLMetry
 Traceloop.init(
-    app_name="acme-llm-service",
+    app_name="untrace-llm-service",
     api_endpoint=os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4318"),
     headers={
         "x-traceloop-api-key": os.getenv("TRACELOOP_API_KEY"),
@@ -260,7 +260,7 @@ import * as traceloop from "@traceloop/node-server-sdk";
 
 // Initialize OpenLLMetry
 traceloop.initialize({
-  appName: "acme-llm-service",
+  appName: "untrace-llm-service",
   apiEndpoint: process.env.OTEL_EXPORTER_OTLP_ENDPOINT || "http://localhost:4318",
   disableBatch: false,
   headers: {
@@ -291,7 +291,7 @@ class DocumentProcessor {
 // Instrument HTTP endpoints
 import { trace, SpanStatusCode } from '@opentelemetry/api';
 
-const tracer = trace.getTracer('acme-api', '1.0.0');
+const tracer = trace.getTracer('untrace-api', '1.0.0');
 
 app.post('/api/trace', async (req, res) => {
   const span = tracer.startSpan('handle_trace_ingestion', {
@@ -358,17 +358,17 @@ def analyze_trace_quality(trace_data):
             "trace.id": trace_data["id"],
             "trace.size": len(str(trace_data))
         })
-        
+
         # LLM call here
         response = llm_client.analyze(trace_data)
-        
+
         span.set_attributes({
             "llm.prompt_tokens": response.usage.prompt_tokens,
             "llm.completion_tokens": response.usage.completion_tokens,
             "llm.total_tokens": response.usage.total_tokens,
             "llm.estimated_cost": calculate_cost(response.usage)
         })
-        
+
         return response
 ```
 
@@ -381,17 +381,17 @@ def analyze_trace_quality(trace_data):
 processors:
   probabilistic_sampler:
     sampling_percentage: 10  # Sample 10% of traces
-  
+
   tail_sampling:
     policies:
       - name: errors-policy
         type: status_code
         status_code: {status_codes: [ERROR]}
-        
+
       - name: slow-traces-policy
         type: latency
         latency: {threshold_ms: 5000}
-        
+
       - name: llm-traces-policy
         type: string_attribute
         string_attribute: {key: "service.name", values: ["llm-*"]}
@@ -401,7 +401,7 @@ processors:
 
 ```typescript
 // Custom metrics for business logic
-const meter = metrics.getMeter('acme-metrics', '1.0.0');
+const meter = metrics.getMeter('untrace-metrics', '1.0.0');
 
 const traceCounter = meter.createCounter('traces_processed', {
   description: 'Number of traces processed',
@@ -438,12 +438,12 @@ class PrivacyProcessor implements SpanProcessor {
 
   onEnd(span: ReadableSpan): void {
     const attributes = span.attributes;
-    
+
     // Remove or hash sensitive fields
     if (attributes['user.email']) {
       span.setAttribute('user.email', hash(attributes['user.email']));
     }
-    
+
     if (attributes['llm.prompt']) {
       span.setAttribute('llm.prompt', '[REDACTED]');
     }

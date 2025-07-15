@@ -1,9 +1,10 @@
 'use client';
-import { Alert, AlertDescription, AlertTitle } from '@acme/ui/alert';
-import { Button } from '@acme/ui/button';
-import { CopyButton } from '@acme/ui/custom/copy-button';
-import { Icons } from '@acme/ui/custom/icons';
-import { P } from '@acme/ui/custom/typography';
+import { useUser } from '@clerk/nextjs';
+import { Alert, AlertDescription, AlertTitle } from '@untrace/ui/alert';
+import { Button } from '@untrace/ui/button';
+import { CopyButton } from '@untrace/ui/custom/copy-button';
+import { Icons } from '@untrace/ui/custom/icons';
+import { P } from '@untrace/ui/custom/typography';
 import {
   Dialog,
   DialogClose,
@@ -12,11 +13,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@acme/ui/dialog';
-import { Input } from '@acme/ui/input';
-import { Label } from '@acme/ui/label';
-import { toast } from '@acme/ui/sonner';
-import { useUser } from '@clerk/nextjs';
+} from '@untrace/ui/dialog';
+import { Input } from '@untrace/ui/input';
+import { Label } from '@untrace/ui/label';
+import { toast } from '@untrace/ui/sonner';
 import { useRouter } from 'next/navigation';
 import { useAction } from 'next-safe-action/hooks';
 import { useState } from 'react';

@@ -1,6 +1,6 @@
 'use client';
 
-import { cn } from '@acme/ui/lib/utils';
+import { cn } from '@untrace/ui/lib/utils';
 import type { CSSProperties, ReactElement, ReactNode } from 'react';
 import { useEffect, useRef, useState } from 'react';
 

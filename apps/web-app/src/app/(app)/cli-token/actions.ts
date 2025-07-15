@@ -1,8 +1,8 @@
 'use server';
 
-import { db } from '@acme/db/client';
-import { AuthCodes, OrgMembers, Orgs, Users } from '@acme/db/schema';
 import { auth, clerkClient, currentUser } from '@clerk/nextjs/server';
+import { db } from '@untrace/db/client';
+import { AuthCodes, OrgMembers, Orgs, Users } from '@untrace/db/schema';
 import { createSafeActionClient } from 'next-safe-action';
 import { z } from 'zod';
 

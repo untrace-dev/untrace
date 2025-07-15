@@ -13,7 +13,7 @@ export class NetworkMonitor {
 
   constructor(options?: { checkInterval?: number; host?: string }) {
     this.checkInterval = options?.checkInterval ?? 5000; // Default 5 seconds
-    this.host = options?.host ?? 'acme.sh'; // Default to our domain
+    this.host = options?.host ?? 'untrace.sh'; // Default to our domain
   }
 
   private async checkConnection(): Promise<boolean> {

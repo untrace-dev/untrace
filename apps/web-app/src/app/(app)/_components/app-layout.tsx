@@ -1,4 +1,4 @@
-import { SidebarInset, SidebarProvider } from '@acme/ui/components/sidebar';
+import { SidebarInset, SidebarProvider } from '@untrace/ui/components/sidebar';
 import { cookies } from 'next/headers';
 import type { PropsWithChildren } from 'react';
 import { AppSidebar } from '~/app/(app)/_components/app-sidebar';

@@ -1,8 +1,8 @@
 'use client';
 
-import { usePostHog } from '@acme/analytics/posthog/client';
-import { Button } from '@acme/ui/button';
-import { Icons } from '@acme/ui/custom/icons';
+import { usePostHog } from '@untrace/analytics/posthog/client';
+import { Button } from '@untrace/ui/button';
+import { Icons } from '@untrace/ui/custom/icons';
 import { useAction } from 'next-safe-action/hooks';
 import { useCallback, useState } from 'react';
 import { createAuthCode } from '../actions';

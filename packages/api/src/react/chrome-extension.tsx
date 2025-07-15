@@ -1,11 +1,11 @@
 /* eslint-disable unicorn/prefer-ternary */
 
-import type { AppRouter } from '@acme/api';
 import { useAuth } from '@clerk/chrome-extension';
 import type { QueryClient } from '@tanstack/react-query';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { loggerLink, unstable_httpBatchStreamLink } from '@trpc/client';
 import { createTRPCReact } from '@trpc/react-query';
+import type { AppRouter } from '@untrace/api';
 import { useState } from 'react';
 import SuperJSON from 'superjson';
 

@@ -112,8 +112,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: acme-${{ matrix.platform }}-${{ matrix.target }}
-          path: apps/cli/bin/acme-${{ matrix.platform }}-${{ matrix.target }}${{ matrix.binary_ext }}
+          name: untrace-${{ matrix.platform }}-${{ matrix.target }}
+          path: apps/cli/bin/untrace-${{ matrix.platform }}-${{ matrix.target }}${{ matrix.binary_ext }}
 
   release:
     name: Release CLI
@@ -138,7 +138,7 @@ jobs:
       - name: Download build artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: acme-*
+          pattern: untrace-*
           path: dist
           run-id: ${{ github.run_id }}
           repository: ${{ github.repository }}

@@ -4,7 +4,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@acme/ui/card';
+} from '@untrace/ui/card';
 import { Suspense } from 'react';
 import { CliTokenContent } from './_components/cli-token-content';
 import { SignInDifferentAccountButton } from './_components/sign-in-different-account-button';
@@ -17,7 +17,7 @@ export default function CliTokenPage() {
           <CardTitle>Login to CLI</CardTitle>
           <CardDescription>
             Select or create an organization, then click the button below to
-            authenticate with the Acme CLI.
+            authenticate with the Untrace CLI.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">

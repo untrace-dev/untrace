@@ -1,6 +1,6 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@acme/ui/card';
-import { H3, P } from '@acme/ui/custom/typography';
-import { Separator } from '@acme/ui/separator';
+import { Card, CardContent, CardHeader, CardTitle } from '@untrace/ui/card';
+import { H3, P } from '@untrace/ui/custom/typography';
+import { Separator } from '@untrace/ui/separator';
 import { Suspense } from 'react';
 import type Stripe from 'stripe';
 import { getStripeInvoices } from './actions';

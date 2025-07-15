@@ -1,5 +1,5 @@
-import { cn } from '@acme/ui/lib/utils';
-import { Globe } from '@acme/ui/magicui/globe';
+import { cn } from '@untrace/ui/lib/utils';
+import { Globe } from '@untrace/ui/magicui/globe';
 import { FirstBentoAnimation } from '~/app/(marketing)/_components/first-bento-animation';
 import { FourthBentoAnimation } from '~/app/(marketing)/_components/fourth-bento-animation';
 import { SecondBentoAnimation } from '~/app/(marketing)/_components/second-bento-animation';
@@ -235,7 +235,7 @@ export const siteConfig = {
   },
   featureSection: {
     description:
-      'Discover how Acme transforms webhook testing in four easy steps',
+      'Discover how Untrace transforms webhook testing in four easy steps',
     items: [
       {
         content:
@@ -353,10 +353,10 @@ export const siteConfig = {
     cta: {
       primary: {
         href: '/app?utm_source=marketing-site&utm_medium=hero-cta',
-        text: 'Start Free Trial',
+        text: 'Get Started',
       },
       secondary: {
-        href: 'https://docs.untrace.dev',
+        href: 'https://docs.untrace.com',
         text: 'View Documentation',
       },
     },
@@ -460,7 +460,7 @@ export const siteConfig = {
     author: {
       image: 'https://randomuser.me/api/portraits/women/12.jpg',
       name: 'Dana Chen',
-      role: 'Engineering Manager, Acme Corp',
+      role: 'Engineering Manager, Untrace Corp',
     },
     quote:
       'Untrace saved us from observability hell. We went from maintaining 4 different integrations to just one, and our monitoring costs dropped by 60%.',

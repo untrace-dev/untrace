@@ -1,6 +1,6 @@
-import { eq } from '@acme/db';
-import { CreateUserSchema, Users } from '@acme/db/schema';
 import type { TRPCRouterRecord } from '@trpc/server';
+import { eq } from '@untrace/db';
+import { CreateUserSchema, Users } from '@untrace/db/schema';
 import { z } from 'zod';
 
 import { protectedProcedure, publicProcedure } from '../trpc';

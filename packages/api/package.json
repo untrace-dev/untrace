@@ -1,12 +1,15 @@
 {
   "dependencies": {
-    "@acme/db": "workspace:*",
     "@t3-oss/env-core": "0.13.8",
     "@t3-oss/env-nextjs": "0.13.8",
     "@tanstack/react-query": "5.81.5",
     "@trpc/client": "11.4.3",
     "@trpc/react-query": "11.4.3",
     "@trpc/server": "11.4.3",
+    "@ts-rest/core": "3.52.1",
+    "@ts-rest/next": "3.52.1",
+    "@ts-rest/react-query": "3.52.1",
+    "@untrace/db": "workspace:*",
     "next": "15.3.5",
     "react": "19.1.0",
     "react-dom": "19.1.0",
@@ -15,9 +18,9 @@
     "zod-to-json-schema": "3.24.6"
   },
   "devDependencies": {
-    "@acme/tsconfig": "workspace:*",
     "@types/react": "19.1.8",
     "@types/react-dom": "19.1.6",
+    "@untrace/tsconfig": "workspace:*",
     "typescript": "5.8.3"
   },
   "exports": {
@@ -37,13 +40,17 @@
       "default": "./src/react/client-exports.ts",
       "types": "./dist/react/client-exports.d.ts"
     },
+    "./rest": {
+      "default": "./src/rest/index.ts",
+      "types": "./dist/rest/index.d.ts"
+    },
     "./server": {
       "default": "./src/react/server-exports.ts",
       "types": "./dist/react/server-exports.d.ts"
     }
   },
   "license": "MIT",
-  "name": "@acme/api",
+  "name": "@untrace/api",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .turbo node_modules dist",

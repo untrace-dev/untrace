@@ -1,6 +1,6 @@
 'use server';
 
-import { createSelectors } from '@acme/zustand';
+import { createSelectors } from '@untrace/zustand';
 import { createStore } from 'zustand';
 
 export type NetworkStatus = 'online' | 'offline' | 'checking';
@@ -43,7 +43,7 @@ const store = createStore<NetworkStore>()((set, get) => {
       }
 
       // Then try to resolve our domain
-      await lookup('acme.sh');
+      await lookup('untrace.sh');
       return true;
     } catch (error) {
       console.log('Network check failed:', error);

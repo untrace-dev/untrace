@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { cn } from '@acme/ui/lib/utils';
+import { cn } from '@untrace/ui/lib/utils';
 import { marked } from 'marked';
 import { memo, type PropsWithChildren, useId, useMemo } from 'react';
 import ReactMarkdown, {

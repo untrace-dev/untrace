@@ -253,9 +253,9 @@ Record custom metrics:
 import { metric } from '@untrace/sdk';
 
 class EmbeddingService {
-  @metric({ 
+  @metric({
     name: 'embedding.generation.duration',
-    unit: 'ms' 
+    unit: 'ms'
   })
   async generateEmbedding(text: string) {
     // Embedding logic
@@ -283,15 +283,15 @@ try {
   // Set span attributes
   span.setAttribute('documents.count', 5);
   span.setAttribute('query.complexity', 'high');
-  
+
   // Your logic here
   const result = await performRAG(query);
-  
+
   // Record token usage
   span.setAttribute('llm.prompt_tokens', 150);
   span.setAttribute('llm.completion_tokens', 500);
   span.setAttribute('llm.total_tokens', 650);
-  
+
   span.end();
   return result;
 } catch (error) {
@@ -503,7 +503,7 @@ const untrace = init({
 export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     const { init } = await import('@untrace/sdk');
-    
+
     init({
       apiKey: process.env.UNTRACE_API_KEY!,
       serviceName: 'my-nextjs-app',
@@ -536,7 +536,7 @@ app.post('/chat', async (req, res) => {
     model: 'gpt-3.5-turbo',
     messages: req.body.messages,
   });
-  
+
   res.json(response);
 });
 ```
@@ -551,7 +551,7 @@ import { ConversationChain } from 'langchain/chains';
 init({ apiKey: 'your-api-key' });
 
 // LangChain is automatically instrumented
-const model = new ChatOpenAI({ 
+const model = new ChatOpenAI({
   modelName: 'gpt-4',
   temperature: 0,
 });
@@ -568,7 +568,7 @@ const response = await chain.invoke({
 
 ```typescript
 import { init } from '@untrace/sdk';
-import { 
+import {
   Document,
   VectorStoreIndex,
   OpenAI,
@@ -674,14 +674,14 @@ async function safeLLMCall<T>(
   spanName: string,
 ): Promise<T> {
   const span = tracer.startSpan(spanName);
-  
+
   try {
     const result = await operation();
     span.setStatus({ code: SpanStatusCode.OK });
     return result;
   } catch (error) {
     span.recordException(error);
-    span.setStatus({ 
+    span.setStatus({
       code: SpanStatusCode.ERROR,
       message: error.message,
     });
@@ -704,7 +704,7 @@ async function safeLLMCall<T>(
       apiKey: 'your-api-key',
       debug: true,
     });
-    
+
     // Check console for errors
     ```
   </Accordion>
@@ -829,7 +829,7 @@ init({ apiKey: 'your-api-key' });
 
 ## Support
 
-- **Documentation**: [https://docs.untrace.dev](https://docs.untrace.dev)
+- **Documentation**: [https://docs.untrace.com](https://docs.untrace.com)
 - **GitHub Issues**: [https://github.com/untrace-dev/untrace/issues](https://github.com/untrace-dev/untrace/issues)
 - **Discord Community**: [Join our Discord](https://discord.gg/untrace)
 - **Email Support**: support@untrace.dev

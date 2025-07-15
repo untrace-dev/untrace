@@ -1,7 +1,7 @@
 'use client';
 
-import { Icons } from '@acme/ui/custom/icons';
-import { cn } from '@acme/ui/lib/utils';
+import { Icons } from '@untrace/ui/custom/icons';
+import { cn } from '@untrace/ui/lib/utils';
 import {
   Sidebar,
   SidebarContent,
@@ -14,8 +14,8 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarTrigger,
-} from '@acme/ui/sidebar';
-import { ToggleGroup, ToggleGroupItem } from '@acme/ui/toggle-group';
+} from '@untrace/ui/sidebar';
+import { ToggleGroup, ToggleGroupItem } from '@untrace/ui/toggle-group';
 import {
   ArrowLeft,
   BookOpen,
@@ -193,7 +193,7 @@ export function AppSidebar({
               <SidebarMenuButton asChild>
                 <a
                   className="flex items-center justify-between"
-                  href="https://docs.acme.com"
+                  href="https://docs.untrace.com"
                   rel="noreferrer"
                   target="_blank"
                 >
@@ -209,7 +209,7 @@ export function AppSidebar({
               <SidebarMenuButton asChild>
                 <a
                   className="flex items-center justify-between"
-                  href="https://docs.acme.com/ref/overview"
+                  href="https://docs.untrace.com/ref/overview"
                   rel="noreferrer"
                   target="_blank"
                 >
@@ -241,7 +241,7 @@ export function AppSidebar({
               <SidebarMenuButton asChild>
                 <a
                   className="flex items-center justify-between"
-                  href="https://github.com/acme/baml/blob/canary/CHANGELOG.md"
+                  href="https://github.com/untrace/baml/blob/canary/CHANGELOG.md"
                   rel="noreferrer"
                   target="_blank"
                 >

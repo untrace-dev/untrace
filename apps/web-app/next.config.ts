@@ -1,6 +1,6 @@
 // import createJiti from 'jiti'
 
-import baseConfig from '@acme/next-config/base';
+import baseConfig from '@untrace/next-config/base';
 
 // Import env files to validate at build time. Use jiti so we can load .ts files in here.
 // createJiti(fileURLToPath(import.meta.url))('./src/env.client')
@@ -10,11 +10,11 @@ import baseConfig from '@acme/next-config/base';
 const nextConfig = {
   ...baseConfig,
   transpilePackages: [
-    '@acme/api',
-    '@acme/db',
-    '@acme/ui',
-    '@acme/ai',
-    '@acme/analytics',
+    '@untrace/api',
+    '@untrace/db',
+    '@untrace/ui',
+    '@untrace/ai',
+    '@untrace/analytics',
   ],
 };
 
