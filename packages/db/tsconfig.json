@@ -4,6 +4,6 @@
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
   "exclude": ["node_modules"],
-  "extends": "@acme/tsconfig/react-library.json",
-  "include": ["src"]
+  "extends": "@untrace/tsconfig/react-library.json",
+  "include": ["src", "tests", "scripts"]
 }

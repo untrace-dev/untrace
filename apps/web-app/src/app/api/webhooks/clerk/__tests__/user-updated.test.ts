@@ -74,7 +74,7 @@ describe('handleUserUpdated', () => {
       },
       object: 'event',
       type: 'user.updated',
-    } satisfies UserWebhookEvent;
+    } as unknown as UserWebhookEvent;
 
     const response = await handleUserUpdated(event);
     expect(response).toBeUndefined();

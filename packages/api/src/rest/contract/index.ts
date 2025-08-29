@@ -5,7 +5,7 @@ import { tracesContract } from './traces';
 const c = initContract();
 
 // Main API contract combining all routes
-export const apiContract = c.router(
+export const contract = c.router(
   {
     destinations: destinationsContract,
     traces: tracesContract,
@@ -16,7 +16,7 @@ export const apiContract = c.router(
   },
 );
 
-export type ApiContract = typeof apiContract;
+export type ApiContract = typeof contract;
 
 export {
   type DestinationsContract,

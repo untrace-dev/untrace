@@ -69,7 +69,7 @@ export function ScriptCopyBtn({
       )}
     >
       <div className="w-full space-y-2">
-        <div className="mb-2 flex items-center justify-between">
+        <div className="mb-2 flex items-center justify-center">
           {showMultiplePackageOptions && (
             <div className="relative">
               <div className="inline-flex overflow-hidden rounded-md border border-border text-xs">
@@ -112,7 +112,7 @@ export function ScriptCopyBtn({
           <div className="min-w-[300px] grow font-mono">
             {highlightedCode ? (
               <div
-                className={`[&>pre]:overflow-x-auto [&>pre]:rounded-md [&>pre]:p-2 [&>pre]:px-4 [&>pre]:font-mono ${
+                className={`[&>pre]:overflow-x-auto [&>pre]:rounded-md [&>pre]:p-1.5 [&>pre]:px-4 [&>pre]:font-mono bg-background rounded ${
                   theme === 'dark' ? 'dark' : 'light'
                 }`}
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: ok
@@ -126,14 +126,14 @@ export function ScriptCopyBtn({
           </div>
           <Button
             aria-label={copied ? 'Copied' : 'Copy to clipboard'}
-            className="relative ml-2 rounded-md"
+            className="relative ml-2 rounded-md hidden md:block"
             onClick={copyToClipboard}
             size="icon"
             variant="outline"
           >
             <span className="sr-only">{copied ? 'Copied' : 'Copy'}</span>
             <Copy
-              className={`h-4 w-4 transition-all duration-300 ${
+              className={`absolute inset-0 m-auto h-4 w-4 transition-all duration-300 ${
                 copied ? 'scale-0' : 'scale-100'
               }`}
             />

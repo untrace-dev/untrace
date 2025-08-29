@@ -7,9 +7,8 @@ export type {
   DestinationsContract,
   TracesContract,
 } from './contract';
-export { apiContract, destinationsContract, tracesContract } from './contract';
+export { contract, destinationsContract, tracesContract } from './contract';
 // Export router
-export { apiRouter } from './routes';
+export { routes } from './routes';
 export { destinationsRouter } from './routes/destinations';
-// Export individual routers if needed
 export { tracesRouter } from './routes/traces';

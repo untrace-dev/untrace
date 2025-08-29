@@ -1,4 +1,4 @@
-import { cn } from '@untrace/ui/lib/utils';
+import { cn } from '../lib/utils';
 
 interface BorderBeamProps {
   className?: string;

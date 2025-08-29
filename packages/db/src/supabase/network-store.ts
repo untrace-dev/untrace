@@ -1,7 +1,8 @@
-'use server';
-
+import { debug } from '@untrace/logger';
 import { createSelectors } from '@untrace/zustand';
 import { createStore } from 'zustand';
+
+const log = debug('untrace:lib:network-store');
 
 export type NetworkStatus = 'online' | 'offline' | 'checking';
 
@@ -38,7 +39,7 @@ const store = createStore<NetworkStore>()((set, get) => {
       );
 
       if (!hasActiveInterface) {
-        console.log('No active network interfaces found');
+        log('No active network interfaces found');
         return false;
       }
 
@@ -46,7 +47,7 @@ const store = createStore<NetworkStore>()((set, get) => {
       await lookup('untrace.sh');
       return true;
     } catch (error) {
-      console.log('Network check failed:', error);
+      log('Network check failed:', error);
       return false;
     }
   };
@@ -99,7 +100,7 @@ const store = createStore<NetworkStore>()((set, get) => {
         );
       }
 
-      console.log('Network monitoring started');
+      log('Network monitoring started');
     },
     // Initial state
     status: 'checking',
@@ -119,7 +120,7 @@ const store = createStore<NetworkStore>()((set, get) => {
         );
       }
 
-      console.log('Network monitoring stopped');
+      log('Network monitoring stopped');
     },
   };
 });

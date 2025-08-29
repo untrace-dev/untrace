@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: todo */
 import { and, desc, eq, gte, lt, lte } from 'drizzle-orm';
 import { db } from './client';
 import {
@@ -12,18 +13,18 @@ import {
 export interface ITraceDeliveryAdapter {
   deliver(
     trace: TraceType,
-    config: any,
-    transformedPayload?: any,
+    config: unknown,
+    transformedPayload?: unknown,
   ): Promise<{
     success: boolean;
-    responseData?: any;
+    responseData?: unknown;
     error?: string;
   }>;
 }
 
 // Example adapter implementations
 export class LangfuseAdapter implements ITraceDeliveryAdapter {
-  async deliver(trace: TraceType, config: any, transformedPayload?: any) {
+  async deliver(trace: TraceType, config: any, transformedPayload?: unknown) {
     const payload = transformedPayload || trace.data;
 
     try {
@@ -58,14 +59,14 @@ export class LangfuseAdapter implements ITraceDeliveryAdapter {
 }
 
 export class WebhookAdapter implements ITraceDeliveryAdapter {
-  async deliver(trace: TraceType, config: any, transformedPayload?: any) {
+  async deliver(trace: TraceType, config: any, transformedPayload?: unknown) {
     const payload = transformedPayload || trace.data;
 
     try {
       const controller = new AbortController();
       const timeout = setTimeout(
         () => controller.abort(),
-        config.timeout || 30000,
+        config.timeoutMs || 30000,
       );
 
       const response = await fetch(config.url, {
@@ -105,12 +106,13 @@ const adapterRegistry: Record<string, ITraceDeliveryAdapter> = {
 };
 
 // Transform execution service (should be sandboxed in production)
+// biome-ignore lint/complexity/noStaticOnlyClass: ignore
 export class TransformService {
   static execute(
     transformFunction: string,
     trace: TraceType,
     destination: OrgDestinationType,
-  ): any {
+  ): unknown {
     try {
       // WARNING: This is a simple example. In production, use a proper sandbox
       // like vm2, isolated-vm, or a separate worker process
@@ -134,9 +136,9 @@ export class TraceDeliveryService {
         org: {
           with: {
             destinations: {
-              orderBy: [desc(OrgDestinations.priority)],
+              orderBy: [desc(OrgDestinations.batchSize)],
               where: and(
-                eq(OrgDestinations.isActive, true),
+                eq(OrgDestinations.isEnabled, true),
                 // Optional: Add filtering support
               ),
               with: {
@@ -220,8 +222,8 @@ export class TraceDeliveryService {
       const recentDeliveries = await db.query.TraceDeliveries.findMany({
         where: and(
           eq(TraceDeliveries.destinationId, delivery.destinationId),
-          eq(TraceDeliveries.status, 'delivered'),
-          gte(TraceDeliveries.lastAttemptAt, new Date(Date.now() - 60000)), // Last minute
+          eq(TraceDeliveries.status, 'success'),
+          gte(TraceDeliveries.deliveredAt, new Date(Date.now() - 60000)), // Last minute
         ),
       });
 
@@ -306,7 +308,7 @@ export class TraceDeliveryService {
     await db
       .update(TraceDeliveries)
       .set({
-        attempts: TraceDeliveries.attempts + 1,
+        attempts: (TraceDeliveries.attempts as any) + 1,
         lastError: error,
         lastErrorAt: new Date(),
         nextRetryAt,
@@ -328,7 +330,7 @@ export class TraceDeliveryService {
       .where(eq(TraceDeliveries.id, deliveryId));
   }
 
-  private async decryptConfig(encryptedConfig: any): Promise<any> {
+  private async decryptConfig(encryptedConfig: unknown): Promise<unknown> {
     // TODO: Implement your decryption logic
     // This is a placeholder - in production, use proper encryption
     return encryptedConfig;
@@ -377,7 +379,7 @@ async function _main() {
 
 // Webhook endpoint example for receiving traces
 export async function handleTraceIngestion(
-  traceData: unknown,
+  traceData: any,
   orgId: string,
   userId?: string,
 ) {
@@ -400,6 +402,10 @@ export async function handleTraceIngestion(
 
   // Process deliveries asynchronously
   const service = new TraceDeliveryService();
+
+  if (!trace) {
+    throw new Error('Failed to store trace');
+  }
 
   // Don't await - process in background
   service.processNewTrace(trace.id).catch((error) => {

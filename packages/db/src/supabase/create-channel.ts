@@ -6,7 +6,10 @@ import type {
   SupabaseClient,
 } from '@supabase/supabase-js';
 import { REALTIME_POSTGRES_CHANGES_LISTEN_EVENT } from '@supabase/supabase-js';
+import { debug } from '@untrace/logger';
 import type { TableName, Tables } from './types';
+
+const log = debug('untrace:lib:channel');
 
 type SubscriptionStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
@@ -51,7 +54,7 @@ function determineEvents<T extends TableName>(
 }
 
 async function handleChannelEvent<T extends TableName>(
-  payload: RealtimePostgresChangesPayload<T>,
+  payload: RealtimePostgresChangesPayload<Tables<T>>,
   callbacks: ChannelCallbacks<T>,
 ) {
   try {
@@ -88,10 +91,10 @@ export function createChannel<T extends TableName>(
   client: SupabaseClient,
   props: ChannelProps<T>,
 ): RealtimeChannel {
-  console.log('Creating channel for:', { table: props.table });
+  log('Creating channel for:', { table: props.table });
 
   const event = determineEvents(props);
-  console.log('Determined events:', { event });
+  log('Determined events:', { event });
 
   const channel = client
     .channel(props.channelName ?? `${String(props.table)}-changes`)
@@ -103,8 +106,8 @@ export function createChannel<T extends TableName>(
         schema: 'public',
         table: String(props.table),
       },
-      (payload: RealtimePostgresChangesPayload<T>) => {
-        console.log('Received payload:', {
+      (payload: RealtimePostgresChangesPayload<Tables<T>>) => {
+        log('Received payload:', {
           table: props.table,
           type: payload.eventType,
         });
@@ -113,7 +116,7 @@ export function createChannel<T extends TableName>(
     )
     .subscribe(
       (status: keyof typeof REALTIME_SUBSCRIBE_STATES, error?: Error) => {
-        console.log('Channel status changed:', { error, status });
+        log('Channel status changed:', { error, status });
         let newStatus: SubscriptionStatus;
         switch (status) {
           case 'SUBSCRIBED':
@@ -134,7 +137,7 @@ export function createChannel<T extends TableName>(
       props.timeout,
     );
 
-  console.log('Channel created:', {
+  log('Channel created:', {
     channelName: channel.topic,
     status: channel.state,
   });

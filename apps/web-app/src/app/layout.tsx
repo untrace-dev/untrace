@@ -1,4 +1,5 @@
 import { AnalyticsProviders } from '@untrace/analytics';
+import { StripeProvider } from '@untrace/stripe/guards/client';
 import { ReactScan } from '@untrace/ui/custom/react-scan';
 import { ThemeProvider } from '@untrace/ui/custom/theme';
 import { cn } from '@untrace/ui/lib/utils';
@@ -12,7 +13,8 @@ import '@untrace/ui/globals.css';
 
 import { ClerkProvider } from '@clerk/nextjs';
 import { TRPCReactProvider } from '@untrace/api/react';
-import { env } from '~/env.server';
+import { Suspense } from 'react';
+import { env } from '~/env';
 
 export const metadata: Metadata = {
   description:
@@ -59,18 +61,22 @@ export default async function RootLayout(props: { children: React.ReactNode }) {
         {isDevelopment && <ReactScan />}
         <NuqsAdapter>
           <TRPCReactProvider>
-            <ClerkProvider>
-              <AnalyticsProviders identifyUser>
-                <ThemeProvider
-                  attribute="class"
-                  defaultTheme="dark"
-                  enableSystem
-                >
-                  {props.children}
-                  <Toaster />
-                </ThemeProvider>
-              </AnalyticsProviders>
-            </ClerkProvider>
+            <Suspense>
+              <ClerkProvider>
+                <AnalyticsProviders identifyUser>
+                  <ThemeProvider
+                    attribute="class"
+                    defaultTheme="dark"
+                    enableSystem
+                  >
+                    <StripeProvider>
+                      {props.children}
+                      <Toaster />
+                    </StripeProvider>
+                  </ThemeProvider>
+                </AnalyticsProviders>
+              </ClerkProvider>
+            </Suspense>
           </TRPCReactProvider>
         </NuqsAdapter>
       </body>

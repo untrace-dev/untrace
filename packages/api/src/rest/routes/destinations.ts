@@ -1,19 +1,19 @@
 import crypto from 'node:crypto';
-import { createServerFn, type TsRestRequest } from '@ts-rest/core';
-import { and, desc, eq } from '@untrace/db';
+import { createNextRoute } from '@ts-rest/next';
+import { and, eq } from '@untrace/db';
 import { db } from '@untrace/db/client';
 import { DestinationProviders, OrgDestinations } from '@untrace/db/schema';
-import { createId } from '@untrace/id';
+import type { NextApiRequest } from 'next';
 import { destinationsContract } from '../contract/destinations';
 
 // Helper to get organization ID from request (would be from auth in production)
-async function getOrganizationId(request: TsRestRequest): Promise<string> {
+async function getOrgId(req: NextApiRequest): Promise<string> {
   // TODO: Get from auth context
-  const orgId = request.headers.get('x-organization-id');
+  const orgId = req.headers['x-organization-id'];
   if (!orgId) {
     throw new Error('Organization ID not provided');
   }
-  return orgId;
+  return orgId as string;
 }
 
 // Simple encryption for secrets (in production, use proper key management)
@@ -21,7 +21,7 @@ const ENCRYPTION_KEY =
   process.env.ENCRYPTION_KEY || 'dev-key-32-chars-long-for-testing';
 const algorithm = 'aes-256-gcm';
 
-function encryptSecrets(secrets: Record<string, string>): string {
+function _encryptSecrets(secrets: Record<string, string>): string {
   const iv = crypto.randomBytes(16);
   const cipher = crypto.createCipheriv(
     algorithm,
@@ -41,7 +41,7 @@ function encryptSecrets(secrets: Record<string, string>): string {
   });
 }
 
-function decryptSecrets(encryptedData: string): Record<string, string> {
+function _decryptSecrets(encryptedData: string): Record<string, string> {
   const { iv, authTag, encrypted } = JSON.parse(encryptedData);
 
   const decipher = crypto.createDecipheriv(
@@ -58,11 +58,11 @@ function decryptSecrets(encryptedData: string): Record<string, string> {
   return JSON.parse(decrypted);
 }
 
-export const destinationsRouter = createServerFn(destinationsContract, {
+export const destinationsRouter = createNextRoute(destinationsContract, {
   // Create a new destination
-  createDestination: async ({ body, request }) => {
+  createDestination: async ({ body, req }) => {
     try {
-      const organizationId = await getOrganizationId(request);
+      const orgId = await getOrgId(req);
 
       // Verify provider exists
       const provider = await db.query.DestinationProviders.findFirst({
@@ -76,26 +76,30 @@ export const destinationsRouter = createServerFn(destinationsContract, {
         };
       }
 
-      const encryptedSecrets = body.secrets
-        ? encryptSecrets(body.secrets)
-        : null;
-
       const [destination] = await db
         .insert(OrgDestinations)
         .values({
+          batchSize: body.batchSize || null,
           config: body.config,
           description: body.description || null,
-          encryptedSecrets,
-          filter: body.filter || null,
-          id: createId(),
-          isActive: body.isActive ?? true,
+          isEnabled: body.isEnabled ?? true,
+          maxRetries: body.maxRetries || 3,
           name: body.name,
-          organizationId,
-          priority: body.priority ?? 50,
+          orgId,
           providerId: body.providerId,
-          transform: body.transform || null,
+          rateLimit: body.rateLimit || null,
+          retryDelayMs: body.retryDelayMs || 1000,
+          retryEnabled: body.retryEnabled ?? true,
+          transformFunction: body.transformFunction || null,
         })
         .returning();
+
+      if (!destination) {
+        return {
+          body: { error: 'Failed to create destination' },
+          status: 400 as const,
+        };
+      }
 
       // Fetch with provider relation
       const createdDestination = await db.query.OrgDestinations.findFirst({
@@ -108,7 +112,14 @@ export const destinationsRouter = createServerFn(destinationsContract, {
       return {
         body: {
           ...createdDestination!,
-          encryptedSecrets: null,
+          config: createdDestination?.config as Record<string, unknown>,
+          provider: createdDestination?.provider
+            ? {
+                ...createdDestination?.provider,
+                configSchema: createdDestination?.provider
+                  .configSchema as Record<string, unknown>,
+              }
+            : undefined,
         },
         status: 201 as const,
       };
@@ -126,16 +137,16 @@ export const destinationsRouter = createServerFn(destinationsContract, {
   },
 
   // Delete a destination
-  deleteDestination: async ({ params, request }) => {
+  deleteDestination: async ({ params, req }) => {
     try {
-      const organizationId = await getOrganizationId(request);
+      const orgId = await getOrgId(req);
 
       const result = await db
         .delete(OrgDestinations)
         .where(
           and(
             eq(OrgDestinations.id, params.id),
-            eq(OrgDestinations.organizationId, organizationId),
+            eq(OrgDestinations.orgId, orgId),
           ),
         )
         .returning({ id: OrgDestinations.id });
@@ -160,14 +171,14 @@ export const destinationsRouter = createServerFn(destinationsContract, {
   },
 
   // Get a single destination
-  getDestination: async ({ params, request }) => {
+  getDestination: async ({ params, req }) => {
     try {
-      const organizationId = await getOrganizationId(request);
+      const orgId = await getOrgId(req);
 
       const destination = await db.query.OrgDestinations.findFirst({
         where: and(
           eq(OrgDestinations.id, params.id),
-          eq(OrgDestinations.organizationId, organizationId),
+          eq(OrgDestinations.orgId, orgId),
         ),
         with: {
           provider: true,
@@ -181,14 +192,20 @@ export const destinationsRouter = createServerFn(destinationsContract, {
         };
       }
 
-      // Don't return encrypted secrets
-      const sanitizedDestination = {
-        ...destination,
-        encryptedSecrets: null,
-      };
-
       return {
-        body: sanitizedDestination,
+        body: {
+          ...destination,
+          config: destination.config as Record<string, unknown>,
+          provider: destination.provider
+            ? {
+                ...destination.provider,
+                configSchema: destination.provider.configSchema as Record<
+                  string,
+                  unknown
+                >,
+              }
+            : undefined,
+        },
         status: 200 as const,
       };
     } catch (_error) {
@@ -214,7 +231,10 @@ export const destinationsRouter = createServerFn(destinationsContract, {
       }
 
       return {
-        body: provider,
+        body: {
+          ...provider,
+          configSchema: provider.configSchema as Record<string, unknown>,
+        },
         status: 200 as const,
       };
     } catch (_error) {
@@ -226,40 +246,42 @@ export const destinationsRouter = createServerFn(destinationsContract, {
   },
 
   // List organization destinations
-  listDestinations: async ({ query, request }) => {
+  listDestinations: async ({ query, req }) => {
     try {
-      const organizationId = await getOrganizationId(request);
+      const orgId = await getOrgId(req);
 
-      const conditions = [
-        eq(
-          OrgDestinations.organizationId,
-          query.organizationId || organizationId,
-        ),
-      ];
+      const conditions = [eq(OrgDestinations.orgId, query.orgId || orgId)];
 
-      if (query.isActive !== undefined) {
-        conditions.push(eq(OrgDestinations.isActive, query.isActive));
+      if (query.isEnabled !== undefined) {
+        conditions.push(eq(OrgDestinations.isEnabled, query.isEnabled));
       }
       if (query.providerId) {
         conditions.push(eq(OrgDestinations.providerId, query.providerId));
       }
 
       const destinations = await db.query.OrgDestinations.findMany({
-        orderBy: [desc(OrgDestinations.priority), OrgDestinations.name],
         where: and(...conditions),
         with: {
           provider: true,
         },
       });
 
-      // Don't return encrypted secrets in list view
-      const sanitizedDestinations = destinations.map((dest) => ({
-        ...dest,
-        encryptedSecrets: null,
-      }));
-
       return {
-        body: { destinations: sanitizedDestinations },
+        body: {
+          destinations: destinations.map((dest) => ({
+            ...dest,
+            config: dest.config as Record<string, unknown>,
+            provider: dest.provider
+              ? {
+                  ...dest.provider,
+                  configSchema: dest.provider.configSchema as Record<
+                    string,
+                    unknown
+                  >,
+                }
+              : undefined,
+          })),
+        },
         status: 200 as const,
       };
     } catch (_error) {
@@ -273,17 +295,22 @@ export const destinationsRouter = createServerFn(destinationsContract, {
   listProviders: async ({ query }) => {
     try {
       const conditions = [];
+
       if (query.isActive !== undefined) {
         conditions.push(eq(DestinationProviders.isActive, query.isActive));
       }
 
       const providers = await db.query.DestinationProviders.findMany({
-        orderBy: [DestinationProviders.name],
         where: conditions.length > 0 ? and(...conditions) : undefined,
       });
 
       return {
-        body: { providers },
+        body: {
+          providers: providers.map((provider) => ({
+            ...provider,
+            configSchema: provider.configSchema as Record<string, unknown>,
+          })),
+        },
         status: 200 as const,
       };
     } catch (_error) {
@@ -295,14 +322,14 @@ export const destinationsRouter = createServerFn(destinationsContract, {
   },
 
   // Test a destination configuration
-  testDestination: async ({ params, body, request }) => {
+  testDestination: async ({ params, body, req }) => {
     try {
-      const organizationId = await getOrganizationId(request);
+      const orgId = await getOrgId(req);
 
       const destination = await db.query.OrgDestinations.findFirst({
         where: and(
           eq(OrgDestinations.id, params.id),
-          eq(OrgDestinations.organizationId, organizationId),
+          eq(OrgDestinations.orgId, orgId),
         ),
         with: {
           provider: true,
@@ -317,12 +344,12 @@ export const destinationsRouter = createServerFn(destinationsContract, {
       }
 
       // Merge provided config/secrets with existing ones
-      const _testConfig = body.config || destination.config;
-      const _testSecrets =
-        body.secrets ||
-        (destination.encryptedSecrets
-          ? decryptSecrets(destination.encryptedSecrets)
-          : {});
+      // const _testConfig = body.config || destination.config;
+      // const _testSecrets =
+      //   body.secrets ||
+      //   (destination.encryptedSecrets
+      //     ? decryptSecrets(destination.encryptedSecrets)
+      //     : {});
 
       // TODO: Implement actual testing logic based on provider type
       // This would involve making a test API call or connection
@@ -382,60 +409,70 @@ export const destinationsRouter = createServerFn(destinationsContract, {
   },
 
   // Update a destination
-  updateDestination: async ({ params, body, request }) => {
+  updateDestination: async ({ params, body, req }) => {
     try {
-      const organizationId = await getOrganizationId(request);
+      const orgId = await getOrgId(req);
 
-      // Verify destination exists and belongs to org
-      const existing = await db.query.OrgDestinations.findFirst({
+      // Check if destination exists and belongs to org
+      const existingDestination = await db.query.OrgDestinations.findFirst({
         where: and(
           eq(OrgDestinations.id, params.id),
-          eq(OrgDestinations.organizationId, organizationId),
+          eq(OrgDestinations.orgId, orgId),
         ),
       });
 
-      if (!existing) {
+      if (!existingDestination) {
         return {
           body: { error: 'Destination not found' },
           status: 404 as const,
         };
       }
 
-      const updates: Partial<{
-        name: string;
+      // Build update object with only provided fields
+      const updateData: Partial<{
         description: string | null;
         config: Record<string, unknown>;
-        encryptedSecrets: string | null;
-        transform: string | null;
-        filter: string | null;
-        isActive: boolean;
-        priority: number;
-        updatedAt: Date;
+        isEnabled: boolean;
+        name: string;
+        batchSize: number | null;
+        maxRetries: number;
+        rateLimit: number | null;
+        retryDelayMs: number;
+        retryEnabled: boolean;
+        transformFunction: string | null;
       }> = {};
-
-      if (body.name !== undefined) updates.name = body.name;
       if (body.description !== undefined)
-        updates.description = body.description;
-      if (body.config !== undefined) updates.config = body.config;
-      if (body.secrets !== undefined) {
-        updates.encryptedSecrets = encryptSecrets(body.secrets);
-      }
-      if (body.transform !== undefined) updates.transform = body.transform;
-      if (body.filter !== undefined) updates.filter = body.filter;
-      if (body.isActive !== undefined) updates.isActive = body.isActive;
-      if (body.priority !== undefined) updates.priority = body.priority;
+        updateData.description = body.description;
+      if (body.config !== undefined) updateData.config = body.config;
+      if (body.isEnabled !== undefined) updateData.isEnabled = body.isEnabled;
+      if (body.name !== undefined) updateData.name = body.name;
+      if (body.batchSize !== undefined) updateData.batchSize = body.batchSize;
+      if (body.maxRetries !== undefined)
+        updateData.maxRetries = body.maxRetries;
+      if (body.rateLimit !== undefined) updateData.rateLimit = body.rateLimit;
+      if (body.retryDelayMs !== undefined)
+        updateData.retryDelayMs = body.retryDelayMs;
+      if (body.retryEnabled !== undefined)
+        updateData.retryEnabled = body.retryEnabled;
+      if (body.transformFunction !== undefined)
+        updateData.transformFunction = body.transformFunction;
 
-      updates.updatedAt = new Date();
-
-      const [updated] = await db
+      const [updatedDestination] = await db
         .update(OrgDestinations)
-        .set(updates)
+        .set(updateData)
         .where(eq(OrgDestinations.id, params.id))
         .returning();
 
+      if (!updatedDestination) {
+        return {
+          body: { error: 'Failed to update destination' },
+          status: 400 as const,
+        };
+      }
+
       // Fetch with provider relation
-      const updatedDestination = await db.query.OrgDestinations.findFirst({
-        where: eq(OrgDestinations.id, updated.id),
+      const destination = await db.query.OrgDestinations.findFirst({
+        where: eq(OrgDestinations.id, params.id),
         with: {
           provider: true,
         },
@@ -443,8 +480,17 @@ export const destinationsRouter = createServerFn(destinationsContract, {
 
       return {
         body: {
-          ...updatedDestination!,
-          encryptedSecrets: null,
+          ...destination!,
+          config: destination?.config as Record<string, unknown>,
+          provider: destination?.provider
+            ? {
+                ...destination?.provider,
+                configSchema: destination?.provider.configSchema as Record<
+                  string,
+                  unknown
+                >,
+              }
+            : undefined,
         },
         status: 200 as const,
       };

@@ -34,7 +34,7 @@ describe('handleSessionCreated', () => {
       },
       object: 'event',
       type: 'session.created',
-    } satisfies SessionWebhookEvent;
+    } as unknown as SessionWebhookEvent;
 
     const response = await handleSessionCreated(event);
     expect(response).toBeUndefined();

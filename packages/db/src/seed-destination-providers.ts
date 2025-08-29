@@ -28,7 +28,7 @@ const providers = [
     configSchema: {
       properties: {
         apiKey: { description: 'OpenAI API key', type: 'string' },
-        organizationId: {
+        orgId: {
           description: 'OpenAI Organization ID (optional)',
           type: 'string',
         },

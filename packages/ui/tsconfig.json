@@ -2,13 +2,10 @@
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "dist",
-    "paths": {
-      "@acme/ui/*": ["src/*"]
-    },
     "rootDir": ".",
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
   "exclude": ["node_modules"],
-  "extends": "@acme/tsconfig/react-library.json",
+  "extends": "@untrace/tsconfig/react-library.json",
   "include": ["."]
 }

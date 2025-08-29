@@ -3,10 +3,9 @@
     "jsx": "preserve",
     "lib": ["dom", "dom.iterable", "ES2022"],
     "outDir": "dist",
-    "rootDir": "src",
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json"
   },
-  "exclude": ["node_modules"],
-  "extends": "@acme/tsconfig/react-library.json",
+  "exclude": ["node_modules", "src/rest/**"],
+  "extends": "@untrace/tsconfig/react-library.json",
   "include": ["src"]
 }

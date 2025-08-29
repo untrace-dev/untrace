@@ -63,18 +63,18 @@ describe('handleUserCreated', () => {
       },
       object: 'event',
       type: 'user.created',
-    } satisfies UserWebhookEvent;
+    } as unknown as UserWebhookEvent;
 
     const response = await handleUserCreated(event);
 
     expect(response).toBeUndefined();
 
     const user = await db.query.Users.findFirst({
-      where: eq(Users.clerkId, event.data.id),
+      where: eq(Users.clerkId, event.data.id as string),
     });
 
     expect(user).toBeDefined();
     expect(user?.clerkId).toBe(event.data.id);
-    await db.delete(Users).where(eq(Users.clerkId, event.data.id));
+    await db.delete(Users).where(eq(Users.clerkId, event.data.id as string));
   });
 });

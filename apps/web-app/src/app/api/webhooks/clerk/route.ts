@@ -3,7 +3,7 @@ import { posthog } from '@untrace/analytics/posthog/server';
 import { headers } from 'next/headers';
 import { Webhook } from 'svix';
 
-import { env } from '~/env.server';
+import { env } from '~/env';
 import { handleOrganizationCreated } from './organization-created';
 import { handleOrganizationMembershipCreated } from './organization-membership-created';
 import { handleOrganizationMembershipUpdated } from './organization-membership-updated';

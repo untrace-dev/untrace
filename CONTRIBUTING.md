@@ -353,7 +353,7 @@ For a more detailed guide on implementing observability in the Untrace project, 
 Don't hesitate to ask questions by:
 * Opening an issue
 * Joining our [Discord community](https://discord.gg/untrace)
-* Checking our [documentation](https://docs.untrace.sh)
+* Checking our [documentation](https://docs.untrace.dev)
 
 ## License
 

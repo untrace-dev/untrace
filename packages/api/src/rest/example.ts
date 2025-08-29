@@ -77,13 +77,9 @@ async function createDestination() {
         publicKey: 'pk_test_123',
       },
       description: 'Production Langfuse for trace storage',
-      isActive: true,
+      isEnabled: true,
       name: 'My Langfuse Instance',
-      priority: 100,
       providerId: langfuseProvider.id,
-      secrets: {
-        secretKey: 'sk_test_456',
-      },
     },
   });
 

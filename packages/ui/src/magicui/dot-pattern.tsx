@@ -1,5 +1,5 @@
-import { cn } from '@untrace/ui/lib/utils';
 import { useId } from 'react';
+import { cn } from '../lib/utils';
 
 interface DotPatternProps {
   width?: number;

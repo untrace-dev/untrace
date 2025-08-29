@@ -1,0 +1,30 @@
+{
+  "dependencies": {
+    "@untrace/analytics": "workspace:*",
+    "next": "15.5.2",
+    "stripe": "18.5.0"
+  },
+  "devDependencies": {
+    "@untrace/tsconfig": "workspace:*",
+    "typescript": "5.9.2"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./guards/client": "./src/guards/client.tsx",
+    "./guards/server": "./src/guards/server.ts"
+  },
+  "license": "MIT",
+  "name": "@untrace/stripe",
+  "private": true,
+  "scripts": {
+    "build": "bun run populate-ids",
+    "clean": "git clean -xdf .turbo node_modules dist",
+    "delete-subscriptions": "bun run ./scripts/delete-customer-subscriptions.ts",
+    "dev": "bun run build && tsc --watch",
+    "populate-ids": "bun run ./scripts/populate-ids.ts",
+    "push": "bun run ./scripts/create-stripe-entities.ts",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "type": "module",
+  "version": "0.1.0"
+}

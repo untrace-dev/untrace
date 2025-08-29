@@ -36,7 +36,7 @@ describe('handleOrganizationUpdated', () => {
       },
       object: 'event',
       type: 'organization.updated',
-    } satisfies OrganizationWebhookEvent;
+    } as unknown as OrganizationWebhookEvent;
 
     const response = await handleOrganizationUpdated(event);
     expect(response).toBeUndefined();

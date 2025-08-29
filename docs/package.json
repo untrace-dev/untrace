@@ -1,0 +1,11 @@
+{
+  "devDependencies": {
+    "mint": "4.2.92"
+  },
+  "name": "@untrace/docs",
+  "private": true,
+  "scripts": {
+    "dev": "mint dev"
+  },
+  "version": "0.1.0"
+}

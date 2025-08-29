@@ -27,6 +27,17 @@ export const Highlight = ({
 
 export const BLUR_FADE_DELAY = 0.15;
 
+// Team pricing constants
+export const TEAM_PRICING = {
+  BASE_PRICE_MONTHLY: 10,
+  BASE_PRICE_YEARLY: 8,
+  DEFAULT_SEATS: 1,
+  INCLUDED_SEATS: 1,
+  MAX_SEATS: 50,
+  PRICE_PER_SEAT_MONTHLY: 10,
+  PRICE_PER_SEAT_YEARLY: 8,
+} as const;
+
 const url = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 export const siteConfig = {
   benefits: [
@@ -280,6 +291,27 @@ export const siteConfig = {
       ],
       title: 'Company',
     },
+    {
+      links: [
+        { id: 12, title: 'VS Code Extension', url: '/vscode' },
+        { id: 13, title: 'JetBrains Plugin', url: '/jetbrains' },
+        { id: 14, title: 'MCP Server', url: '/mcp' },
+        { id: 15, title: 'Untrace CLI', url: '/cli' },
+      ],
+      title: 'Products',
+    },
+    {
+      links: [
+        {
+          id: 16,
+          title: 'Changelog',
+          url: 'https://github.com/untrace-dev/untrace/releases',
+        },
+        // { id: 17, title: 'Blog', url: '/blog' },
+        { id: 18, title: 'Docs', url: 'https://docs.untrace.dev' },
+      ],
+      title: 'Resources',
+    },
     // {
     //   title: 'Products',
     //   links: [
@@ -356,7 +388,7 @@ export const siteConfig = {
         text: 'Get Started',
       },
       secondary: {
-        href: 'https://docs.untrace.com',
+        href: 'https://docs.untrace.dev',
         text: 'View Documentation',
       },
     },
@@ -412,6 +444,7 @@ export const siteConfig = {
         yearlyPrice: '$0',
       },
       {
+        betaFree: false,
         buttonColor: 'bg-secondary text-white',
         buttonText: 'Start Trial',
         description: 'For growing AI teams',

@@ -3,7 +3,7 @@ import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   integer,
-  jsonb,
+  json,
   pgEnum,
   pgTable,
   text,
@@ -11,14 +11,43 @@ import {
   unique,
   varchar,
 } from 'drizzle-orm/pg-core';
-import { createInsertSchema } from 'drizzle-zod';
+import { createInsertSchema, createUpdateSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
+// Helper function to get user ID from Clerk JWT
+const requestingUserId = () => sql`requesting_user_id()`;
+
+// Helper function to get org ID from Clerk JWT
+const requestingOrgId = () => sql`requesting_org_id()`;
+
 export const userRoleEnum = pgEnum('userRole', ['admin', 'superAdmin', 'user']);
+export const localConnectionStatusEnum = pgEnum('localConnectionStatus', [
+  'connected',
+  'disconnected',
+]);
+export const stripeSubscriptionStatusEnum = pgEnum('stripeSubscriptionStatus', [
+  'active',
+  'canceled',
+  'incomplete',
+  'incomplete_expired',
+  'past_due',
+  'paused',
+  'trialing',
+  'unpaid',
+]);
 
-export const UserRoleType = z.enum(userRoleEnum.enumValues).Enum;
+export const apiKeyUsageTypeEnum = pgEnum('apiKeyUsageType', ['mcp-server']);
 
-export const Users = pgTable('users', {
+export const UserRoleType = z.enum(userRoleEnum.enumValues).enum;
+export const LocalConnectionStatusType = z.enum(
+  localConnectionStatusEnum.enumValues,
+).enum;
+export const StripeSubscriptionStatusType = z.enum(
+  stripeSubscriptionStatusEnum.enumValues,
+).enum;
+export const ApiKeyUsageTypeType = z.enum(apiKeyUsageTypeEnum.enumValues).enum;
+
+export const Users = pgTable('user', {
   avatarUrl: text('avatarUrl'),
   clerkId: text('clerkId').unique().notNull(),
   createdAt: timestamp('createdAt').defaultNow().notNull(),
@@ -38,9 +67,10 @@ export const Users = pgTable('users', {
 });
 
 export const UsersRelations = relations(Users, ({ many }) => ({
+  apiKeys: many(ApiKeys),
+  apiKeyUsage: many(ApiKeyUsage),
   authCodes: many(AuthCodes),
   orgMembers: many(OrgMembers),
-  shortUrls: many(ShortUrls),
   traces: many(Traces),
 }));
 
@@ -67,7 +97,13 @@ export const Orgs = pgTable('orgs', {
     .$defaultFn(() => createId({ prefix: 'org' }))
     .notNull()
     .primaryKey(),
-  name: text('name').notNull(),
+  name: text('name').notNull().unique(),
+  // Stripe fields
+  stripeCustomerId: text('stripeCustomerId'),
+  stripeSubscriptionId: text('stripeSubscriptionId'),
+  stripeSubscriptionStatus: stripeSubscriptionStatusEnum(
+    'stripeSubscriptionStatus',
+  ),
   updatedAt: timestamp('updatedAt', {
     mode: 'date',
     withTimezone: true,
@@ -76,7 +112,7 @@ export const Orgs = pgTable('orgs', {
 
 export type OrgType = typeof Orgs.$inferSelect;
 
-export const updateOrgSchema = createInsertSchema(Orgs, {}).omit({
+export const updateOrgSchema = createInsertSchema(Orgs).omit({
   createdAt: true,
   createdByUserId: true,
   id: true,
@@ -84,6 +120,8 @@ export const updateOrgSchema = createInsertSchema(Orgs, {}).omit({
 });
 
 export const OrgsRelations = relations(Orgs, ({ one, many }) => ({
+  apiKeys: many(ApiKeys),
+  apiKeyUsage: many(ApiKeyUsage),
   authCodes: many(AuthCodes),
   createdByUser: one(Users, {
     fields: [Orgs.createdByUserId],
@@ -111,7 +149,7 @@ export const OrgMembers = pgTable(
         onDelete: 'cascade',
       })
       .notNull()
-      .default(sql`auth.jwt()->>'org_id'`),
+      .default(requestingOrgId()),
     role: userRoleEnum('role').default('user').notNull(),
     updatedAt: timestamp('updatedAt', {
       mode: 'date',
@@ -122,7 +160,7 @@ export const OrgMembers = pgTable(
         onDelete: 'cascade',
       })
       .notNull()
-      .default(sql`auth.jwt()->>'sub'`),
+      .default(requestingUserId()),
   },
   (table) => [
     // Add unique constraint for userId and orgId combination using the simpler syntax
@@ -146,35 +184,6 @@ export const OrgMembersRelations = relations(OrgMembers, ({ one }) => ({
   }),
 }));
 
-export const ShortUrls = pgTable('shortUrls', {
-  code: text('code').notNull().unique(),
-  createdAt: timestamp('createdAt', {
-    mode: 'date',
-    withTimezone: true,
-  }).defaultNow(),
-  id: varchar('id', { length: 128 })
-    .$defaultFn(() => createId({ prefix: 's' }))
-    .notNull()
-    .primaryKey(),
-  orgId: varchar('orgId')
-    .references(() => Orgs.id, {
-      onDelete: 'cascade',
-    })
-    .notNull()
-    .default(sql`auth.jwt()->>'org_id'`),
-  redirectUrl: text('redirectUrl').notNull(),
-  updatedAt: timestamp('updatedAt', {
-    mode: 'date',
-    withTimezone: true,
-  }).$onUpdateFn(() => new Date()),
-  userId: varchar('userId')
-    .references(() => Users.id, {
-      onDelete: 'cascade',
-    })
-    .notNull()
-    .default(sql`auth.jwt()->>'sub'`),
-});
-
 export const AuthCodes = pgTable('authCodes', {
   createdAt: timestamp('createdAt', {
     mode: 'date',
@@ -197,7 +206,7 @@ export const AuthCodes = pgTable('authCodes', {
       onDelete: 'cascade',
     })
     .notNull()
-    .default(sql`auth.jwt()->>'org_id'`),
+    .default(requestingOrgId()),
   sessionId: text('sessionId').notNull(),
   updatedAt: timestamp('updatedAt', {
     mode: 'date',
@@ -212,7 +221,7 @@ export const AuthCodes = pgTable('authCodes', {
       onDelete: 'cascade',
     })
     .notNull()
-    .default(sql`auth.jwt()->>'sub'`),
+    .default(requestingUserId()),
 });
 
 export type AuthCodeType = typeof AuthCodes.$inferSelect;
@@ -224,6 +233,207 @@ export const AuthCodesRelations = relations(AuthCodes, ({ one }) => ({
   }),
   user: one(Users, {
     fields: [AuthCodes.userId],
+    references: [Users.id],
+  }),
+}));
+
+// API Keys Table
+export const ApiKeys = pgTable('apiKeys', {
+  createdAt: timestamp('createdAt', {
+    mode: 'date',
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow(),
+  expiresAt: timestamp('expiresAt', {
+    mode: 'date',
+    withTimezone: true,
+  }),
+  id: varchar('id', { length: 128 })
+    .$defaultFn(() => createId({ prefix: 'ak' }))
+    .notNull()
+    .primaryKey(),
+  isActive: boolean('isActive').notNull().default(true),
+  key: text('key')
+    .notNull()
+    .unique()
+    .$defaultFn(() => createId({ prefix: 'usk', prefixSeparator: '-live-' })),
+  lastUsedAt: timestamp('lastUsedAt', {
+    mode: 'date',
+    withTimezone: true,
+  }),
+  name: text('name').notNull(),
+  orgId: varchar('orgId')
+    .references(() => Orgs.id, {
+      onDelete: 'cascade',
+    })
+    .notNull()
+    .default(requestingOrgId()),
+  updatedAt: timestamp('updatedAt', {
+    mode: 'date',
+    withTimezone: true,
+  }).$onUpdateFn(() => new Date()),
+  userId: varchar('userId')
+    .references(() => Users.id, {
+      onDelete: 'cascade',
+    })
+    .notNull()
+    .default(requestingUserId()),
+});
+
+export type ApiKeyType = typeof ApiKeys.$inferSelect;
+
+export const CreateApiKeySchema = createInsertSchema(ApiKeys).omit({
+  createdAt: true,
+  id: true,
+  lastUsedAt: true,
+  orgId: true,
+  updatedAt: true,
+  userId: true,
+});
+
+export const UpdateApiKeySchema = createUpdateSchema(ApiKeys).omit({
+  createdAt: true,
+  id: true,
+  orgId: true,
+  updatedAt: true,
+  userId: true,
+});
+
+export const ApiKeysRelations = relations(ApiKeys, ({ one, many }) => ({
+  org: one(Orgs, {
+    fields: [ApiKeys.orgId],
+    references: [Orgs.id],
+  }),
+  usage: many(ApiKeyUsage),
+  user: one(Users, {
+    fields: [ApiKeys.userId],
+    references: [Users.id],
+  }),
+}));
+
+// API Key Usage Table
+export const ApiKeyUsage = pgTable('apiKeyUsage', {
+  apiKeyId: varchar('apiKeyId', { length: 128 })
+    .references(() => ApiKeys.id, {
+      onDelete: 'cascade',
+    })
+    .notNull(),
+  createdAt: timestamp('createdAt', {
+    mode: 'date',
+    withTimezone: true,
+  })
+    .notNull()
+    .defaultNow(),
+  id: varchar('id', { length: 128 })
+    .$defaultFn(() => createId({ prefix: 'aku' }))
+    .notNull()
+    .primaryKey(),
+  // Generic metadata for different usage types
+  metadata: json('metadata').$type<Record<string, unknown>>(),
+  orgId: varchar('orgId')
+    .references(() => Orgs.id, {
+      onDelete: 'cascade',
+    })
+    .notNull()
+    .default(requestingOrgId()),
+  type: apiKeyUsageTypeEnum('type').notNull(),
+  updatedAt: timestamp('updatedAt', {
+    mode: 'date',
+    withTimezone: true,
+  }).$onUpdateFn(() => new Date()),
+  userId: varchar('userId')
+    .references(() => Users.id, {
+      onDelete: 'cascade',
+    })
+    .notNull()
+    .default(requestingUserId()),
+});
+
+export type ApiKeyUsageType = typeof ApiKeyUsage.$inferSelect;
+
+export const CreateApiKeyUsageSchema = createInsertSchema(ApiKeyUsage).omit({
+  createdAt: true,
+  id: true,
+  orgId: true,
+  updatedAt: true,
+  userId: true,
+});
+
+export const ApiKeyUsageRelations = relations(ApiKeyUsage, ({ one }) => ({
+  apiKey: one(ApiKeys, {
+    fields: [ApiKeyUsage.apiKeyId],
+    references: [ApiKeys.id],
+  }),
+  org: one(Orgs, {
+    fields: [ApiKeyUsage.orgId],
+    references: [Orgs.id],
+  }),
+  user: one(Users, {
+    fields: [ApiKeyUsage.userId],
+    references: [Users.id],
+  }),
+}));
+
+export const ShortUrls = pgTable('shortUrls', {
+  code: varchar('code', { length: 128 }).notNull(),
+  createdAt: timestamp('createdAt', {
+    mode: 'date',
+    withTimezone: true,
+  }).defaultNow(),
+  expiresAt: timestamp('expiresAt', {
+    mode: 'date',
+    withTimezone: true,
+  }),
+  id: varchar('id', { length: 128 })
+    .$defaultFn(() => createId({ prefix: 'shortUrl' }))
+    .notNull()
+    .primaryKey(),
+  isActive: boolean('isActive').notNull().default(true),
+  orgId: varchar('orgId')
+    .references(() => Orgs.id, {
+      onDelete: 'cascade',
+    })
+    .notNull()
+    .default(requestingOrgId()),
+  redirectUrl: text('redirectUrl').notNull(),
+  updatedAt: timestamp('updatedAt', {
+    mode: 'date',
+    withTimezone: true,
+  }).$onUpdateFn(() => new Date()),
+  userId: varchar('userId')
+    .references(() => Users.id, {
+      onDelete: 'cascade',
+    })
+    .notNull()
+    .default(requestingUserId()),
+});
+
+export type ShortUrlType = typeof ShortUrls.$inferSelect;
+
+export const CreateShortUrlSchema = createInsertSchema(ShortUrls).omit({
+  createdAt: true,
+  id: true,
+  orgId: true,
+  updatedAt: true,
+  userId: true,
+});
+
+export const UpdateShortUrlSchema = createUpdateSchema(ShortUrls).omit({
+  createdAt: true,
+  id: true,
+  orgId: true,
+  updatedAt: true,
+  userId: true,
+});
+
+export const ShortUrlsRelations = relations(ShortUrls, ({ one }) => ({
+  org: one(Orgs, {
+    fields: [ShortUrls.orgId],
+    references: [Orgs.id],
+  }),
+  user: one(Users, {
+    fields: [ShortUrls.userId],
     references: [Users.id],
   }),
 }));
@@ -246,7 +456,7 @@ export const destinationTypeEnum = pgEnum('destinationType', [
   'custom',
 ]);
 
-export const DestinationType = z.enum(destinationTypeEnum.enumValues).Enum;
+export const DestinationType = z.enum(destinationTypeEnum.enumValues).enum;
 
 // Enum for delivery status
 export const deliveryStatusEnum = pgEnum('deliveryStatus', [
@@ -257,7 +467,7 @@ export const deliveryStatusEnum = pgEnum('deliveryStatus', [
   'cancelled',
 ]);
 
-export const DeliveryStatus = z.enum(deliveryStatusEnum.enumValues).Enum;
+export const DeliveryStatus = z.enum(deliveryStatusEnum.enumValues).enum;
 
 // Traces table with TTL support
 export const Traces = pgTable('traces', {
@@ -270,7 +480,7 @@ export const Traces = pgTable('traces', {
     .notNull(),
 
   // Core trace data
-  data: jsonb('data').notNull(), // Full trace payload
+  data: json('data').notNull(), // Full trace payload
 
   // TTL support
   expiresAt: timestamp('expiresAt', {
@@ -283,7 +493,7 @@ export const Traces = pgTable('traces', {
     .$defaultFn(() => createId({ prefix: 'tr' }))
     .notNull()
     .primaryKey(),
-  metadata: jsonb('metadata'), // Additional metadata
+  metadata: json('metadata'), // Additional metadata
 
   // Organization and user context
   orgId: varchar('orgId')
@@ -291,7 +501,7 @@ export const Traces = pgTable('traces', {
       onDelete: 'cascade',
     })
     .notNull()
-    .default(sql`auth.jwt()->>'org_id'`),
+    .default(requestingOrgId()),
   parentSpanId: varchar('parentSpanId', { length: 32 }),
   spanId: varchar('spanId', { length: 32 }), // OTEL span ID
 
@@ -305,7 +515,7 @@ export const Traces = pgTable('traces', {
     .references(() => Users.id, {
       onDelete: 'set null',
     })
-    .default(sql`auth.jwt()->>'sub'`),
+    .default(requestingUserId()),
 });
 
 export type TraceType = typeof Traces.$inferSelect;
@@ -325,7 +535,7 @@ export const TracesRelations = relations(Traces, ({ one, many }) => ({
 // Available destination providers (reference table)
 export const DestinationProviders = pgTable('destinationProviders', {
   // Schema for configuration (JSON Schema)
-  configSchema: jsonb('configSchema').notNull(),
+  configSchema: json('configSchema').notNull(),
 
   createdAt: timestamp('createdAt', {
     mode: 'date',
@@ -373,7 +583,7 @@ export const OrgDestinations = pgTable(
     batchSize: integer('batchSize').default(100),
 
     // Encrypted configuration (API keys, endpoints, etc.)
-    config: jsonb('config').notNull(), // Should be encrypted in application layer
+    config: json('config').notNull(), // Should be encrypted in application layer
 
     createdAt: timestamp('createdAt', {
       mode: 'date',
@@ -398,7 +608,7 @@ export const OrgDestinations = pgTable(
         onDelete: 'cascade',
       })
       .notNull()
-      .default(sql`auth.jwt()->>'org_id'`),
+      .default(requestingOrgId()),
 
     providerId: varchar('providerId')
       .references(() => DestinationProviders.id, {
@@ -482,7 +692,7 @@ export const TraceDeliveries = pgTable(
       mode: 'date',
       withTimezone: true,
     }),
-    responseData: jsonb('responseData'),
+    responseData: json('responseData'),
 
     // Delivery status
     status: deliveryStatusEnum('status').default('pending').notNull(),
@@ -494,7 +704,7 @@ export const TraceDeliveries = pgTable(
       .notNull(),
 
     // Transformed payload (what was actually sent)
-    transformedPayload: jsonb('transformedPayload'),
+    transformedPayload: json('transformedPayload'),
     updatedAt: timestamp('updatedAt', {
       mode: 'date',
       withTimezone: true,

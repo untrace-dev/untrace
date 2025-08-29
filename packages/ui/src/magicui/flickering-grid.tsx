@@ -1,9 +1,9 @@
 'use client';
 
-import { cn } from '@untrace/ui/lib/utils';
-import { colorWithOpacity, getRGBA } from '@untrace/ui/magicui/utils';
 import type React from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { cn } from '../lib/utils';
+import { colorWithOpacity, getRGBA } from '../magicui/utils';
 
 interface FlickeringGridProps extends React.HTMLAttributes<HTMLDivElement> {
   squareSize?: number;

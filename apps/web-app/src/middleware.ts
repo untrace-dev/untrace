@@ -1,17 +1,13 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 
-const isPublicRoute = createRouteMatcher([
-  '/api/webhooks/clerk',
-  '/api/webhooks/stripe',
-  '/api/trpc(.*)',
-  '/blog(.*)',
-  '/',
-  '/privacy-policy',
-  '/terms-of-service',
+// Define routes that require authentication
+const isPrivateRoute = createRouteMatcher([
+  // Dashboard and app routes
+  '/app(.*)',
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
+  if (isPrivateRoute(request)) {
     await auth.protect();
   }
 });
@@ -22,5 +18,6 @@ export const config = {
     '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
     // Always run for API routes
     '/(api|trpc)(.*)',
+    '/app(.*)',
   ],
 };

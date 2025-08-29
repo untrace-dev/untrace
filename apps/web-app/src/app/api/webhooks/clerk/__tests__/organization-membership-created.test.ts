@@ -55,7 +55,7 @@ describe('handleOrganizationMembershipCreated', () => {
       },
       object: 'event',
       type: 'organizationMembership.created',
-    } satisfies OrganizationMembershipWebhookEvent;
+    } as unknown as OrganizationMembershipWebhookEvent;
 
     const response = await handleOrganizationMembershipCreated(event);
     expect(response).toBeUndefined();

@@ -446,6 +446,6 @@ Contributions are welcome! Please see our [Contributing Guide](../../CONTRIBUTIN
 
 ## Support
 
-- Documentation: [https://docs.untrace.com](https://docs.untrace.com)
+- Documentation: [https://docs.untrace.dev](https://docs.untrace.dev)
 - Issues: [GitHub Issues](https://github.com/untrace-dev/untrace/issues)
 - Discord: [Join our community](https://discord.gg/untrace)
