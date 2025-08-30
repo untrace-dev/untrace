@@ -174,11 +174,7 @@ interface OnboardingFormProps {
   source?: string;
 }
 
-export function OnboardingForm({
-  isLoading = false,
-  redirectTo,
-  source,
-}: OnboardingFormProps) {
+export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { organization } = useOrganization();

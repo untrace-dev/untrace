@@ -29,7 +29,7 @@
       "!**/.git",
       "!**/coverage",
       "!**/.nyc_output",
-      "!**/packages/ai",
+      "!**/packages/ai/src/baml_client",
       "!**/apps/chrome-extension/scripts/detect-obfuscation"
     ]
   },

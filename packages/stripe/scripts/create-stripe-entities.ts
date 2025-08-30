@@ -29,7 +29,7 @@ interface PlanConfig {
   name: string;
   description: string;
   baseFeeCents: number;
-  includedWebhookEvents: number; // Daily webhook events
+  includedWebhookEvents: number; // Monthly LLM traces or daily webhook events
   pricingModel: 'flat' | 'per_user';
   baseUsers?: number; // Number of users included in base price
   pricePerUserCents?: number; // Cost per additional user
@@ -48,31 +48,31 @@ const PLANS: PlanConfig[] = [
   {
     baseFeeCents: 0,
     description:
-      'Perfect for individual developers getting started with webhook testing',
+      'Perfect for individual developers getting started with LLM observability',
     entitlements: [
       {
-        lookupKey: 'webhook_events_50_per_day',
-        name: '50 Webhook Events Per Day',
+        lookupKey: 'llm_traces_100_per_month',
+        name: '100 LLM Traces Per Month',
       },
       {
-        lookupKey: 'single_webhook_url',
-        name: 'Single Webhook URL',
+        lookupKey: 'single_integration',
+        name: 'Single Platform Integration',
       },
       {
         lookupKey: 'basic_monitoring',
-        name: 'Basic Webhook Monitoring',
+        name: 'Basic Trace Monitoring',
       },
       {
-        lookupKey: 'cli_editor_access',
-        name: 'CLI & Editor Extension Access',
+        lookupKey: 'cli_access',
+        name: 'CLI Access',
       },
       {
-        lookupKey: 'local_event_routing',
-        name: 'Local Event Routing',
+        lookupKey: 'local_trace_routing',
+        name: 'Local Trace Routing',
       },
       {
-        lookupKey: 'public_webhook_urls',
-        name: 'Public Webhook URLs',
+        lookupKey: 'public_webhook_endpoints',
+        name: 'Public Webhook Endpoints',
       },
       {
         lookupKey: 'community_support',
@@ -80,17 +80,17 @@ const PLANS: PlanConfig[] = [
       },
     ],
     features: [
-      'CLI & Editor extension access',
-      '50 webhook events per day',
-      '1 webhook URL',
-      'Basic webhook monitoring',
-      'Local event routing',
+      'CLI access for trace capture',
+      '100 LLM traces per month',
+      '1 platform integration',
+      'Basic trace monitoring',
+      'Local trace routing',
       'Single developer',
-      'Public webhook URLs',
+      'Public webhook endpoints',
       'Community support',
     ],
     id: 'free',
-    includedWebhookEvents: 50,
+    includedWebhookEvents: 100,
     lookup_keys: {
       monthly: 'untrace_free_2025_01_monthly',
     },
@@ -98,80 +98,154 @@ const PLANS: PlanConfig[] = [
     pricingModel: 'flat',
   },
   {
-    baseFeeCents: 10 * CONSTANTS.CENTS_MULTIPLIER,
+    baseFeeCents: 99 * CONSTANTS.CENTS_MULTIPLIER,
     baseUsers: 1,
-    description: 'Ideal for development teams with unlimited webhook events',
+    description: 'Ideal for development teams with unlimited LLM trace routing',
     entitlements: [
       {
-        lookupKey: 'unlimited_webhook_events',
-        name: 'Unlimited Webhook Events',
+        lookupKey: 'unlimited_llm_traces',
+        name: 'Unlimited LLM Traces',
       },
       {
-        lookupKey: 'unlimited_webhook_urls',
-        name: 'Unlimited Webhook URLs',
-      },
-      {
-        lookupKey: 'mcp_server_access',
-        name: 'MCP Server Access',
+        lookupKey: 'unlimited_integrations',
+        name: 'Unlimited Platform Integrations',
       },
       {
         lookupKey: 'ai_powered_debugging',
-        name: 'AI-Powered Debugging with MCP Server',
+        name: 'AI-Powered Trace Analysis',
       },
       {
-        lookupKey: 'trace_ai_agent_workflows',
-        name: 'Trace AI Agent Workflows',
+        lookupKey: 'advanced_routing_rules',
+        name: 'Advanced Routing Rules',
       },
       {
-        lookupKey: 'team_webhook_sharing',
-        name: 'Team Webhook Sharing',
+        lookupKey: 'team_trace_sharing',
+        name: 'Team Trace Sharing',
       },
       {
         lookupKey: 'unlimited_developers',
         name: 'Unlimited Developers',
       },
       {
-        lookupKey: 'private_webhook_urls',
-        name: 'Private Webhook URLs',
+        lookupKey: 'private_endpoints',
+        name: 'Private Endpoints',
       },
       {
-        lookupKey: 'custom_webhook_transformations',
-        name: 'Custom Webhook Transformations',
+        lookupKey: 'custom_transformations',
+        name: 'Custom Trace Transformations',
       },
       {
-        lookupKey: 'custom_webhook_subdomains',
-        name: 'Custom Webhook Subdomains',
+        lookupKey: 'custom_subdomains',
+        name: 'Custom Subdomains',
       },
       {
         lookupKey: 'advanced_monitoring_analytics',
         name: 'Advanced Monitoring & Analytics',
       },
       {
-        lookupKey: 'route_to_external_integrations',
-        name: 'Route to External Integrations',
+        lookupKey: 'external_integrations',
+        name: 'External Platform Integrations',
       },
     ],
     features: [
-      'AI-Powered debugging with MCP Server',
-      'Trace AI Agent Workflows',
-      'Unlimited webhook events',
-      'Unlimited webhook URLs',
-      'Team webhook sharing',
+      'AI-Powered trace analysis',
+      'Advanced routing rules',
+      'Unlimited LLM traces',
+      'Unlimited platform integrations',
+      'Team trace sharing',
       'Unlimited developers',
-      'Private webhook URLs',
-      'Custom webhook transformations',
-      'Custom webhook subdomains',
+      'Private endpoints',
+      'Custom trace transformations',
+      'Custom subdomains',
       'Advanced monitoring & analytics',
-      'Route to external integrations',
+      'External platform integrations',
     ],
-    id: 'team',
+    id: 'growth',
     includedWebhookEvents: -1,
     lookup_keys: {
-      monthly: 'untrace_team_2025_01_monthly',
-      yearly: 'untrace_team_2025_01_yearly',
+      monthly: 'untrace_growth_2025_01_monthly',
+      yearly: 'untrace_growth_2025_01_yearly',
     },
-    name: 'Team Plan',
-    pricePerUserCents: 10 * CONSTANTS.CENTS_MULTIPLIER,
+    name: 'Growth Plan',
+    pricePerUserCents: 99 * CONSTANTS.CENTS_MULTIPLIER,
+    pricingModel: 'per_user',
+  },
+  {
+    baseFeeCents: 499 * CONSTANTS.CENTS_MULTIPLIER,
+    baseUsers: 5,
+    description: 'Enterprise-grade LLM observability with advanced features',
+    entitlements: [
+      {
+        lookupKey: 'enterprise_llm_traces',
+        name: 'Enterprise LLM Traces',
+      },
+      {
+        lookupKey: 'enterprise_integrations',
+        name: 'Enterprise Platform Integrations',
+      },
+      {
+        lookupKey: 'enterprise_ai_analysis',
+        name: 'Enterprise AI Analysis',
+      },
+      {
+        lookupKey: 'enterprise_routing_rules',
+        name: 'Enterprise Routing Rules',
+      },
+      {
+        lookupKey: 'enterprise_team_features',
+        name: 'Enterprise Team Features',
+      },
+      {
+        lookupKey: 'enterprise_developers',
+        name: 'Enterprise Developer Access',
+      },
+      {
+        lookupKey: 'enterprise_endpoints',
+        name: 'Enterprise Endpoints',
+      },
+      {
+        lookupKey: 'enterprise_transformations',
+        name: 'Enterprise Transformations',
+      },
+      {
+        lookupKey: 'enterprise_subdomains',
+        name: 'Enterprise Subdomains',
+      },
+      {
+        lookupKey: 'enterprise_monitoring',
+        name: 'Enterprise Monitoring',
+      },
+      {
+        lookupKey: 'enterprise_integrations',
+        name: 'Enterprise Integrations',
+      },
+      {
+        lookupKey: 'dedicated_support',
+        name: 'Dedicated Support',
+      },
+    ],
+    features: [
+      'Enterprise AI analysis',
+      'Enterprise routing rules',
+      'Enterprise LLM traces',
+      'Enterprise platform integrations',
+      'Enterprise team features',
+      'Enterprise developer access',
+      'Enterprise endpoints',
+      'Enterprise transformations',
+      'Enterprise subdomains',
+      'Enterprise monitoring',
+      'Enterprise integrations',
+      'Dedicated support',
+    ],
+    id: 'scale',
+    includedWebhookEvents: -1,
+    lookup_keys: {
+      monthly: 'untrace_scale_2025_01_monthly',
+      yearly: 'untrace_scale_2025_01_yearly',
+    },
+    name: 'Scale Plan',
+    pricePerUserCents: 99 * CONSTANTS.CENTS_MULTIPLIER,
     pricingModel: 'per_user',
   },
 ];
@@ -213,18 +287,62 @@ const ADDONS: AddonConfig[] = [
     },
     name: 'Dedicated Support',
   },
+  {
+    baseFeeCents: 200 * CONSTANTS.CENTS_MULTIPLIER,
+    description: 'Advanced AI-powered trace analysis and debugging',
+    entitlements: [
+      {
+        lookupKey: 'advanced_ai_analysis',
+        name: 'Advanced AI Analysis',
+      },
+    ],
+    features: [
+      'AI-powered trace debugging',
+      'Intelligent error detection',
+      'Performance optimization insights',
+      'Custom trace analysis rules',
+    ],
+    id: 'advanced_ai_analysis',
+    lookup_keys: {
+      monthly: 'untrace_advanced_ai_analysis_2025_01_monthly',
+      yearly: 'untrace_advanced_ai_analysis_2025_01_yearly',
+    },
+    name: 'Advanced AI Analysis',
+  },
+  {
+    baseFeeCents: 150 * CONSTANTS.CENTS_MULTIPLIER,
+    description: 'Custom trace transformations and data processing',
+    entitlements: [
+      {
+        lookupKey: 'custom_transformations',
+        name: 'Custom Transformations',
+      },
+    ],
+    features: [
+      'Custom trace transformations',
+      'Data enrichment',
+      'Format conversion',
+      'Conditional routing logic',
+    ],
+    id: 'custom_transformations',
+    lookup_keys: {
+      monthly: 'untrace_custom_transformations_2025_01_monthly',
+      yearly: 'untrace_custom_transformations_2025_01_yearly',
+    },
+    name: 'Custom Transformations',
+  },
 ];
 
 // Utility functions
 function calculateYearlyAmount(monthlyAmount: number): number {
   // Apply 20% discount to annual pricing: monthly * 12 * 0.8
-  // For Team plan: $10/month * 12 * 0.8 = $96/year
+  // For Growth plan: $99/month * 12 * 0.8 = $950/year
   return Math.floor(monthlyAmount * 12 * CONSTANTS.YEARLY_DISCOUNT_RATE);
 }
 
 function calculateYearlyPerUserAmount(monthlyPerUserAmount: number): number {
   // Apply 20% discount to annual per-user pricing: monthly * 12 * 0.8
-  // For Team plan per-user: $10/month * 12 * 0.8 = $96/year per additional seat
+  // For Growth plan per-user: $99/month * 12 * 0.8 = $950/year per additional seat
   return Math.floor(monthlyPerUserAmount * 12 * CONSTANTS.YEARLY_DISCOUNT_RATE);
 }
 
@@ -302,7 +420,7 @@ async function createOrUpdatePrice(params: {
     currency: CONSTANTS.DEFAULT_CURRENCY,
     lookup_key: lookupKey,
     metadata,
-    nickname: `${metadata.type === 'addon' ? 'Add-on' : 'Base'} price (${interval}ly) with ${includedUsers ? `${includedUsers} included users` : 'fixed pricing'}`,
+    nickname: `${metadata.type === 'addon' ? 'Add-on' : 'Base'} price (${interval}ly) with ${includedUsers ? `${includedUsers} included users` : 'fixed pricing'} for LLM observability`,
     product,
     recurring: {
       interval,
@@ -559,7 +677,7 @@ async function main() {
       // 3.c Create prices based on pricing model
       if (plan.pricingModel === 'per_user') {
         console.log(`Creating per-seat prices for plan: ${plan.id}`);
-        // Per-seat pricing for Team plan using Stripe's native per-seat billing
+        // Per-seat pricing for Growth/Scale plans using Stripe's native per-seat billing
         const monthlyPrice = await createOrUpdatePrice({
           amount: plan.baseFeeCents,
           includedUsers: plan.baseUsers,
@@ -568,6 +686,10 @@ async function main() {
           metadata: {
             billing_period: 'monthly',
             included_users: plan.baseUsers?.toString() ?? '0',
+            llm_traces:
+              plan.includedWebhookEvents === -1
+                ? 'unlimited'
+                : plan.includedWebhookEvents.toString(),
             plan_id: plan.id,
             price_per_user_cents: plan.pricePerUserCents?.toString() ?? '0',
             type: 'per_seat',
@@ -585,6 +707,10 @@ async function main() {
             metadata: {
               billing_period: 'yearly',
               included_users: plan.baseUsers?.toString() ?? '0',
+              llm_traces:
+                plan.includedWebhookEvents === -1
+                  ? 'unlimited'
+                  : plan.includedWebhookEvents.toString(),
               plan_id: plan.id,
               price_per_user_cents:
                 calculateYearlyPerUserAmount(
@@ -618,6 +744,10 @@ async function main() {
           lookupKey: plan.lookup_keys.monthly,
           metadata: {
             billing_period: 'monthly',
+            llm_traces:
+              plan.includedWebhookEvents === -1
+                ? 'unlimited'
+                : plan.includedWebhookEvents.toString(),
             plan_id: plan.id,
             type: 'free',
           },
@@ -652,6 +782,7 @@ async function main() {
           metadata: {
             addon_id: addon.id,
             billing_period: 'monthly',
+            llm_observability: 'true',
             type: 'addon',
           },
           product: product.id,
@@ -663,6 +794,7 @@ async function main() {
           metadata: {
             addon_id: addon.id,
             billing_period: 'yearly',
+            llm_observability: 'true',
             type: 'addon',
           },
           product: product.id,
@@ -677,7 +809,7 @@ async function main() {
     }
 
     console.log(
-      'Successfully created or updated all Untrace products, prices, and addons!',
+      'Successfully created or updated all Untrace LLM observability products, prices, and addons!',
     );
   } catch (error) {
     console.error('Error creating or updating products and prices:', error);

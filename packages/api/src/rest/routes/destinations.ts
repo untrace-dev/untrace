@@ -111,7 +111,7 @@ export const destinationsRouter = createNextRoute(destinationsContract, {
 
       return {
         body: {
-          ...createdDestination!,
+          ...createdDestination,
           config: createdDestination?.config as Record<string, unknown>,
           provider: createdDestination?.provider
             ? {
@@ -322,7 +322,7 @@ export const destinationsRouter = createNextRoute(destinationsContract, {
   },
 
   // Test a destination configuration
-  testDestination: async ({ params, body, req }) => {
+  testDestination: async ({ params, body: _body, req }) => {
     try {
       const orgId = await getOrgId(req);
 
@@ -480,7 +480,7 @@ export const destinationsRouter = createNextRoute(destinationsContract, {
 
       return {
         body: {
-          ...destination!,
+          ...destination,
           config: destination?.config as Record<string, unknown>,
           provider: destination?.provider
             ? {

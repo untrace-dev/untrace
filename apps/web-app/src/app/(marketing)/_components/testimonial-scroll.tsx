@@ -34,6 +34,7 @@ export const TestimonialCard = ({
     </div>
 
     <div className="flex w-full select-none items-center justify-start gap-3.5">
+      {/** biome-ignore lint/performance/noImgElement: no need*/}
       <img alt={name} className="size-8 rounded-full" src={img} />
 
       <div>

@@ -21,8 +21,7 @@ export default function OnboardingSuccessPage() {
   const orgName = searchParams.get('orgName');
   const webhookName = searchParams.get('webhookName');
   const redirectTo = searchParams.get('redirectTo') || undefined;
-  const source = searchParams.get('source') || undefined;
-  const [isSetupComplete, setIsSetupComplete] = useState(false);
+  const [isSetupComplete] = useState(false);
 
   if (!orgName || !webhookName) {
     return (

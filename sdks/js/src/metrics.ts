@@ -6,23 +6,6 @@ import type { Cost, TokenUsage, UntraceMetrics } from './types';
  * Metrics implementation for Untrace
  */
 export class UntraceMetricsImpl implements UntraceMetrics {
-  private readonly modelCosts: Map<string, { input: number; output: number }> =
-    new Map([
-      // OpenAI
-      ['gpt-4', { input: 0.03, output: 0.06 }],
-      ['gpt-4-32k', { input: 0.06, output: 0.12 }],
-      ['gpt-3.5-turbo', { input: 0.0015, output: 0.002 }],
-      ['gpt-3.5-turbo-16k', { input: 0.003, output: 0.004 }],
-      // Anthropic
-      ['claude-3-opus', { input: 0.015, output: 0.075 }],
-      ['claude-3-sonnet', { input: 0.003, output: 0.015 }],
-      ['claude-3-haiku', { input: 0.00025, output: 0.00125 }],
-      ['claude-2.1', { input: 0.008, output: 0.024 }],
-      ['claude-2', { input: 0.008, output: 0.024 }],
-      ['claude-instant', { input: 0.0008, output: 0.0024 }],
-      // Add more models as needed
-    ]);
-
   /**
    * Record token usage
    */
