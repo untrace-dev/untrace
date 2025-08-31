@@ -1,5 +1,4 @@
 import { cn } from '@untrace/ui/lib/utils';
-import Image from 'next/image';
 
 export const Icons = {
   boat: () => (
@@ -1317,13 +1316,22 @@ export const Icons = {
     </svg>
   ),
   logo: ({ className }: { className?: string }) => (
-    <Image
-      alt="Untrace Logo"
-      className={cn('size-4', className)}
-      height={24}
-      src="/logo.svg"
-      width={42}
-    />
+    <svg
+      className={cn('size-12', className)}
+      fill="none"
+      viewBox="0 0 384 323"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <title>Untrace Logo</title>
+      <path
+        className="fill-foreground"
+        d="M113.5 323L0 200.5L38.5 160H39.5L115.5 236.5L189.5 155L266 239L344 159.5L383.5 200.5L265 321.5L191.5 240.5L113.5 323Z"
+      />
+      <path
+        className="fill-foreground"
+        d="M191.5 86.5L269 172.5L310.5 129L191 0L73.5 129L113.5 171.5L191.5 86.5Z"
+      />
+    </svg>
   ),
   posthog: () => (
     <svg

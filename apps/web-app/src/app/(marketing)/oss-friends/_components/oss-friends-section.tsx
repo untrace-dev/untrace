@@ -44,6 +44,12 @@ const ossProjects = [
     url: 'https://www.appsmith.com',
   },
   {
+    category: 'Development',
+    description: 'Unhook is a webhook management platform for developers.',
+    name: 'Unhook',
+    url: 'https://www.unhook.sh',
+  },
+  {
     category: 'Analytics',
     description:
       'Analytics for Apps, open source, simple and privacy-friendly. SDKs for Swift, React Native, Electron, Flutter and many others.',

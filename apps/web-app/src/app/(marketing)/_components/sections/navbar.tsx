@@ -130,8 +130,8 @@ export function Navbar() {
           )}
         >
           <div className="flex h-[56px] items-center justify-between pl-1 md:pl-2 pr-4">
-            <Link className="flex items-center gap-1" href="/">
-              <Icons.logo className="size-12" />
+            <Link className="flex items-center gap-2" href="/">
+              <Icons.logo className="size-8" />
               {/* {!hasScrolled && ( */}
               <div className="flex items-center gap-2">
                 <p className="text-lg font-semibold text-primary">Untrace</p>

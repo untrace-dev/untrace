@@ -31,340 +31,489 @@ const staggerContainer = {
   },
 };
 
-const webhookTerms = {
+const aiTerms = {
+  // Additional important terms for comprehensive coverage
+  '1': [
+    {
+      description:
+        "1-shot learning is a form of few-shot learning where AI models learn new tasks with just one example, demonstrating the model's ability to generalize from minimal data.",
+      term: '1-Shot Learning',
+      tlDr: 'AI models learning new tasks with just one example.',
+    },
+  ],
+  '2': [
+    {
+      description:
+        '2-shot learning allows AI models to learn new tasks with exactly two examples, providing slightly more context than 1-shot learning while still being extremely data-efficient.',
+      term: '2-Shot Learning',
+      tlDr: 'AI models learning new tasks with exactly two examples.',
+    },
+  ],
+  '3': [
+    {
+      description:
+        '3-shot learning provides AI models with three examples to learn new tasks, offering a balance between data efficiency and learning effectiveness.',
+      term: '3-Shot Learning',
+      tlDr: 'AI models learning new tasks with three examples.',
+    },
+  ],
   A: [
     {
       description:
-        'An API endpoint is a specific URL within a web service that can receive webhook payloads. It acts as the destination where webhook data is sent and processed.',
-      term: 'API Endpoint',
-      tlDr: 'A specific URL that accepts webhook requests and processes them according to predefined rules.',
+        'A/B testing in AI systems involves comparing two different model versions, prompts, or configurations to determine which performs better based on specific metrics and user feedback.',
+      term: 'A/B Testing',
+      tlDr: 'Comparing two AI model versions to determine which performs better.',
     },
     {
       description:
-        "Webhook authentication methods like HMAC signatures, API keys, or OAuth tokens help verify that webhook requests come from legitimate sources and haven't been tampered with.",
-      term: 'Authentication',
-      tlDr: 'The process of verifying the identity of webhook senders to ensure data security.',
+        'Active learning is a machine learning technique where the model identifies the most informative data points for labeling, reducing the amount of labeled data needed for training.',
+      term: 'Active Learning',
+      tlDr: 'AI model identifies most valuable data points for human labeling to improve efficiency.',
     },
     {
       description:
-        'API keys are unique identifiers used to authenticate webhook requests and control access to webhook endpoints, ensuring only authorized applications can send webhook data.',
-      term: 'API Key',
-      tlDr: 'A unique identifier used to authenticate and authorize webhook requests.',
+        'Adversarial training involves training AI models with intentionally crafted examples designed to fool the model, improving robustness and reducing vulnerability to attacks.',
+      term: 'Adversarial Training',
+      tlDr: 'Training AI models with intentionally misleading examples to improve robustness.',
+    },
+    {
+      description:
+        'Attention mechanisms allow AI models to focus on specific parts of input data, enabling better understanding of context and relationships between different elements.',
+      term: 'Attention Mechanism',
+      tlDr: 'AI model technique that focuses on relevant parts of input data for better understanding.',
     },
   ],
   B: [
     {
       description:
-        'Batch processing allows systems to handle multiple webhook events in a single operation, reducing overhead and improving performance when dealing with high volumes of events.',
+        'Batch processing in AI involves processing multiple data samples together, improving computational efficiency and enabling parallel processing on GPUs and TPUs.',
       term: 'Batch Processing',
-      tlDr: 'Processing multiple webhook events together instead of individually for improved efficiency.',
+      tlDr: 'Processing multiple AI training examples together for improved efficiency.',
     },
     {
       description:
-        'Backoff strategies automatically adjust retry intervals when webhook delivery fails, starting with short delays and gradually increasing to avoid overwhelming receiving systems.',
-      term: 'Backoff Strategy',
-      tlDr: 'A retry mechanism that gradually increases delay between failed webhook attempts.',
+        'Bias in AI refers to systematic errors or prejudices in model predictions, often reflecting historical data patterns or training data imbalances that can lead to unfair outcomes.',
+      term: 'Bias',
+      tlDr: 'Systematic errors in AI predictions that can lead to unfair or incorrect outcomes.',
+    },
+    {
+      description:
+        'Backpropagation is the core algorithm for training neural networks, calculating gradients to update model weights and minimize prediction errors.',
+      term: 'Backpropagation',
+      tlDr: 'Core algorithm for training neural networks by calculating and applying gradients.',
     },
   ],
   C: [
     {
       description:
-        "A callback URL is the destination address that receives webhook payloads. It's the endpoint that gets called whenever the triggering event happens in the source system.",
-      term: 'Callback URL',
-      tlDr: 'The URL where webhook notifications are sent when specific events occur.',
+        'Chain-of-thought prompting encourages AI models to show their reasoning process step-by-step, improving accuracy and making outputs more interpretable and trustworthy.',
+      term: 'Chain-of-Thought',
+      tlDr: 'AI prompting technique that shows step-by-step reasoning for better accuracy.',
     },
     {
       description:
-        'The Content-Type header tells the receiving system how to parse the webhook payload. Most webhooks use application/json, but some may use application/x-www-form-urlencoded or other formats.',
-      term: 'Content-Type',
-      tlDr: 'HTTP header that specifies the format of webhook payload data (usually application/json).',
+        'Context length refers to the maximum amount of text or tokens an AI model can process in a single input, affecting how much information the model can consider at once.',
+      term: 'Context Length',
+      tlDr: 'Maximum amount of text an AI model can process in a single input.',
     },
     {
       description:
-        'CORS (Cross-Origin Resource Sharing) policies control which domains can send webhook requests to your endpoints, providing an additional layer of security for webhook processing.',
-      term: 'CORS',
-      tlDr: 'Security policy that controls which domains can access your webhook endpoints.',
+        'Cost optimization in AI involves balancing model performance with computational resources, including strategies for reducing inference time, memory usage, and API costs.',
+      term: 'Cost Optimization',
+      tlDr: 'Balancing AI model performance with computational resources and costs.',
+    },
+    {
+      description:
+        'Cross-validation is a technique for assessing AI model performance by training on multiple data subsets, ensuring reliable performance estimates across different data distributions.',
+      term: 'Cross-Validation',
+      tlDr: 'Technique to assess AI model performance across multiple data subsets.',
     },
   ],
   D: [
     {
       description:
-        'When webhook delivery fails repeatedly, events are moved to a dead letter queue for manual inspection and potential reprocessing, preventing data loss.',
-      term: 'Dead Letter Queue',
-      tlDr: 'A storage mechanism for webhook events that failed to be processed after multiple retry attempts.',
+        'Data drift occurs when the statistical properties of input data change over time, potentially degrading AI model performance and requiring retraining or adaptation.',
+      term: 'Data Drift',
+      tlDr: 'Changes in input data statistics that can degrade AI model performance.',
     },
     {
       description:
-        'Different webhook providers offer varying levels of delivery guarantees, from at-least-once delivery to exactly-once delivery, affecting how applications handle duplicate events.',
-      term: 'Delivery Guarantee',
-      tlDr: 'The assurance level that webhook events will be successfully delivered to their destination.',
+        'Distillation involves training a smaller, faster model to mimic the behavior of a larger, more complex model, enabling deployment in resource-constrained environments.',
+      term: 'Distillation',
+      tlDr: 'Training smaller models to mimic larger ones for efficient deployment.',
     },
     {
       description:
-        'Webhook debugging involves analyzing webhook requests, responses, and processing logic to identify and resolve issues in webhook implementations.',
-      term: 'Debugging',
-      tlDr: 'The process of identifying and fixing issues in webhook processing and delivery.',
+        'Domain adaptation techniques help AI models perform well on new, related domains by leveraging knowledge from source domains while adapting to target domain characteristics.',
+      term: 'Domain Adaptation',
+      tlDr: 'Techniques to adapt AI models for new domains using source domain knowledge.',
     },
   ],
   E: [
     {
       description:
-        'Event-driven architecture uses webhooks to decouple systems, allowing them to communicate asynchronously when specific events occur, improving scalability and maintainability.',
-      term: 'Event-Driven Architecture',
-      tlDr: 'A software design pattern where webhooks trigger actions based on system events.',
+        'Embeddings are numerical representations of text, images, or other data that capture semantic meaning, enabling AI models to understand relationships and similarities.',
+      term: 'Embeddings',
+      tlDr: 'Numerical representations that capture semantic meaning of data for AI models.',
     },
     {
       description:
-        'The event payload contains all relevant data about what happened, including timestamps, user information, and any changes that occurred, formatted as JSON or XML.',
-      term: 'Event Payload',
-      tlDr: 'The data structure sent in a webhook request containing information about the triggering event.',
+        'Evaluation metrics measure AI model performance using specific criteria like accuracy, precision, recall, F1-score, or custom business metrics relevant to the use case.',
+      term: 'Evaluation Metrics',
+      tlDr: 'Specific criteria used to measure and compare AI model performance.',
     },
     {
       description:
-        'End-to-end encryption ensures that webhook data is encrypted from the sender to the receiver, protecting sensitive information during transmission.',
-      term: 'End-to-End Encryption',
-      tlDr: 'Security method that encrypts webhook data throughout its entire journey from sender to receiver.',
+        'Explainable AI (XAI) refers to techniques that make AI model decisions interpretable and understandable to humans, building trust and enabling better decision-making.',
+      term: 'Explainable AI',
+      tlDr: 'Techniques to make AI model decisions interpretable and understandable.',
     },
   ],
   F: [
     {
       description:
-        'Fan-out patterns allow one event to trigger multiple webhook endpoints, enabling complex workflows where different systems need to react to the same event.',
-      term: 'Fan-out',
-      tlDr: 'Sending a single webhook event to multiple destinations simultaneously.',
+        'Few-shot learning enables AI models to learn new tasks with minimal examples, leveraging pre-trained knowledge to adapt quickly to new domains or requirements.',
+      term: 'Few-Shot Learning',
+      tlDr: 'AI models learning new tasks with minimal training examples.',
     },
     {
       description:
-        'Webhook filtering allows you to process only specific events based on criteria like event type, user ID, or custom attributes, reducing unnecessary processing.',
-      term: 'Filtering',
-      tlDr: 'Selectively processing webhook events based on specific criteria or conditions.',
+        'Fine-tuning involves adapting pre-trained AI models to specific tasks or domains by training on task-specific data, improving performance while requiring less data than training from scratch.',
+      term: 'Fine-Tuning',
+      tlDr: 'Adapting pre-trained AI models to specific tasks using targeted data.',
+    },
+    {
+      description:
+        'Feature engineering is the process of creating, selecting, or transforming input variables to improve AI model performance and interpretability.',
+      term: 'Feature Engineering',
+      tlDr: 'Creating and transforming input variables to improve AI model performance.',
+    },
+  ],
+  G: [
+    {
+      description:
+        'Ground truth refers to the correct or expected answers used to train and evaluate AI models, typically provided by human experts or authoritative sources.',
+      term: 'Ground Truth',
+      tlDr: 'Correct answers used to train and evaluate AI models.',
+    },
+    {
+      description:
+        'Gradient descent is the optimization algorithm used to train neural networks, iteratively adjusting model weights to minimize prediction errors.',
+      term: 'Gradient Descent',
+      tlDr: 'Optimization algorithm that adjusts neural network weights to minimize errors.',
     },
   ],
   H: [
     {
       description:
-        'HTTP status codes like 200 (success), 4xx (client errors), and 5xx (server errors) help webhook providers understand if delivery was successful and determine retry strategies.',
-      term: 'HTTP Status Codes',
-      tlDr: 'Standard response codes that indicate the success or failure of webhook delivery.',
+        'Hallucination in AI refers to when models generate false or fabricated information that appears plausible but is not based on actual training data or facts.',
+      term: 'Hallucination',
+      tlDr: 'AI models generating false information that appears plausible but is incorrect.',
     },
     {
       description:
-        'HMAC (Hash-based Message Authentication Code) signatures use a secret key to create a unique hash of the webhook payload, allowing receivers to verify the request came from the expected sender.',
-      term: 'HMAC Signature',
-      tlDr: 'A cryptographic method to verify webhook authenticity and prevent tampering.',
-    },
-    {
-      description:
-        'HTTP headers in webhook requests contain metadata like Content-Type, User-Agent, and custom headers that provide context about the request and its origin.',
-      term: 'HTTP Headers',
-      tlDr: 'Metadata fields in webhook requests that provide context and control request behavior.',
+        'Hyperparameter tuning involves optimizing AI model configuration settings like learning rates, batch sizes, and architecture choices to achieve optimal performance.',
+      term: 'Hyperparameter Tuning',
+      tlDr: 'Optimizing AI model configuration settings for best performance.',
     },
   ],
   I: [
     {
       description:
-        "Idempotent webhook processing ensures that processing the same event multiple times (due to retries) doesn't cause duplicate actions or data corruption.",
-      term: 'Idempotency',
-      tlDr: 'The property that allows webhook processing to be safely repeated without side effects.',
+        'In-context learning allows AI models to learn new tasks by providing examples within the input prompt, enabling adaptation without retraining.',
+      term: 'In-Context Learning',
+      tlDr: 'AI models learning new tasks through examples in input prompts.',
     },
     {
       description:
-        'Webhook integration involves connecting external services and applications through webhook endpoints to enable real-time data exchange and automation.',
-      term: 'Integration',
-      tlDr: 'The process of connecting systems and services through webhook endpoints.',
+        'Inference is the process of using a trained AI model to make predictions on new data, typically much faster than training but requiring the model to be already trained.',
+      term: 'Inference',
+      tlDr: 'Using trained AI models to make predictions on new data.',
+    },
+    {
+      description:
+        'Iterative refinement involves repeatedly improving AI model outputs through feedback loops, often using human feedback to guide model improvements.',
+      term: 'Iterative Refinement',
+      tlDr: 'Repeatedly improving AI model outputs through feedback loops.',
     },
   ],
   J: [
     {
       description:
-        "JSON webhooks are the standard format for modern webhook implementations, providing structured, human-readable data that's easy to parse and process.",
-      term: 'JSON Webhook',
-      tlDr: 'A webhook that sends data in JSON format, the most common webhook payload format.',
+        'Joint training involves training multiple AI models or components together, allowing them to learn complementary representations and improve overall system performance.',
+      term: 'Joint Training',
+      tlDr: 'Training multiple AI models together for complementary learning.',
     },
   ],
   L: [
     {
       description:
-        'Local development with webhooks involves testing webhook endpoints on your local machine before deploying to production, using tools to route external webhooks to localhost.',
-      term: 'Local Development',
-      tlDr: 'Testing webhook endpoints locally before deploying to production environments.',
+        'Large Language Models (LLMs) are AI models trained on vast amounts of text data, capable of understanding and generating human-like text across many domains.',
+      term: 'Large Language Models',
+      tlDr: 'AI models trained on vast text data for understanding and generating text.',
     },
     {
       description:
-        'Webhook logging captures detailed information about incoming requests, processing steps, and responses for debugging, monitoring, and audit purposes.',
+        'Learning rate controls how quickly AI models update their weights during training, affecting convergence speed and final model performance.',
+      term: 'Learning Rate',
+      tlDr: 'Controls how quickly AI models update weights during training.',
+    },
+    {
+      description:
+        'Logging in AI systems captures detailed information about model inputs, outputs, decisions, and performance metrics for monitoring, debugging, and improvement.',
       term: 'Logging',
-      tlDr: 'Recording webhook events and processing details for debugging and monitoring.',
+      tlDr: 'Recording AI model inputs, outputs, and performance for monitoring.',
+    },
+    {
+      description:
+        'LLM trace refers to the detailed tracking and recording of all interactions with large language models, including inputs, outputs, prompts, and metadata for debugging and optimization.',
+      term: 'LLM Trace',
+      tlDr: 'Detailed tracking of all LLM interactions for debugging and optimization.',
+    },
+    {
+      description:
+        'Latency in AI systems measures the time between sending a request to a model and receiving a response, critical for user experience and real-time applications.',
+      term: 'Latency',
+      tlDr: 'Time between AI model request and response, critical for user experience.',
     },
   ],
   M: [
     {
       description:
-        'Webhook monitoring involves tracking the health, performance, and reliability of webhook endpoints to ensure they are functioning correctly and meeting SLAs.',
-      term: 'Monitoring',
-      tlDr: 'Tracking webhook endpoint health, performance, and reliability in real-time.',
+        'Model monitoring involves tracking AI model performance, behavior, and health in production, detecting issues like drift, degradation, or unexpected behavior.',
+      term: 'Model Monitoring',
+      tlDr: 'Tracking AI model performance and behavior in production environments.',
     },
     {
       description:
-        'Middleware in webhook processing allows you to add custom logic, validation, or transformation between receiving a webhook and processing it.',
-      term: 'Middleware',
-      tlDr: 'Custom processing logic that runs between webhook reception and final processing.',
+        'Multi-modal AI refers to models that can process and understand multiple types of data (text, images, audio, video) simultaneously.',
+      term: 'Multi-Modal AI',
+      tlDr: 'AI models that process multiple data types simultaneously.',
+    },
+    {
+      description:
+        'Model serving involves deploying trained AI models to production environments where they can receive requests and return predictions in real-time.',
+      term: 'Model Serving',
+      tlDr: 'Deploying trained AI models for real-time prediction serving.',
     },
   ],
   N: [
     {
       description:
-        'Webhook notifications are real-time alerts sent from one system to another when specific events occur, enabling immediate response to important changes.',
-      term: 'Notifications',
-      tlDr: 'Real-time alerts sent between systems when specific events occur.',
+        'Neural networks are computational models inspired by biological brains, consisting of interconnected nodes that process information and learn patterns from data.',
+      term: 'Neural Networks',
+      tlDr: 'Computational models with interconnected nodes that learn from data.',
+    },
+    {
+      description:
+        'Natural Language Processing (NLP) is a field of AI focused on enabling computers to understand, interpret, and generate human language.',
+      term: 'NLP',
+      tlDr: 'AI field focused on understanding and generating human language.',
     },
   ],
   O: [
     {
       description:
-        'OAuth tokens are used to authenticate webhook requests, providing secure access to protected resources without sharing sensitive credentials.',
-      term: 'OAuth',
-      tlDr: 'An authentication protocol used to secure webhook access to protected resources.',
+        'Observability in AI systems provides visibility into model behavior, performance, and decision-making processes, enabling debugging, optimization, and trust building.',
+      term: 'Observability',
+      tlDr: 'Visibility into AI model behavior, performance, and decision-making.',
+    },
+    {
+      description:
+        'Overfitting occurs when AI models learn training data too well, including noise and irrelevant patterns, leading to poor performance on new, unseen data.',
+      term: 'Overfitting',
+      tlDr: 'AI models learning training data too well, including noise and irrelevant patterns.',
+    },
+    {
+      description:
+        'Online learning allows AI models to continuously update and improve as new data becomes available, adapting to changing patterns and requirements.',
+      term: 'Online Learning',
+      tlDr: 'AI models continuously updating as new data becomes available.',
+    },
+    {
+      description:
+        'OpenAI API is a popular platform for accessing large language models, providing developers with tools to integrate AI capabilities into applications.',
+      term: 'OpenAI API',
+      tlDr: 'Popular platform for accessing large language models and AI capabilities.',
+    },
+    {
+      description:
+        'Output validation ensures AI model responses meet quality standards, including checks for accuracy, relevance, safety, and adherence to guidelines.',
+      term: 'Output Validation',
+      tlDr: 'Ensuring AI model responses meet quality and safety standards.',
     },
   ],
   P: [
     {
       description:
-        'The webhook payload contains all the relevant information about the event that occurred, including metadata, timestamps, and any associated data that needs to be processed.',
-      term: 'Payload',
-      tlDr: 'The actual data sent in a webhook request containing event information.',
+        'Prompt engineering involves designing and optimizing input prompts to get desired outputs from AI models, including techniques like few-shot learning and chain-of-thought.',
+      term: 'Prompt Engineering',
+      tlDr: 'Designing and optimizing input prompts for desired AI model outputs.',
     },
     {
       description:
-        'Polling involves regularly querying an API to check for new events, as opposed to webhooks which push events immediately when they occur.',
-      term: 'Polling',
-      tlDr: 'An alternative to webhooks where systems repeatedly check for new data instead of receiving push notifications.',
+        'Product analytics in AI involves tracking user interactions, model performance, and business metrics to understand how AI systems impact user experience and business outcomes.',
+      term: 'Product Analytics',
+      tlDr: 'Tracking AI system performance and user interactions for business insights.',
     },
     {
       description:
-        'Webhook providers are services that send webhook notifications when events occur in their systems, such as payment processors, version control platforms, or SaaS applications.',
-      term: 'Provider',
-      tlDr: 'A service that sends webhook notifications when events occur in their system.',
+        'Pre-training involves training AI models on large, general datasets before fine-tuning on specific tasks, enabling transfer learning and improved performance.',
+      term: 'Pre-Training',
+      tlDr: 'Training AI models on general data before task-specific fine-tuning.',
+    },
+    {
+      description:
+        'Performance metrics in AI track key indicators like accuracy, response time, throughput, and user satisfaction to measure system effectiveness and identify improvement areas.',
+      term: 'Performance Metrics',
+      tlDr: 'Key indicators measuring AI system effectiveness and user satisfaction.',
+    },
+    {
+      description:
+        'Prompt templates are reusable, structured formats for AI model inputs that ensure consistency, reduce errors, and improve output quality across different use cases.',
+      term: 'Prompt Templates',
+      tlDr: 'Reusable, structured formats for consistent AI model inputs.',
     },
   ],
   Q: [
     {
       description:
-        'Webhook queuing systems store incoming webhook events in a queue for processing, ensuring reliable delivery even when the receiving system is temporarily unavailable.',
-      term: 'Queuing',
-      tlDr: 'Storing webhook events in a queue for reliable processing and delivery.',
+        'Quantization reduces AI model size and improves inference speed by representing weights and activations with fewer bits, often with minimal accuracy loss.',
+      term: 'Quantization',
+      tlDr: 'Reducing AI model size by using fewer bits for weights and activations.',
+    },
+    {
+      description:
+        'Quality assurance in AI involves systematic testing, validation, and monitoring to ensure models meet performance, safety, and reliability requirements.',
+      term: 'Quality Assurance',
+      tlDr: 'Systematic testing and validation to ensure AI model quality.',
     },
   ],
   R: [
     {
       description:
-        "Rate limiting ensures that webhook endpoints don't receive too many requests too quickly, protecting both the sender and receiver from performance issues.",
-      term: 'Rate Limiting',
-      tlDr: 'Controlling the frequency of webhook requests to prevent system overload.',
+        'Reinforcement Learning from Human Feedback (RLHF) uses human preferences to train AI models, improving alignment with human values and desired behaviors.',
+      term: 'RLHF',
+      tlDr: 'Training AI models using human feedback to improve alignment.',
     },
     {
       description:
-        'Retry logic automatically attempts to redeliver webhook requests that failed, typically using exponential backoff to avoid overwhelming the receiving system.',
-      term: 'Retry Logic',
-      tlDr: 'Automatic re-attempts to deliver failed webhook requests with exponential backoff.',
+        'Retrieval-augmented generation (RAG) combines AI language models with external knowledge sources, enabling more accurate and up-to-date responses.',
+      term: 'RAG',
+      tlDr: 'Combining AI models with external knowledge for better responses.',
     },
     {
       description:
-        'Webhook routing determines which endpoint or service should receive and process incoming webhook events based on rules, filters, or routing logic.',
-      term: 'Routing',
-      tlDr: 'Directing webhook events to the appropriate endpoints or services for processing.',
+        'Real-time inference enables AI models to provide immediate responses to user queries, essential for interactive applications and user experience.',
+      term: 'Real-Time Inference',
+      tlDr: 'AI models providing immediate responses for interactive applications.',
     },
   ],
   S: [
     {
       description:
-        'Secret keys are used in webhook authentication to create signatures that verify the authenticity and integrity of webhook requests.',
-      term: 'Secret Key',
-      tlDr: 'A private key used to sign and verify webhook requests for security.',
+        'Semantic search enables finding information based on meaning rather than exact text matches, using AI embeddings to understand query intent and content relevance.',
+      term: 'Semantic Search',
+      tlDr: 'Finding information based on meaning using AI understanding.',
     },
     {
       description:
-        "Signature verification involves checking that webhook requests were actually sent by the expected source and haven't been modified in transit.",
-      term: 'Signature Verification',
-      tlDr: 'The process of validating webhook signatures to ensure request authenticity.',
+        'Supervised learning trains AI models using labeled examples, where the correct output is provided for each input, enabling learning of input-output mappings.',
+      term: 'Supervised Learning',
+      tlDr: 'Training AI models using labeled examples with correct outputs.',
     },
     {
       description:
-        'SSL/TLS encryption secures webhook communications by encrypting data in transit, preventing unauthorized access to sensitive webhook payloads.',
-      term: 'SSL/TLS',
-      tlDr: 'Security protocols that encrypt webhook data during transmission.',
-    },
-    {
-      description:
-        'Webhook security involves implementing measures like authentication, encryption, and validation to protect webhook endpoints and data from unauthorized access.',
-      term: 'Security',
-      tlDr: 'Protecting webhook endpoints and data from unauthorized access and tampering.',
+        'System prompts provide context and instructions to AI models, setting behavior guidelines and ensuring consistent, appropriate responses.',
+      term: 'System Prompts',
+      tlDr: 'Context and instructions that guide AI model behavior and responses.',
     },
   ],
   T: [
     {
       description:
-        'Webhook timeouts prevent requests from hanging indefinitely, ensuring that failed deliveries are detected and can be retried appropriately.',
-      term: 'Timeout',
-      tlDr: 'The maximum time a webhook request will wait for a response before failing.',
+        'Tokenization breaks text into smaller units (tokens) that AI models can process, affecting model understanding and computational efficiency.',
+      term: 'Tokenization',
+      tlDr: 'Breaking text into smaller units for AI model processing.',
     },
     {
       description:
-        'TLS (Transport Layer Security) and SSL (Secure Sockets Layer) encrypt webhook communications, ensuring that sensitive data cannot be intercepted during transmission.',
-      term: 'TLS/SSL',
-      tlDr: 'Security protocols that encrypt webhook data in transit to prevent interception.',
+        'Transfer learning enables AI models to apply knowledge learned from one task to related tasks, reducing training time and improving performance.',
+      term: 'Transfer Learning',
+      tlDr: 'Applying knowledge from one task to related tasks for efficiency.',
     },
     {
       description:
-        'Webhook testing involves validating that webhook endpoints correctly process incoming requests, handle errors, and integrate properly with other systems.',
-      term: 'Testing',
-      tlDr: 'Validating webhook endpoints and their integration with other systems.',
+        'Training data consists of examples used to teach AI models, including inputs and expected outputs that guide the learning process.',
+      term: 'Training Data',
+      tlDr: 'Examples used to teach AI models, including inputs and expected outputs.',
+    },
+    {
+      description:
+        'Training loops are iterative processes where AI models learn from data by repeatedly updating weights, evaluating performance, and adjusting parameters.',
+      term: 'Training Loops',
+      tlDr: 'Iterative processes where AI models learn and update weights from data.',
+    },
+    {
+      description:
+        'Temperature in AI generation controls randomness and creativity in model outputs, with lower values producing more focused responses and higher values enabling more diverse outputs.',
+      term: 'Temperature',
+      tlDr: 'Controls randomness and creativity in AI model generation outputs.',
     },
   ],
   U: [
     {
       description:
-        'Webhook URLs are the complete addresses where webhook notifications are sent, typically following patterns like https://api.example.com/webhooks/events.',
-      term: 'URL',
-      tlDr: 'The complete address where webhook notifications are sent.',
+        'Underfitting occurs when AI models are too simple to capture the underlying patterns in data, leading to poor performance on both training and test data.',
+      term: 'Underfitting',
+      tlDr: 'AI models too simple to capture underlying data patterns.',
+    },
+    {
+      description:
+        'Unsupervised learning trains AI models to find patterns in data without labeled examples, discovering hidden structures and relationships.',
+      term: 'Unsupervised Learning',
+      tlDr: 'AI models finding patterns in data without labeled examples.',
     },
   ],
   V: [
     {
       description:
-        'Webhook verification typically involves responding to a challenge request to prove that the endpoint is owned by the intended recipient and can process webhook requests.',
-      term: 'Verification',
-      tlDr: 'The process of confirming webhook endpoint ownership and functionality.',
+        'Vector databases store and search AI embeddings efficiently, enabling semantic search, recommendation systems, and similarity-based applications.',
+      term: 'Vector Databases',
+      tlDr: 'Databases for storing and searching AI embeddings efficiently.',
     },
     {
       description:
-        'Webhook validation ensures that incoming webhook requests contain the expected data structure, format, and required fields before processing.',
-      term: 'Validation',
-      tlDr: 'Checking webhook requests for correct format, structure, and required data.',
+        'Version control for AI models tracks changes, experiments, and deployments, enabling reproducibility and rollback capabilities.',
+      term: 'Version Control',
+      tlDr: 'Tracking AI model changes, experiments, and deployments.',
     },
   ],
   W: [
     {
       description:
-        'Webhooks are HTTP callbacks that allow one application to notify another application about events in real-time, enabling event-driven integrations between systems.',
-      term: 'Webhook',
-      tlDr: 'A way for applications to send real-time data to other applications when specific events occur.',
+        'Webhook integration in AI systems enables real-time communication between AI services and external applications, supporting automated workflows and data exchange.',
+      term: 'Webhook Integration',
+      tlDr: 'Real-time communication between AI services and external applications.',
     },
     {
       description:
-        'A webhook URL is the full endpoint address (e.g., https://api.example.com/webhooks/orders) that receives webhook notifications when events occur.',
-      term: 'Webhook URL',
-      tlDr: 'The complete address where webhook notifications are sent, including protocol and path.',
+        'Workflow automation uses AI to streamline business processes, reducing manual tasks and improving efficiency through intelligent decision-making.',
+      term: 'Workflow Automation',
+      tlDr: 'Using AI to streamline business processes and reduce manual tasks.',
     },
+  ],
+  Z: [
     {
       description:
-        'Webhook workflows are automated sequences of actions triggered by webhook events, enabling complex business logic and system integrations.',
-      term: 'Workflow',
-      tlDr: 'Automated sequences of actions triggered by webhook events.',
+        'Zero-shot learning enables AI models to perform new tasks without specific training examples, relying on general knowledge and understanding.',
+      term: 'Zero-Shot Learning',
+      tlDr: 'AI models performing new tasks without specific training examples.',
     },
   ],
 };
 
-const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+const alphabet = '123ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 
 export function GlossarySection() {
   const [selectedLetter, setSelectedLetter] = useState('ALL');
@@ -372,7 +521,7 @@ export function GlossarySection() {
 
   // Flatten all terms for search
   const allTerms = useMemo(() => {
-    return Object.entries(webhookTerms).flatMap(([letter, terms]) =>
+    return Object.entries(aiTerms).flatMap(([letter, terms]) =>
       terms.map((term) => ({ ...term, letter })),
     );
   }, []);
@@ -417,7 +566,7 @@ export function GlossarySection() {
 
     // If a specific letter is selected, show only that letter's terms
     if (selectedLetter && selectedLetter !== 'ALL') {
-      return webhookTerms[selectedLetter as keyof typeof webhookTerms] || [];
+      return aiTerms[selectedLetter as keyof typeof aiTerms] || [];
     }
 
     // Default: show all terms
@@ -440,13 +589,13 @@ export function GlossarySection() {
         >
           <motion.div variants={fadeInUpVariants}>
             <Badge className="mb-4" variant="secondary">
-              Webhook Terminology
+              AI Terminology
             </Badge>
           </motion.div>
 
           <motion.div variants={fadeInUpVariants}>
             <H1 className="text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-medium tracking-tighter text-balance mb-6">
-              Webhook Glossary
+              AI Glossary
             </H1>
           </motion.div>
 
@@ -454,9 +603,8 @@ export function GlossarySection() {
             className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8"
             variants={fadeInUpVariants}
           >
-            A comprehensive guide to webhook terminology and concepts.
-            Understand the key terms and definitions used in webhook development
-            and integration.
+            A comprehensive guide to AI terminology and concepts. Understand the
+            key terms and definitions used in AI development and integration.
           </motion.p>
 
           <motion.div variants={fadeInUpVariants}>
@@ -528,8 +676,7 @@ export function GlossarySection() {
 
                   {alphabet.map((letter) => {
                     const hasTerms =
-                      webhookTerms[letter as keyof typeof webhookTerms]
-                        ?.length > 0;
+                      aiTerms[letter as keyof typeof aiTerms]?.length > 0;
                     return (
                       <button
                         className={`px-2 py-1 rounded text-sm font-medium transition-all duration-200 ${
@@ -614,10 +761,10 @@ export function GlossarySection() {
                 >
                   <P className="text-muted-foreground">
                     {searchQuery
-                      ? `No webhook terms found matching "${searchQuery}". Try a different search term.`
+                      ? `No AI terms found matching "${searchQuery}". Try a different search term.`
                       : selectedLetter === 'ALL'
-                        ? 'No webhook terms found. Check back soon for more terms!'
-                        : `No webhook terms found for letter "${selectedLetter}". Check back soon for more terms!`}
+                        ? 'No AI terms found. Check back soon for more terms!'
+                        : `No AI terms found for letter "${selectedLetter}". Check back soon for more terms!`}
                   </P>
                 </motion.div>
               )}
@@ -633,11 +780,11 @@ export function GlossarySection() {
           variants={fadeInUpVariants}
         >
           <H2 className="text-2xl md:text-3xl font-medium tracking-tighter mb-4">
-            Need help with webhooks?
+            Need help with AI?
           </H2>
           <P className="text-muted-foreground mb-6">
-            Start building with Untrace today and get real-time webhook testing
-            and management.
+            Start building with Untrace today and get real-time AI testing and
+            management.
           </P>
           <MetricButton
             asChild

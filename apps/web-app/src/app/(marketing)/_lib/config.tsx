@@ -309,6 +309,8 @@ export const siteConfig = {
         },
         // { id: 17, title: 'Blog', url: '/blog' },
         { id: 18, title: 'Docs', url: 'https://docs.untrace.dev' },
+        { id: 19, title: 'OSS Friends', url: '/oss-friends' },
+        { id: 20, title: 'Glossary', url: '/glossary' },
       ],
       title: 'Resources',
     },

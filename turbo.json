@@ -167,14 +167,6 @@
     "ui-add": {
       "cache": false,
       "interactive": true
-    },
-    "untrace-vscode#dev:extension": {
-      "cache": false,
-      "persistent": true
-    },
-    "untrace-vscode#dev:webview": {
-      "cache": false,
-      "persistent": true
     }
   },
   "ui": "tui"

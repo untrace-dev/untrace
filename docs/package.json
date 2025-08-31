@@ -5,7 +5,7 @@
   "name": "@untrace/docs",
   "private": true,
   "scripts": {
-    "dev": "mint dev"
+    "docs": "mint dev"
   },
   "version": "0.1.0"
 }

@@ -29,8 +29,7 @@
       "!**/.git",
       "!**/coverage",
       "!**/.nyc_output",
-      "!**/packages/ai/src/baml_client",
-      "!**/apps/chrome-extension/scripts/detect-obfuscation"
+      "!**/packages/ai/src/baml_client"
     ]
   },
   "formatter": {
@@ -43,7 +42,9 @@
       "semicolons": "always",
       "trailingCommas": "all"
     },
-    "globals": ["React"]
+    "globals": [
+      "React"
+    ]
   },
   "linter": {
     "enabled": true,
@@ -82,7 +83,9 @@
         "useFilenamingConvention": {
           "level": "error",
           "options": {
-            "filenameCases": ["kebab-case"],
+            "filenameCases": [
+              "kebab-case"
+            ],
             "requireAscii": true
           }
         },

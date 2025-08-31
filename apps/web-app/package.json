@@ -72,7 +72,7 @@
   "scripts": {
     "build": "next build",
     "clean": "git clean -xdf .turbo node_modules dist .next",
-    "dev": "next dev",
+    "dev": "next dev --turbo",
     "postbuild": "next-sitemap --config next-sitemap.config.cjs",
     "start": "next start",
     "test": "bun test",
