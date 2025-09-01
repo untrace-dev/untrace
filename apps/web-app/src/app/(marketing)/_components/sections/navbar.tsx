@@ -153,7 +153,7 @@ export function Navbar() {
                 <SignedOut>
                   <Link
                     className="bg-secondary h-8 hidden md:flex items-center justify-center text-sm font-normal tracking-wide rounded-full text-primary-foreground dark:text-secondary-foreground w-fit px-4 shadow-[inset_0_1px_2px_rgba(255,255,255,0.25),0_3px_3px_-1.5px_rgba(16,24,40,0.06),0_1px_1px_rgba(16,24,40,0.08)] border border-white/[0.12]"
-                    href="/sign-in?utm_source=marketing-site&utm_medium=navbar-get-started"
+                    href="/app?utm_source=marketing-site&utm_medium=navbar-get-started"
                   >
                     Get Started
                   </Link>
@@ -164,7 +164,7 @@ export function Navbar() {
                     className="hidden md:flex rounded-full"
                     variant="outline"
                   >
-                    <Link href="/dashboard?utm_source=marketing-site&utm_medium=navbar-dashboard">
+                    <Link href="/app/dashboard?utm_source=marketing-site&utm_medium=navbar-dashboard">
                       Dashboard
                     </Link>
                   </Button>
@@ -175,7 +175,7 @@ export function Navbar() {
                     className="hidden md:flex rounded-full"
                     variant="outline"
                   >
-                    <Link href="/sign-in?utm_source=marketing-site&utm_medium=navbar-sign-in">
+                    <Link href="/app?utm_source=marketing-site&utm_medium=navbar-sign-in">
                       Sign In
                     </Link>
                   </Button>
@@ -183,7 +183,7 @@ export function Navbar() {
               </div>
               <GitHubStarsButtonWrapper
                 className="rounded-full"
-                repo="untrace-sh/untrace"
+                repo="untrace-dev/untrace"
               />
               <ThemeToggle className="rounded-full" mode="toggle" />
               <button

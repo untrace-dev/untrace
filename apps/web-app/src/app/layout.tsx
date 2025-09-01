@@ -19,6 +19,7 @@ import { env } from '~/env';
 export const metadata: Metadata = {
   description:
     'The Segment for LLM traces. Capture once, route everywhere - end vendor lock-in and observability tool sprawl.',
+  manifest: '/manifest.json',
   metadataBase: new URL(
     env.VERCEL_ENV === 'production'
       ? 'https://untrace.dev'
