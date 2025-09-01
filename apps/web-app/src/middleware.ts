@@ -1,4 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
 // Define routes that require authentication
 const isPrivateRoute = createRouteMatcher([
@@ -7,8 +8,36 @@ const isPrivateRoute = createRouteMatcher([
 ]);
 
 export default clerkMiddleware(async (auth, request) => {
+  // Protect private routes - everything else is public by default
   if (isPrivateRoute(request)) {
-    await auth.protect();
+    const authResponse = await auth.protect();
+    if (
+      authResponse.userId &&
+      !authResponse.orgId &&
+      !request.nextUrl.pathname.startsWith('/app/onboarding')
+    ) {
+      console.log('Redirecting to onboarding', {
+        isOnboarding: request.nextUrl.pathname.startsWith('/app/onboarding'),
+        orgId: authResponse.orgId,
+        pathname: request.nextUrl.pathname,
+        url: request.nextUrl,
+        userId: authResponse.userId,
+      });
+      const url = request.nextUrl.clone();
+      url.pathname = '/app/onboarding';
+      const redirectTo = request.nextUrl.searchParams.get('redirectTo');
+      const source = request.nextUrl.searchParams.get('source');
+
+      if (redirectTo) {
+        url.searchParams.set('redirectTo', redirectTo);
+      }
+
+      if (source) {
+        url.searchParams.set('source', source);
+      }
+
+      return NextResponse.redirect(url);
+    }
   }
 });
 

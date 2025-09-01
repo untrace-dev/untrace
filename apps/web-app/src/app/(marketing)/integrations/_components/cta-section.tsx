@@ -41,18 +41,18 @@ export function CTASection() {
                 <MetricButton
                   asChild
                   className="rounded-full"
-                  metric="comparisons_cta_create_webhook_url_clicked"
+                  metric="integrations_cta_create_webhook_url_clicked"
                   properties={{
-                    location: 'comparisons_cta',
+                    location: 'integrations_cta',
                   }}
                   size="lg"
                   variant="secondary"
                 >
                   <MetricLink
-                    href="/app/onboarding?utm_source=marketing-site&utm_medium=comparisons-cta"
-                    metric="comparisons_cta_create_webhook_url_clicked"
+                    href="/app/onboarding?utm_source=marketing-site&utm_medium=integrations-cta"
+                    metric="integrations_cta_create_webhook_url_clicked"
                     properties={{
-                      location: 'comparisons_cta',
+                      location: 'integrations_cta',
                     }}
                   >
                     Install Extension
@@ -61,18 +61,18 @@ export function CTASection() {
                 <MetricButton
                   asChild
                   className="rounded-full"
-                  metric="comparisons_cta_schedule_demo_clicked"
+                  metric="integrations_cta_schedule_demo_clicked"
                   properties={{
-                    location: 'comparisons_cta',
+                    location: 'integrations_cta',
                   }}
                   size="lg"
                   variant="outline"
                 >
                   <MetricLink
                     href="https://cal.com/seawatts/30min"
-                    metric="comparisons_cta_schedule_demo_clicked"
+                    metric="integrations_cta_schedule_demo_clicked"
                     properties={{
-                      location: 'comparisons_cta',
+                      location: 'integrations_cta',
                     }}
                   >
                     Schedule Demo

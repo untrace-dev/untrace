@@ -460,7 +460,7 @@ function NavigationMenuSection() {
               <ListItem href="https://docs.untrace.dev" title="Documentation">
                 Get started with our comprehensive guides and API reference.
               </ListItem>
-              <ListItem href="/comparisons" title="Comparisons">
+              <ListItem href="/integrations" title="Integrations">
                 See how Untrace compares to other monitoring and debugging tools
                 and alternatives.
               </ListItem>

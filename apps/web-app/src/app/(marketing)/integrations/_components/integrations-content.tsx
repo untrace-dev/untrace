@@ -21,7 +21,7 @@ const staggerContainer = {
   },
 };
 
-export function ComparisonsContent() {
+export function IntegrationsContent() {
   return (
     <main className="flex flex-col items-center justify-center divide-y divide-border min-h-screen w-full">
       <HeroSection />
@@ -31,7 +31,7 @@ export function ComparisonsContent() {
         <div className="container mx-auto px-6">
           {/* <SectionHeader
             description="In-depth analysis of how Untrace integrates with each major LLM observability platform."
-            title="Detailed Integration Platform Comparisons"
+            title="Detailed Integration Platform Integrations"
           /> */}
 
           <motion.div
