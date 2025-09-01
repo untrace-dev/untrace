@@ -61,11 +61,6 @@ const policyConditions = {
     `(SELECT requesting_org_id()) = ("${columnName}")::text`,
   userOwnership: (columnName = 'userId') =>
     `(SELECT requesting_user_id()) = ("${columnName}")::text`,
-  webhookOwnership: `EXISTS (
-    SELECT 1 FROM webhooks
-    WHERE webhooks.id = requests."webhookId"
-    AND webhooks."orgId" = (SELECT requesting_org_id())
-  )`,
 } as const;
 
 // Helper to create a policy for user ownership
@@ -152,41 +147,23 @@ const policyConfigs: Record<string, PolicyConfig> = {
     ],
     tableName: 'authCodes',
   },
-  connections: {
+  destinationProviders: {
     policies: [
-      createUserOwnershipPolicy('ALL', 'userId'),
-      createOrgOwnershipPolicy('ALL', 'orgId'),
+      // Destination providers are read-only for all authenticated users
+      {
+        name: 'Authenticated users can select destination providers',
+        operation: 'SELECT',
+        using: 'true',
+      },
     ],
-    tableName: 'connections',
+    tableName: 'destinationProviders',
   },
-  events: {
+  orgDestinations: {
     policies: [
       createUserOwnershipPolicy('ALL', 'userId'),
       createOrgOwnershipPolicy('ALL', 'orgId'),
     ],
-    tableName: 'events',
-  },
-  forwardingDestinations: {
-    policies: [
-      createUserOwnershipPolicy('ALL', 'userId'),
-      createUserOwnershipPolicy('DELETE', 'userId'),
-      createOrgOwnershipPolicy('ALL', 'orgId'),
-    ],
-    tableName: 'forwardingDestinations',
-  },
-  forwardingExecutions: {
-    policies: [
-      createUserOwnershipPolicy('ALL', 'userId'),
-      createOrgOwnershipPolicy('ALL', 'orgId'),
-    ],
-    tableName: 'forwardingExecutions',
-  },
-  forwardingRules: {
-    policies: [
-      createUserOwnershipPolicy('ALL', 'userId'),
-      createOrgOwnershipPolicy('ALL', 'orgId'),
-    ],
-    tableName: 'forwardingRules',
+    tableName: 'orgDestinations',
   },
   orgMembers: {
     policies: [
@@ -217,27 +194,26 @@ const policyConfigs: Record<string, PolicyConfig> = {
     ],
     tableName: 'orgs',
   },
-  requests: {
+  shortUrls: {
     policies: [
       createUserOwnershipPolicy('ALL', 'userId'),
       createOrgOwnershipPolicy('ALL', 'orgId'),
-      {
-        name: 'Users can access requests for their webhooks',
-        operation: 'SELECT',
-        using: policyConditions.webhookOwnership,
-      },
-      {
-        name: 'Users can delete requests for their webhooks',
-        operation: 'DELETE',
-        using: policyConditions.webhookOwnership,
-      },
-      {
-        name: 'Users can update requests for their webhooks',
-        operation: 'UPDATE',
-        using: policyConditions.webhookOwnership,
-      },
     ],
-    tableName: 'requests',
+    tableName: 'shortUrls',
+  },
+  traceDeliveries: {
+    policies: [
+      createUserOwnershipPolicy('ALL', 'userId'),
+      createOrgOwnershipPolicy('ALL', 'orgId'),
+    ],
+    tableName: 'traceDeliveries',
+  },
+  traces: {
+    policies: [
+      createUserOwnershipPolicy('ALL', 'userId'),
+      createOrgOwnershipPolicy('ALL', 'orgId'),
+    ],
+    tableName: 'traces',
   },
   user: {
     policies: [
@@ -245,43 +221,6 @@ const policyConfigs: Record<string, PolicyConfig> = {
       createUserOwnershipPolicy('UPDATE', 'id'),
     ],
     tableName: 'user',
-  },
-  webhookAccessRequests: {
-    policies: [
-      // Users can access requests they made (as requester)
-      {
-        name: 'Users can select their own access requests',
-        operation: 'SELECT',
-        using: policyConditions.userOwnership('requesterId'),
-      },
-      {
-        name: 'Users can insert their own access requests',
-        operation: 'INSERT',
-        withCheck: policyConditions.userOwnership('requesterId'),
-      },
-      {
-        name: 'Users can update their own access requests',
-        operation: 'UPDATE',
-        using: policyConditions.userOwnership('requesterId'),
-        withCheck: policyConditions.userOwnership('requesterId'),
-      },
-      // Users can respond to requests (as responder)
-      {
-        name: 'Users can update requests they are responding to',
-        operation: 'UPDATE',
-        using: policyConditions.userOwnership('responderId'),
-        withCheck: policyConditions.userOwnership('responderId'),
-      },
-      createOrgOwnershipPolicy('ALL', 'orgId'),
-    ],
-    tableName: 'webhookAccessRequests',
-  },
-  webhooks: {
-    policies: [
-      createUserOwnershipPolicy('ALL', 'userId'),
-      createOrgOwnershipPolicy('ALL', 'orgId'),
-    ],
-    tableName: 'webhooks',
   },
 };
 

@@ -8,17 +8,23 @@ import {
   AuthCodes,
   OrgMembers,
   Orgs,
+  ShortUrls,
+  TraceDeliveries,
+  Traces,
   Users,
 } from './schema';
 
 // Reset all tables
 
-await db.delete(Users);
-await db.delete(Orgs);
-await db.delete(OrgMembers);
-await db.delete(AuthCodes);
+await db.delete(TraceDeliveries);
+await db.delete(Traces);
+await db.delete(ShortUrls);
 await db.delete(ApiKeyUsage);
 await db.delete(ApiKeys);
+await db.delete(AuthCodes);
+await db.delete(OrgMembers);
+await db.delete(Orgs);
+await db.delete(Users);
 
 const userId = 'user_30oVYOGDYUTdXqB6HImz3XbRyTs';
 const orgId = 'org_30oVYhhebEP3q4dSFlxo8DyAxhr';
@@ -32,6 +38,9 @@ await seed(db, {
   ApiKeyUsage,
   OrgMembers,
   Orgs,
+  ShortUrls,
+  TraceDeliveries,
+  Traces,
   Users,
 }).refine((funcs) => ({
   ApiKeys: {
@@ -91,6 +100,69 @@ await seed(db, {
       }),
     },
     count: 1,
+  },
+  ShortUrls: {
+    columns: {
+      code: funcs.default({ defaultValue: 'test123' }),
+      expiresAt: funcs.date({
+        maxDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        minDate: new Date(),
+      }),
+      isActive: funcs.boolean(),
+      orgId: funcs.default({ defaultValue: orgId }),
+      redirectUrl: funcs.default({ defaultValue: 'https://example.com' }),
+      userId: funcs.default({ defaultValue: userId }),
+    },
+    count: 5,
+  },
+  TraceDeliveries: {
+    columns: {
+      attempts: funcs.number({ maxValue: 3, minValue: 0 }),
+      deliveredAt: funcs.date({
+        maxDate: new Date(),
+        minDate: subDays(new Date(), 1),
+      }),
+      destinationId: funcs.default({ defaultValue: 'od_test_destination' }),
+      lastError: funcs.default({ defaultValue: null }),
+      lastErrorAt: funcs.date({
+        maxDate: new Date(),
+        minDate: subDays(new Date(), 1),
+      }),
+      nextRetryAt: funcs.date({
+        maxDate: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours from now
+        minDate: new Date(),
+      }),
+      responseData: funcs.default({ defaultValue: {} }),
+      status: funcs.valuesFromArray({
+        values: ['pending', 'success', 'failed', 'retrying', 'cancelled'],
+      }),
+      traceId: funcs.default({ defaultValue: 'tr_test_trace' }),
+      transformedPayload: funcs.default({ defaultValue: {} }),
+      userId: funcs.default({ defaultValue: userId }),
+    },
+    count: 5,
+  },
+  Traces: {
+    columns: {
+      data: funcs.default({
+        defaultValue: {
+          attributes: {},
+          name: 'test-trace',
+          spans: [],
+        },
+      }),
+      expiresAt: funcs.date({
+        maxDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+        minDate: new Date(),
+      }),
+      metadata: funcs.default({ defaultValue: {} }),
+      orgId: funcs.default({ defaultValue: orgId }),
+      parentSpanId: funcs.default({ defaultValue: 'parent-span-123' }),
+      spanId: funcs.default({ defaultValue: 'span-123' }),
+      traceId: funcs.default({ defaultValue: 'trace-123' }),
+      userId: funcs.default({ defaultValue: userId }),
+    },
+    count: 10,
   },
   Users: {
     columns: {
