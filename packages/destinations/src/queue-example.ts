@@ -115,7 +115,10 @@ export class InMemoryTraceQueue {
     this.processing = true;
 
     while (this.queue.length > 0) {
-      const job = this.queue.shift()!;
+      const job = this.queue.shift();
+      if (!job) {
+        break;
+      }
       try {
         await this.fanoutService.processTraceDeliveryJob(job);
       } catch (error) {

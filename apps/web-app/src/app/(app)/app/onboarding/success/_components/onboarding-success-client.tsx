@@ -29,7 +29,7 @@ export default function OnboardingSuccessClient() {
   // Get the default API key for the current organization
   const { data: defaultApiKey, isLoading: isLoadingApiKey } =
     api.apiKeys.default.useQuery(
-      { projectId: projectId! },
+      { projectId: projectId ?? '' },
       { enabled: !!projectId },
     );
 

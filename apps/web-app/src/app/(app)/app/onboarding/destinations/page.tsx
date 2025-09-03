@@ -178,6 +178,7 @@ export default function DestinationsSetupPage() {
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
                             {destination.logo && (
+                              // biome-ignore lint/performance/noImgElement: no need
                               <img
                                 alt={destination.name}
                                 className="w-6 h-6 rounded"

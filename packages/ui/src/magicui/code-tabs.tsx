@@ -92,7 +92,7 @@ function CodeTabs({ tabs, className, defaultTab, ...props }: CodeTabsProps) {
                   className="[&>pre]:px-2 [&>pre]:py-2"
                   // biome-ignore lint/security/noDangerouslySetInnerHtml: pre-processed code highlighting
                   dangerouslySetInnerHTML={{
-                    __html: highlightedCodes[tab.label]!,
+                    __html: highlightedCodes[tab.label] ?? '',
                   }}
                 />
               ) : (
