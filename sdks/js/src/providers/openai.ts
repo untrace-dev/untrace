@@ -374,7 +374,11 @@ export class OpenAIInstrumentation extends BaseProviderInstrumentation {
   }
 
   private getTracer() {
-    // Get the tracer from OpenTelemetry
+    // Use the tracer from the SDK if available
+    if (this.tracer) {
+      return this.tracer;
+    }
+    // Fallback to OpenTelemetry tracer
     return trace.getTracer(this.name, this.config?.version);
   }
 }

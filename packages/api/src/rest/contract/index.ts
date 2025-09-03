@@ -1,22 +1,14 @@
-import { initContract } from '@ts-rest/core';
+import { os } from '@orpc/server';
 import { destinationsContract } from './destinations';
 import { tracesContract } from './traces';
 
-const c = initContract();
-
 // Main API contract combining all routes
-export const contract = c.router(
-  {
-    destinations: destinationsContract,
-    traces: tracesContract,
-  },
-  {
-    pathPrefix: '/api/v1',
-    strictStatusCodes: true,
-  },
-);
+export const router = os.router({
+  destinations: destinationsContract,
+  traces: tracesContract,
+});
 
-export type ApiContract = typeof contract;
+export type ApiContract = typeof router;
 
 export {
   type DestinationsContract,

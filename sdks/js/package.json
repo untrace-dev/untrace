@@ -10,19 +10,22 @@
     "@opentelemetry/resources": "1.29.0",
     "@opentelemetry/sdk-trace-base": "1.29.0",
     "@opentelemetry/sdk-trace-node": "1.29.0",
-    "@opentelemetry/semantic-conventions": "1.29.0"
+    "@opentelemetry/semantic-conventions": "1.29.0",
+    "@orpc/client": "1.8.6",
+    "@orpc/server": "1.8.6",
+    "@untrace/api": "workspace:*"
   },
   "description": "LLM observability SDK for JavaScript/TypeScript - instrument once, observe everywhere",
   "devDependencies": {
     "@anthropic-ai/sdk": "0.35.0",
-    "@types/node": "24.0.12",
+    "@types/node": "24.3.0",
     "ai": "4.3.17",
     "cohere-ai": "7.17.1",
     "langchain": "0.3.29",
     "llamaindex": "0.11.13",
     "openai": "5.9.0",
     "tsup": "8.5.0",
-    "typescript": "5.8.3",
+    "typescript": "5.9.2",
     "vitest": "3.2.4"
   },
   "engines": {

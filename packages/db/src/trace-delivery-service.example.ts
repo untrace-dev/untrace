@@ -2,9 +2,9 @@
 import { and, desc, eq, gte, lt, lte } from 'drizzle-orm';
 import { db } from './client';
 import {
-  OrgDestinations,
-  type OrgDestinationType,
-  TraceDeliveries,
+  Deliveries,
+  Destinations,
+  type DestinationType,
   Traces,
   type TraceType,
 } from './schema';
@@ -111,7 +111,7 @@ export class TransformService {
   static execute(
     transformFunction: string,
     trace: TraceType,
-    destination: OrgDestinationType,
+    destination: DestinationType,
   ): unknown {
     try {
       // WARNING: This is a simple example. In production, use a proper sandbox
@@ -136,14 +136,11 @@ export class TraceDeliveryService {
         org: {
           with: {
             destinations: {
-              orderBy: [desc(OrgDestinations.batchSize)],
+              orderBy: [desc(Destinations.batchSize)],
               where: and(
-                eq(OrgDestinations.isEnabled, true),
+                eq(Destinations.isEnabled, true),
                 // Optional: Add filtering support
               ),
-              with: {
-                provider: true,
-              },
             },
           },
         },
@@ -158,10 +155,10 @@ export class TraceDeliveryService {
     const deliveries = await Promise.all(
       trace.org.destinations.map(async (destination: any) => {
         // Check if delivery already exists
-        const existing = await db.query.TraceDeliveries.findFirst({
+        const existing = await db.query.Deliveries.findFirst({
           where: and(
-            eq(TraceDeliveries.traceId, traceId),
-            eq(TraceDeliveries.destinationId, destination.id),
+            eq(Deliveries.traceId, traceId),
+            eq(Deliveries.destinationId, destination.id),
           ),
         });
 
@@ -171,9 +168,10 @@ export class TraceDeliveryService {
 
         // Create new delivery record
         const [delivery] = await db
-          .insert(TraceDeliveries)
+          .insert(Deliveries)
           .values({
             destinationId: destination.id,
+            projectId: destination.projectId,
             status: 'pending',
             traceId,
           })
@@ -190,14 +188,9 @@ export class TraceDeliveryService {
   }
 
   async processDelivery(deliveryId: string): Promise<void> {
-    const delivery = await db.query.TraceDeliveries.findFirst({
-      where: eq(TraceDeliveries.id, deliveryId),
+    const delivery = await db.query.Deliveries.findFirst({
+      where: eq(Deliveries.id, deliveryId),
       with: {
-        destination: {
-          with: {
-            provider: true,
-          },
-        },
         trace: true,
       },
     });
@@ -206,28 +199,41 @@ export class TraceDeliveryService {
       throw new Error(`Delivery ${deliveryId} not found`);
     }
 
+    // Get the destination separately
+    const destination = await db.query.Destinations.findFirst({
+      where: eq(Destinations.id, delivery.destinationId),
+    });
+
+    if (!destination) {
+      throw new Error(`Destination ${delivery.destinationId} not found`);
+    }
+
+    if (!delivery) {
+      throw new Error(`Delivery ${deliveryId} not found`);
+    }
+
     // Check if we should retry
     if (
       delivery.status === 'failed' &&
-      delivery.destination.retryEnabled &&
-      delivery.attempts >= delivery.destination.maxRetries
+      destination.retryEnabled &&
+      delivery.attempts >= destination.maxRetries
     ) {
       await this.markDeliveryFailed(deliveryId, 'Max retries exceeded');
       return;
     }
 
     // Apply rate limiting
-    if (delivery.destination.rateLimit) {
+    if (destination.rateLimit) {
       // Check rate limits
-      const recentDeliveries = await db.query.TraceDeliveries.findMany({
+      const recentDeliveries = await db.query.Deliveries.findMany({
         where: and(
-          eq(TraceDeliveries.destinationId, delivery.destinationId),
-          eq(TraceDeliveries.status, 'success'),
-          gte(TraceDeliveries.deliveredAt, new Date(Date.now() - 60000)), // Last minute
+          eq(Deliveries.destinationId, delivery.destinationId),
+          eq(Deliveries.status, 'success'),
+          gte(Deliveries.deliveredAt, new Date(Date.now() - 60000)), // Last minute
         ),
       });
 
-      if (recentDeliveries.length >= delivery.destination.rateLimit) {
+      if (recentDeliveries.length >= destination.rateLimit) {
         // Schedule for later
         await this.scheduleRetry(deliveryId, 60000); // Retry in 1 minute
         return;
@@ -236,26 +242,26 @@ export class TraceDeliveryService {
 
     // Transform the payload if needed
     let transformedPayload = delivery.trace.data;
-    if (delivery.destination.transformFunction) {
+    if (destination.transformFunction) {
       transformedPayload = TransformService.execute(
-        delivery.destination.transformFunction,
+        destination.transformFunction,
         delivery.trace,
-        delivery.destination,
+        destination,
       );
     }
 
     // Get the adapter
-    const adapter = adapterRegistry[delivery.destination.provider.type];
+    const adapter = adapterRegistry[destination.destinationId];
     if (!adapter) {
       await this.markDeliveryFailed(
         deliveryId,
-        `No adapter found for provider type: ${delivery.destination.provider.type}`,
+        `No adapter found for provider type: ${destination.destinationId}`,
       );
       return;
     }
 
     // Decrypt config (implement your encryption logic)
-    const config = await this.decryptConfig(delivery.destination.config);
+    const config = await this.decryptConfig(destination.config);
 
     // Attempt delivery
     const result = await adapter.deliver(
@@ -266,7 +272,7 @@ export class TraceDeliveryService {
 
     if (result.success) {
       await db
-        .update(TraceDeliveries)
+        .update(Deliveries)
         .set({
           deliveredAt: new Date(),
           responseData: result.responseData,
@@ -274,17 +280,14 @@ export class TraceDeliveryService {
           transformedPayload,
           updatedAt: new Date(),
         })
-        .where(eq(TraceDeliveries.id, deliveryId));
+        .where(eq(Deliveries.id, deliveryId));
     } else {
       const attempts = delivery.attempts + 1;
 
-      if (
-        delivery.destination.retryEnabled &&
-        attempts < delivery.destination.maxRetries
-      ) {
+      if (destination.retryEnabled && attempts < destination.maxRetries) {
         // Calculate next retry with exponential backoff
         const delayMs = Math.min(
-          delivery.destination.retryDelayMs * 2 ** (attempts - 1),
+          destination.retryDelayMs * 2 ** (attempts - 1),
           300000, // Max 5 minutes
         );
 
@@ -306,28 +309,28 @@ export class TraceDeliveryService {
     const nextRetryAt = new Date(Date.now() + delayMs);
 
     await db
-      .update(TraceDeliveries)
+      .update(Deliveries)
       .set({
-        attempts: (TraceDeliveries.attempts as any) + 1,
+        attempts: (Deliveries.attempts as any) + 1,
         lastError: error,
         lastErrorAt: new Date(),
         nextRetryAt,
         status: 'retrying',
         updatedAt: new Date(),
       })
-      .where(eq(TraceDeliveries.id, deliveryId));
+      .where(eq(Deliveries.id, deliveryId));
   }
 
   private async markDeliveryFailed(deliveryId: string, error: string) {
     await db
-      .update(TraceDeliveries)
+      .update(Deliveries)
       .set({
         lastError: error,
         lastErrorAt: new Date(),
         status: 'failed',
         updatedAt: new Date(),
       })
-      .where(eq(TraceDeliveries.id, deliveryId));
+      .where(eq(Deliveries.id, deliveryId));
   }
 
   private async decryptConfig(encryptedConfig: unknown): Promise<unknown> {
@@ -338,12 +341,12 @@ export class TraceDeliveryService {
 
   // Background job to process retries
   async processRetries(): Promise<void> {
-    const retriesToProcess = await db.query.TraceDeliveries.findMany({
+    const retriesToProcess = await db.query.Deliveries.findMany({
       limit: 100,
       where: and(
-        eq(TraceDeliveries.status, 'pending'),
-        lte(TraceDeliveries.nextRetryAt, new Date()),
-        lt(TraceDeliveries.attempts, 5), // Max 5 attempts
+        eq(Deliveries.status, 'pending'),
+        lte(Deliveries.nextRetryAt, new Date()),
+        lt(Deliveries.attempts, 5), // Max 5 attempts
       ),
     });
 
@@ -378,11 +381,17 @@ async function _main() {
 }
 
 // Webhook endpoint example for receiving traces
-export async function handleTraceIngestion(
-  traceData: any,
-  orgId: string,
-  userId?: string,
-) {
+export async function handleTraceIngestion({
+  traceData,
+  orgId,
+  userId,
+  projectId,
+}: {
+  traceData: any;
+  orgId: string;
+  userId?: string;
+  projectId: string;
+}) {
   // Store the trace
   const [trace] = await db
     .insert(Traces)
@@ -394,6 +403,7 @@ export async function handleTraceIngestion(
       },
       orgId,
       parentSpanId: traceData.parentSpanId,
+      projectId,
       spanId: traceData.spanId,
       traceId: traceData.traceId || crypto.randomUUID(),
       userId,

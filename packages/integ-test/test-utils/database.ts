@@ -17,10 +17,10 @@ export interface TestDatabase {
 }
 
 let pgContainer: StartedTestContainer | null = null;
-let supabaseContainer: StartedTestContainer | null = null;
-
 // Cache the database instance to avoid creating multiple containers
 let cachedDatabase: TestDatabase | null = null;
+
+let supabaseContainer: StartedTestContainer | null = null;
 
 export async function getTestDatabase(): Promise<TestDatabase> {
   // Return cached instance if available
@@ -42,8 +42,8 @@ export async function getTestDatabase(): Promise<TestDatabase> {
 async function getLocalDatabase(): Promise<TestDatabase> {
   const connectionString =
     process.env.DATABASE_URL ||
-    'postgresql://postgres:postgres@127.0.0.1:44322/postgres';
-  const supabaseUrl = process.env.SUPABASE_URL || 'http://127.0.0.1:44321';
+    'postgresql://postgres:postgres@127.0.0.1:11322/postgres';
+  const supabaseUrl = process.env.SUPABASE_URL || 'http://127.0.0.1:11321';
   const supabaseAnonKey =
     process.env.SUPABASE_ANON_KEY ||
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0';
@@ -146,6 +146,6 @@ async function getContainerDatabase(): Promise<TestDatabase> {
     db,
     supabaseAnonKey: 'test-anon-key',
     supabaseServiceRoleKey: 'test-service-role-key',
-    supabaseUrl: 'http://localhost:54321',
+    supabaseUrl: 'http://localhost:11321',
   };
 }

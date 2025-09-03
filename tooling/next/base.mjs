@@ -10,7 +10,7 @@ const nextConfig = {
     browserDebugInfoInTerminal: true,
 
     // cacheLife: true,
-    cacheComponents: true,
+    // cacheComponents: true,
     // Activate new client-side router improvements
     clientSegmentCache: true, // will be renamed to cacheComponents in Next.js 16
 
@@ -22,7 +22,7 @@ const nextConfig = {
     // Enable support for `global-not-found`, which allows you to more easily define a global 404 page.
     globalNotFound: true,
     scrollRestoration: true,
-    turbopackPersistentCaching: true,
+    // turbopackPersistentCaching: true,
     useCache: true,
   },
   images: {
@@ -36,7 +36,7 @@ const nextConfig = {
       { hostname: 'img.clerk.com' },
       { hostname: 'image.tmdb.org' },
       { hostname: 'picsum.photos' },
-      { hostname: 'untrace.sh' },
+      { hostname: 'untrace.dev' },
       { hostname: 'randomuser.me' },
       { hostname: 'cdn.brandfetch.io' },
     ],
@@ -51,6 +51,13 @@ const nextConfig = {
   // removeConsole: true,
   // },
   reactStrictMode: true,
+  transpilePackages: [
+    '@untrace/api',
+    '@untrace/db',
+    '@untrace/ui',
+    '@untrace/ai',
+    '@untrace/analytics',
+  ],
   typescript: { ignoreBuildErrors: true },
 };
 

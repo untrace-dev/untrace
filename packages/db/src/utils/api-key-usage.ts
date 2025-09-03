@@ -33,6 +33,7 @@ export async function trackApiKeyUsage({
         apiKeyId: apiKeyRecord.id,
         metadata,
         orgId,
+        projectId: apiKeyRecord.projectId,
         type,
         userId,
       });

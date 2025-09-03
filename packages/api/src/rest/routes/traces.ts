@@ -1,192 +1,262 @@
-import { createNextRoute } from '@ts-rest/next';
+import { ORPCError, os } from '@orpc/server';
 import { and, desc, eq, gte, lte, sql } from '@untrace/db';
 import { db } from '@untrace/db/client';
-import { TraceDeliveries, Traces } from '@untrace/db/schema';
+import { Deliveries, Traces } from '@untrace/db/schema';
+import { createTraceFanoutService } from '@untrace/destinations';
 import { createId } from '@untrace/id';
 import { addDays } from 'date-fns';
-import type { NextApiRequest } from 'next';
-import { tracesContract } from '../contract/traces';
+import { createSelectSchema } from 'drizzle-zod';
+import { z } from 'zod';
+import { apiKeyAuthMiddleware } from '../middleware/auth';
 
-// Helper to get organization ID from request (would be from auth in production)
-async function getOrgId(req: NextApiRequest): Promise<string> {
-  // TODO: Get from auth context
-  const orgId = req.headers['x-organization-id'];
-  if (!orgId) {
-    throw new Error('Organization ID not provided');
-  }
-  return orgId as string;
+// Use Drizzle-generated schemas exclusively
+const TraceSelectSchema = createSelectSchema(Traces);
+const TraceDeliverySelectSchema = createSelectSchema(Deliveries);
+
+// OTLP types
+interface OTLPAttribute {
+  key: string;
+  value: OTLPValue;
 }
 
-export const tracesRouter = createNextRoute(tracesContract, {
-  // Create a new trace
-  createTrace: async ({ body, req }) => {
+interface OTLPValue {
+  stringValue?: string;
+  boolValue?: boolean;
+  intValue?: number;
+  doubleValue?: number;
+  arrayValue?: {
+    values: OTLPValue[];
+  };
+  kvlistValue?: {
+    values: OTLPAttribute[];
+  };
+}
+
+// Helper to get organization ID from context
+async function getOrgId(context: {
+  auth?: { orgId?: string };
+}): Promise<string> {
+  const orgId = context.auth?.orgId;
+  if (!orgId) {
+    throw new ORPCError('UNAUTHORIZED', {
+      message:
+        'Organization ID not provided. Please provide a valid API key in the Authorization header.',
+    });
+  }
+  return orgId;
+}
+
+// Helper function to convert OTLP attributes to plain object
+function convertOTLPAttributes(
+  attributes: OTLPAttribute[],
+): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+
+  for (const attr of attributes) {
+    const value = convertOTLPValue(attr.value);
+    if (value !== undefined && value !== null) {
+      result[attr.key] = value;
+    }
+  }
+
+  return result;
+}
+
+// Helper function to convert OTLP value to plain value
+function convertOTLPValue(value: OTLPValue): unknown {
+  if (value.stringValue !== undefined) return value.stringValue;
+  if (value.boolValue !== undefined) return value.boolValue;
+  if (value.intValue !== undefined) return value.intValue;
+  if (value.doubleValue !== undefined) return value.doubleValue;
+  if (value.arrayValue) {
+    return value.arrayValue.values.map(convertOTLPValue);
+  }
+  if (value.kvlistValue) {
+    return convertOTLPAttributes(value.kvlistValue.values);
+  }
+  return undefined;
+}
+
+// OTLP constants
+const ATTR_LLM_MODEL = 'llm.model';
+
+// oRPC handlers
+export const create = os
+  .route({ method: 'POST', path: '/traces' })
+  .input(
+    z.object({
+      data: z.record(z.string(), z.unknown()),
+      expiresAt: z.date().optional(),
+      spanId: z.string().optional(),
+      traceId: z.string(),
+      ttlDays: z.number().int().positive().optional(),
+    }),
+  )
+  .output(TraceSelectSchema)
+  .use(apiKeyAuthMiddleware)
+  .handler(async ({ input, context }) => {
     try {
-      const orgId = await getOrgId(req);
-      const expiresAt = addDays(new Date(), body.ttlDays || 30);
+      const orgId = await getOrgId(context);
+      const expiresAt = addDays(new Date(), input.ttlDays || 30);
 
       const [trace] = await db
         .insert(Traces)
         .values({
-          data: body.data,
+          data: input.data,
           expiresAt,
           id: createId(),
           orgId,
-          spanId: body.spanId || null,
-          traceId: body.traceId,
+          projectId: context.apiKey.projectId,
+          spanId: input.spanId || null,
+          traceId: input.traceId,
         })
         .returning();
 
       if (!trace) {
-        throw new Error('Failed to create trace');
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Failed to create trace',
+        });
       }
 
-      return {
-        body: trace,
-        status: 201 as const,
-      };
+      return trace;
     } catch (error) {
-      return {
-        body: {
-          error:
-            error instanceof Error ? error.message : 'Failed to create trace',
-        },
-        status: 400 as const,
-      };
-    }
-  },
-
-  // Delete a trace
-  deleteTrace: async ({ params, req }) => {
-    try {
-      const orgId = await getOrgId(req);
-
-      const result = await db
-        .delete(Traces)
-        .where(and(eq(Traces.id, params.id), eq(Traces.orgId, orgId)))
-        .returning({ id: Traces.id });
-
-      if (result.length === 0) {
-        return {
-          body: { error: 'Trace not found' },
-          status: 404 as const,
-        };
+      if (error instanceof ORPCError) {
+        throw error;
       }
-
-      return {
-        body: undefined,
-        status: 204 as const,
-      };
-    } catch (_error) {
-      return {
-        body: { error: 'Unauthorized' },
-        status: 401 as const,
-      };
+      throw new ORPCError('BAD_REQUEST', {
+        message:
+          error instanceof Error ? error.message : 'Failed to create trace',
+      });
     }
-  },
-
-  // Get a single trace
-  getTrace: async ({ params, req }) => {
+  });
+export const byId = os
+  .route({ method: 'GET', path: '/traces/{id}' })
+  .input(z.object({ id: z.coerce.string() }))
+  .output(TraceSelectSchema)
+  .handler(async ({ input, context }) => {
     try {
-      const orgId = await getOrgId(req);
+      const orgId = await getOrgId(context);
 
       const trace = await db.query.Traces.findFirst({
-        where: and(eq(Traces.id, params.id), eq(Traces.orgId, orgId)),
+        where: and(eq(Traces.id, input.id), eq(Traces.orgId, orgId)),
       });
 
       if (!trace) {
-        return {
-          body: { error: 'Trace not found' },
-          status: 404 as const,
-        };
+        throw new ORPCError('NOT_FOUND', { message: 'Trace not found' });
       }
 
-      return {
-        body: trace,
-        status: 200 as const,
-      };
-    } catch (_error) {
-      return {
-        body: { error: 'Unauthorized' },
-        status: 401 as const,
-      };
+      return trace;
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('UNAUTHORIZED', { message: 'Unauthorized' });
     }
-  },
+  });
 
-  // Get trace deliveries
-  getTraceDeliveries: async ({ params, query, req }) => {
+export const deliveries = os
+  .route({ method: 'GET', path: '/traces/{id}/deliveries' })
+  .input(
+    z.object({
+      id: z.coerce.string(),
+      limit: z.coerce.number().int().min(1).max(100).optional(),
+      offset: z.coerce.number().int().min(0).optional(),
+    }),
+  )
+  .output(
+    z.object({
+      deliveries: z.array(TraceDeliverySelectSchema),
+      limit: z.number().optional(),
+      offset: z.number().optional(),
+      total: z.number(),
+    }),
+  )
+  .handler(async ({ input, context }) => {
     try {
-      const orgId = await getOrgId(req);
+      const orgId = await getOrgId(context);
 
       // First verify the trace belongs to the organization
       const trace = await db.query.Traces.findFirst({
-        where: and(eq(Traces.id, params.id), eq(Traces.orgId, orgId)),
+        where: and(eq(Traces.id, input.id), eq(Traces.orgId, orgId)),
       });
 
       if (!trace) {
-        return {
-          body: { error: 'Trace not found' },
-          status: 404 as const,
-        };
+        throw new ORPCError('NOT_FOUND', { message: 'Trace not found' });
       }
 
       const [deliveriesList, totalResult] = await Promise.all([
-        db.query.TraceDeliveries.findMany({
-          limit: query.limit,
-          offset: query.offset,
-          orderBy: [desc(TraceDeliveries.createdAt)],
-          where: eq(TraceDeliveries.traceId, params.id),
+        db.query.Deliveries.findMany({
+          limit: input.limit,
+          offset: input.offset,
+          orderBy: [desc(Deliveries.createdAt)],
+          where: eq(Deliveries.traceId, input.id),
         }),
         db
           .select({ count: sql<number>`count(*)` })
-          .from(TraceDeliveries)
-          .where(eq(TraceDeliveries.traceId, params.id)),
+          .from(Deliveries)
+          .where(eq(Deliveries.traceId, input.id)),
       ]);
 
       return {
-        body: {
-          deliveries: deliveriesList.map((delivery) => ({
-            ...delivery,
-            responseData: delivery.responseData as unknown,
-            transformedPayload: delivery.transformedPayload as unknown,
-          })),
-          limit: query.limit,
-          offset: query.offset,
-          total: Number(totalResult[0]?.count || 0),
-        },
-        status: 200 as const,
+        deliveries: deliveriesList,
+        limit: input.limit,
+        offset: input.offset,
+        total: Number(totalResult[0]?.count || 0),
       };
-    } catch (_error) {
-      return {
-        body: { error: 'Unauthorized' },
-        status: 401 as const,
-      };
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('UNAUTHORIZED', { message: 'Unauthorized' });
     }
-  },
+  });
 
-  // List traces with filtering
-  listTraces: async ({ query, req }) => {
+export const all = os
+  .route({ method: 'GET', path: '/traces' })
+  .input(
+    z.object({
+      createdAfter: z.coerce.date().optional(),
+      createdBefore: z.coerce.date().optional(),
+      limit: z.coerce.number().int().min(1).max(100).optional(),
+      offset: z.coerce.number().int().min(0).optional(),
+      organizationId: z.string().optional(),
+      spanId: z.string().optional(),
+      traceId: z.string().optional(),
+    }),
+  )
+  .output(
+    z.object({
+      limit: z.number().optional(),
+      offset: z.number().optional(),
+      total: z.number(),
+      traces: z.array(TraceSelectSchema),
+    }),
+  )
+  .handler(async ({ input, context }) => {
     try {
-      const orgId = await getOrgId(req);
+      const orgId = await getOrgId(context);
 
-      const conditions = [eq(Traces.orgId, query.organizationId || orgId)];
+      const conditions: ReturnType<typeof eq>[] = [
+        eq(Traces.orgId, input.organizationId || orgId),
+      ];
 
-      if (query.traceId) {
-        conditions.push(eq(Traces.traceId, query.traceId));
+      if (input.traceId) {
+        conditions.push(eq(Traces.traceId, input.traceId));
       }
-      if (query.spanId) {
-        conditions.push(eq(Traces.spanId, query.spanId));
+      if (input.spanId) {
+        conditions.push(eq(Traces.spanId, input.spanId));
       }
-      if (query.createdAfter) {
-        conditions.push(gte(Traces.createdAt, query.createdAfter));
+      if (input.createdAfter) {
+        conditions.push(gte(Traces.createdAt, input.createdAfter));
       }
-      if (query.createdBefore) {
-        conditions.push(lte(Traces.createdAt, query.createdBefore));
+      if (input.createdBefore) {
+        conditions.push(lte(Traces.createdAt, input.createdBefore));
       }
 
       const [tracesList, totalResult] = await Promise.all([
         db.query.Traces.findMany({
-          limit: query.limit,
-          offset: query.offset,
+          limit: input.limit,
+          offset: input.offset,
           orderBy: [desc(Traces.createdAt)],
           where: and(...conditions),
         }),
@@ -197,97 +267,333 @@ export const tracesRouter = createNextRoute(tracesContract, {
       ]);
 
       return {
-        body: {
-          limit: query.limit,
-          offset: query.offset,
-          total: Number(totalResult[0]?.count || 0),
-          traces: tracesList,
-        },
-        status: 200 as const,
+        limit: input.limit,
+        offset: input.offset,
+        total: Number(totalResult[0]?.count || 0),
+        traces: tracesList,
       };
     } catch (error) {
-      return {
-        body: {
-          error:
-            error instanceof Error ? error.message : 'Failed to list traces',
-        },
-        status: 400 as const,
-      };
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('BAD_REQUEST', {
+        message:
+          error instanceof Error ? error.message : 'Failed to list traces',
+      });
     }
-  },
+  });
 
-  // Retry a failed delivery
-  retryDelivery: async ({ params, req }) => {
+export const retry = os
+  .route({
+    method: 'POST',
+    path: '/traces/{traceId}/deliveries/{deliveryId}/retry',
+  })
+  .input(
+    z.object({
+      deliveryId: z.coerce.string(),
+      traceId: z.coerce.string(),
+    }),
+  )
+  .output(TraceDeliverySelectSchema)
+  .handler(async ({ input, context }) => {
     try {
-      const orgId = await getOrgId(req);
+      const orgId = await getOrgId(context);
 
       // First verify the trace belongs to the organization
       const trace = await db.query.Traces.findFirst({
-        where: and(eq(Traces.id, params.traceId), eq(Traces.orgId, orgId)),
+        where: and(eq(Traces.id, input.traceId), eq(Traces.orgId, orgId)),
       });
 
       if (!trace) {
-        return {
-          body: { error: 'Trace not found' },
-          status: 404 as const,
-        };
+        throw new ORPCError('NOT_FOUND', { message: 'Trace not found' });
       }
 
       // Get the delivery
-      const delivery = await db.query.TraceDeliveries.findFirst({
+      const delivery = await db.query.Deliveries.findFirst({
         where: and(
-          eq(TraceDeliveries.id, params.deliveryId),
-          eq(TraceDeliveries.traceId, params.traceId),
+          eq(Deliveries.id, input.deliveryId),
+          eq(Deliveries.traceId, input.traceId),
         ),
       });
 
       if (!delivery) {
-        return {
-          body: { error: 'Delivery not found' },
-          status: 404 as const,
-        };
+        throw new ORPCError('NOT_FOUND', { message: 'Delivery not found' });
       }
 
       if (delivery.status === 'success') {
-        return {
-          body: { error: 'Delivery already successful' },
-          status: 409 as const,
-        };
+        throw new ORPCError('CONFLICT', {
+          message: 'Delivery already successful',
+        });
       }
 
       // Update delivery to pending for retry
       const [updatedDelivery] = await db
-        .update(TraceDeliveries)
+        .update(Deliveries)
         .set({
           nextRetryAt: new Date(),
           status: 'pending',
           updatedAt: new Date(),
         })
-        .where(eq(TraceDeliveries.id, params.deliveryId))
+        .where(eq(Deliveries.id, input.deliveryId))
         .returning();
 
       if (!updatedDelivery) {
-        return {
-          body: { error: 'Failed to update delivery' },
-          status: 404 as const,
-        };
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Failed to update delivery',
+        });
       }
 
       // TODO: Trigger actual delivery retry via queue
 
-      return {
-        body: {
-          ...updatedDelivery,
-          responseData: updatedDelivery.responseData as unknown,
-          transformedPayload: updatedDelivery.transformedPayload as unknown,
-        },
-        status: 200 as const,
-      };
-    } catch (_error) {
-      return {
-        body: { error: 'Unauthorized' },
-        status: 401 as const,
-      };
+      return updatedDelivery;
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('UNAUTHORIZED', { message: 'Unauthorized' });
     }
-  },
+  });
+
+export const ingest = os
+  .route({ method: 'POST', path: '/traces/otlp' })
+  .input(
+    z.object({
+      resourceSpans: z.array(
+        z.object({
+          resource: z.object({
+            attributes: z.array(
+              z.object({
+                key: z.string(),
+                value: z.object({
+                  arrayValue: z
+                    .object({
+                      values: z.array(z.any()),
+                    })
+                    .optional(),
+                  boolValue: z.boolean().optional(),
+                  doubleValue: z.number().optional(),
+                  intValue: z.number().optional(),
+                  kvlistValue: z
+                    .object({
+                      values: z.array(z.any()),
+                    })
+                    .optional(),
+                  stringValue: z.string().optional(),
+                }),
+              }),
+            ),
+          }),
+          scopeSpans: z.array(
+            z.object({
+              scope: z.object({
+                name: z.string(),
+                version: z.string().optional(),
+              }),
+              spans: z.array(
+                z.object({
+                  attributes: z.array(z.any()),
+                  endTimeUnixNano: z.string(),
+                  events: z.array(z.any()),
+                  kind: z.number(),
+                  links: z.array(z.any()),
+                  name: z.string(),
+                  parentSpanId: z.string().optional(),
+                  spanId: z.string(),
+                  startTimeUnixNano: z.string(),
+                  status: z.object({
+                    code: z.number(),
+                    message: z.string().optional(),
+                  }),
+                  traceId: z.string(),
+                }),
+              ),
+            }),
+          ),
+        }),
+      ),
+    }),
+  )
+  .output(
+    z.object({
+      success: z.boolean(),
+      tracesProcessed: z.number(),
+    }),
+  )
+  .use(apiKeyAuthMiddleware)
+  .handler(async ({ input, context }) => {
+    try {
+      // Initialize fanout service
+      const fanoutService = createTraceFanoutService();
+
+      const traces: Array<{
+        data: Record<string, unknown>;
+        expiresAt: Date;
+        id: string;
+        orgId: string;
+        parentSpanId: string | null;
+        projectId: string;
+        spanId: string;
+        traceId: string;
+      }> = [];
+
+      for (const resourceSpan of input.resourceSpans) {
+        const resourceAttributes = convertOTLPAttributes(
+          resourceSpan.resource.attributes,
+        );
+
+        for (const scopeSpan of resourceSpan.scopeSpans) {
+          for (const span of scopeSpan.spans) {
+            // Convert span to trace format
+            const spanAttributes = convertOTLPAttributes(span.attributes);
+
+            // Extract LLM-specific data
+            const llmData: Record<string, unknown> = {
+              error: null,
+              request: {},
+              response: {},
+            };
+
+            // Extract request data
+            if (spanAttributes['llm.operation.type']) {
+              llmData.request = {
+                max_tokens: spanAttributes['llm.max_tokens'],
+                messages: spanAttributes['llm.messages'] || [],
+                model:
+                  spanAttributes['llm.model'] || spanAttributes[ATTR_LLM_MODEL],
+                stream: spanAttributes['llm.stream'],
+                temperature: spanAttributes['llm.temperature'],
+              };
+            }
+
+            // Extract response data
+            if (spanAttributes['llm.total.tokens']) {
+              llmData.response = {
+                choices: spanAttributes['llm.choices'] || [],
+                usage: {
+                  completion_tokens: spanAttributes['llm.completion.tokens'],
+                  prompt_tokens: spanAttributes['llm.prompt.tokens'],
+                  total_tokens: spanAttributes['llm.total.tokens'],
+                },
+              };
+            }
+
+            // Extract error data
+            if (span.status.code === 1) {
+              // ERROR status
+              llmData.error = {
+                message: span.status.message,
+                type: spanAttributes['llm.error.type'],
+              };
+            }
+
+            // If this is an LLM operation, try to extract more detailed data
+            if (spanAttributes['llm.operation.type'] === 'chat') {
+              // Look for request/response data in span events
+              for (const event of span.events) {
+                const eventAttributes = convertOTLPAttributes(event.attributes);
+
+                if (event.name === 'llm.request') {
+                  llmData.request = {
+                    ...(llmData.request as Record<string, unknown>),
+                    ...eventAttributes,
+                  };
+                } else if (event.name === 'llm.response') {
+                  llmData.response = {
+                    ...(llmData.response as Record<string, unknown>),
+                    ...eventAttributes,
+                  };
+                }
+              }
+            }
+
+            // Create trace record
+            const trace = {
+              data: {
+                ...llmData,
+                resource: resourceAttributes,
+                scope: {
+                  name: scopeSpan.scope.name,
+                  version: scopeSpan.scope.version,
+                },
+                span: {
+                  attributes: spanAttributes,
+                  endTime: span.endTimeUnixNano,
+                  events: span.events,
+                  kind: span.kind,
+                  links: span.links,
+                  name: span.name,
+                  startTime: span.startTimeUnixNano,
+                },
+              },
+              expiresAt: addDays(new Date(), 30), // 30 days TTL
+              id: createId(),
+              orgId: context.apiKey.orgId,
+              parentSpanId: span.parentSpanId || null,
+              projectId: context.apiKey.projectId,
+              spanId: span.spanId,
+              traceId: span.traceId,
+            };
+
+            traces.push(trace);
+          }
+        }
+      }
+
+      // Insert traces into database
+      if (traces.length > 0) {
+        await db.insert(Traces).values(traces);
+
+        // Process fanout to all destinations
+        const fanoutContext = {
+          orgId: context.apiKey.orgId,
+          projectId: context.apiKey.projectId,
+          userId: (context as { auth?: { userId?: string } }).auth?.userId,
+        };
+
+        // Convert traces to TraceData format for fanout
+        const traceDataArray = traces.map((trace) => ({
+          createdAt: new Date(),
+          data: trace.data,
+          expiresAt: trace.expiresAt,
+          metadata: {},
+          orgId: trace.orgId,
+          parentSpanId: trace.parentSpanId || undefined,
+          spanId: trace.spanId || undefined,
+          traceId: trace.traceId,
+          userId: (context as { auth?: { userId?: string } }).auth?.userId,
+        }));
+
+        // Process fanout asynchronously (don't wait for completion)
+        fanoutService
+          .processTraces(traceDataArray, fanoutContext)
+          .catch((error) => {
+            console.error('Fanout processing failed:', error);
+          });
+      }
+
+      return {
+        success: true,
+        tracesProcessed: traces.length,
+      };
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('BAD_REQUEST', {
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to ingest OTLP traces',
+      });
+    }
+  });
+
+// Export the traces router
+export const tracesRouter = os.router({
+  all,
+  byId,
+  create,
+  deliveries,
+  ingest,
+  retry,
 });

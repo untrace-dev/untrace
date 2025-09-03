@@ -92,6 +92,7 @@
       "packages/*",
       "apps/*",
       "tooling/*",
+      "sdks/*",
       "docs"
     ]
   }

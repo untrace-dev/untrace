@@ -36,7 +36,10 @@ export const stripeSubscriptionStatusEnum = pgEnum('stripeSubscriptionStatus', [
   'unpaid',
 ]);
 
-export const apiKeyUsageTypeEnum = pgEnum('apiKeyUsageType', ['mcp-server']);
+export const apiKeyUsageTypeEnum = pgEnum('apiKeyUsageType', [
+  'mcp-server',
+  'trace',
+]);
 
 export const UserRoleType = z.enum(userRoleEnum.enumValues).enum;
 export const LocalConnectionStatusType = z.enum(
@@ -69,8 +72,8 @@ export const Users = pgTable('user', {
 export const UsersRelations = relations(Users, ({ many }) => ({
   apiKeys: many(ApiKeys),
   apiKeyUsage: many(ApiKeyUsage),
-  authCodes: many(AuthCodes),
   orgMembers: many(OrgMembers),
+  projects: many(Projects),
   traces: many(Traces),
 }));
 
@@ -122,13 +125,13 @@ export const updateOrgSchema = createInsertSchema(Orgs).omit({
 export const OrgsRelations = relations(Orgs, ({ one, many }) => ({
   apiKeys: many(ApiKeys),
   apiKeyUsage: many(ApiKeyUsage),
-  authCodes: many(AuthCodes),
   createdByUser: one(Users, {
     fields: [Orgs.createdByUserId],
     references: [Users.id],
   }),
-  destinations: many(OrgDestinations),
+  destinations: many(Destinations),
   orgMembers: many(OrgMembers),
+  projects: many(Projects),
   traces: many(Traces),
 }));
 
@@ -184,57 +187,71 @@ export const OrgMembersRelations = relations(OrgMembers, ({ one }) => ({
   }),
 }));
 
-export const AuthCodes = pgTable('authCodes', {
-  createdAt: timestamp('createdAt', {
-    mode: 'date',
-    withTimezone: true,
-  })
-    .notNull()
-    .defaultNow(),
-  expiresAt: timestamp('expiresAt', {
-    mode: 'date',
-    withTimezone: true,
-  })
-    .$defaultFn(() => new Date(Date.now() + 1000 * 60 * 30)) // 30 minutes
-    .notNull(),
-  id: varchar('id', { length: 128 })
-    .$defaultFn(() => createId({ prefix: 'ac' }))
-    .notNull()
-    .primaryKey(),
-  orgId: varchar('orgId')
-    .references(() => Orgs.id, {
-      onDelete: 'cascade',
-    })
-    .notNull()
-    .default(requestingOrgId()),
-  sessionId: text('sessionId').notNull(),
-  updatedAt: timestamp('updatedAt', {
-    mode: 'date',
-    withTimezone: true,
-  }).$onUpdateFn(() => new Date()),
-  usedAt: timestamp('usedAt', {
-    mode: 'date',
-    withTimezone: true,
-  }),
-  userId: varchar('userId')
-    .references(() => Users.id, {
-      onDelete: 'cascade',
-    })
-    .notNull()
-    .default(requestingUserId()),
+// Projects Table
+export const Projects = pgTable(
+  'projects',
+  {
+    createdAt: timestamp('createdAt', {
+      mode: 'date',
+      withTimezone: true,
+    }).defaultNow(),
+    createdByUserId: varchar('createdByUserId')
+      .references(() => Users.id, {
+        onDelete: 'cascade',
+      })
+      .notNull()
+      .default(requestingUserId()),
+    description: text('description'),
+    id: varchar('id', { length: 128 })
+      .$defaultFn(() => createId({ prefix: 'proj' }))
+      .notNull()
+      .primaryKey(),
+    name: text('name').notNull(),
+    orgId: varchar('orgId')
+      .references(() => Orgs.id, {
+        onDelete: 'cascade',
+      })
+      .notNull()
+      .default(requestingOrgId()),
+    updatedAt: timestamp('updatedAt', {
+      mode: 'date',
+      withTimezone: true,
+    }).$onUpdateFn(() => new Date()),
+  },
+  (table) => [
+    // Ensure unique project names per org
+    unique().on(table.orgId, table.name),
+  ],
+);
+
+export type ProjectType = typeof Projects.$inferSelect;
+
+export const CreateProjectSchema = createInsertSchema(Projects).omit({
+  createdAt: true,
+  id: true,
+  orgId: true,
+  updatedAt: true,
 });
 
-export type AuthCodeType = typeof AuthCodes.$inferSelect;
+export const UpdateProjectSchema = createUpdateSchema(Projects).omit({
+  createdAt: true,
+  id: true,
+  orgId: true,
+  updatedAt: true,
+});
 
-export const AuthCodesRelations = relations(AuthCodes, ({ one }) => ({
-  org: one(Orgs, {
-    fields: [AuthCodes.orgId],
-    references: [Orgs.id],
-  }),
-  user: one(Users, {
-    fields: [AuthCodes.userId],
+export const ProjectsRelations = relations(Projects, ({ one, many }) => ({
+  apiKeys: many(ApiKeys),
+  createdByUser: one(Users, {
+    fields: [Projects.createdByUserId],
     references: [Users.id],
   }),
+  destinations: many(Destinations),
+  org: one(Orgs, {
+    fields: [Projects.orgId],
+    references: [Orgs.id],
+  }),
+  traces: many(Traces),
 }));
 
 // API Keys Table
@@ -269,6 +286,11 @@ export const ApiKeys = pgTable('apiKeys', {
     })
     .notNull()
     .default(requestingOrgId()),
+  projectId: varchar('projectId')
+    .references(() => Projects.id, {
+      onDelete: 'cascade',
+    })
+    .notNull(),
   updatedAt: timestamp('updatedAt', {
     mode: 'date',
     withTimezone: true,
@@ -288,6 +310,7 @@ export const CreateApiKeySchema = createInsertSchema(ApiKeys).omit({
   id: true,
   lastUsedAt: true,
   orgId: true,
+  projectId: true,
   updatedAt: true,
   userId: true,
 });
@@ -296,6 +319,7 @@ export const UpdateApiKeySchema = createUpdateSchema(ApiKeys).omit({
   createdAt: true,
   id: true,
   orgId: true,
+  projectId: true,
   updatedAt: true,
   userId: true,
 });
@@ -304,6 +328,10 @@ export const ApiKeysRelations = relations(ApiKeys, ({ one, many }) => ({
   org: one(Orgs, {
     fields: [ApiKeys.orgId],
     references: [Orgs.id],
+  }),
+  project: one(Projects, {
+    fields: [ApiKeys.projectId],
+    references: [Projects.id],
   }),
   usage: many(ApiKeyUsage),
   user: one(Users, {
@@ -337,6 +365,11 @@ export const ApiKeyUsage = pgTable('apiKeyUsage', {
     })
     .notNull()
     .default(requestingOrgId()),
+  projectId: varchar('projectId')
+    .references(() => Projects.id, {
+      onDelete: 'cascade',
+    })
+    .notNull(),
   type: apiKeyUsageTypeEnum('type').notNull(),
   updatedAt: timestamp('updatedAt', {
     mode: 'date',
@@ -368,6 +401,10 @@ export const ApiKeyUsageRelations = relations(ApiKeyUsage, ({ one }) => ({
   org: one(Orgs, {
     fields: [ApiKeyUsage.orgId],
     references: [Orgs.id],
+  }),
+  project: one(Projects, {
+    fields: [ApiKeyUsage.projectId],
+    references: [Projects.id],
   }),
   user: one(Users, {
     fields: [ApiKeyUsage.userId],
@@ -440,24 +477,6 @@ export const ShortUrlsRelations = relations(ShortUrls, ({ one }) => ({
 
 // ==================== TRACE STORAGE SCHEMAS ====================
 
-// Enum for destination types
-export const destinationTypeEnum = pgEnum('destinationType', [
-  'langfuse',
-  'openai',
-  'langsmith',
-  'keywords_ai',
-  's3',
-  'webhook',
-  'datadog',
-  'new_relic',
-  'grafana',
-  'prometheus',
-  'elasticsearch',
-  'custom',
-]);
-
-export const DestinationType = z.enum(destinationTypeEnum.enumValues).enum;
-
 // Enum for delivery status
 export const deliveryStatusEnum = pgEnum('deliveryStatus', [
   'pending',
@@ -471,6 +490,9 @@ export const DeliveryStatus = z.enum(deliveryStatusEnum.enumValues).enum;
 
 // Traces table with TTL support
 export const Traces = pgTable('traces', {
+  apiKeyId: varchar('apiKeyId').references(() => ApiKeys.id, {
+    onDelete: 'cascade',
+  }),
   // Timestamps
   createdAt: timestamp('createdAt', {
     mode: 'date',
@@ -503,6 +525,11 @@ export const Traces = pgTable('traces', {
     .notNull()
     .default(requestingOrgId()),
   parentSpanId: varchar('parentSpanId', { length: 32 }),
+  projectId: varchar('projectId')
+    .references(() => Projects.id, {
+      onDelete: 'cascade',
+    })
+    .notNull(),
   spanId: varchar('spanId', { length: 32 }), // OTEL span ID
 
   // OpenTelemetry trace data (JSONB for flexibility)
@@ -521,10 +548,18 @@ export const Traces = pgTable('traces', {
 export type TraceType = typeof Traces.$inferSelect;
 
 export const TracesRelations = relations(Traces, ({ one, many }) => ({
-  deliveries: many(TraceDeliveries),
+  apiKey: one(ApiKeys, {
+    fields: [Traces.apiKeyId],
+    references: [ApiKeys.id],
+  }),
+  deliveries: many(Deliveries),
   org: one(Orgs, {
     fields: [Traces.orgId],
     references: [Orgs.id],
+  }),
+  project: one(Projects, {
+    fields: [Traces.projectId],
+    references: [Projects.id],
   }),
   user: one(Users, {
     fields: [Traces.userId],
@@ -532,53 +567,9 @@ export const TracesRelations = relations(Traces, ({ one, many }) => ({
   }),
 }));
 
-// Available destination providers (reference table)
-export const DestinationProviders = pgTable('destinationProviders', {
-  // Schema for configuration (JSON Schema)
-  configSchema: json('configSchema').notNull(),
-
-  createdAt: timestamp('createdAt', {
-    mode: 'date',
-    withTimezone: true,
-  })
-    .defaultNow()
-    .notNull(),
-
-  // Default transform template (if any)
-  defaultTransform: text('defaultTransform'),
-  description: text('description'),
-  id: varchar('id', { length: 128 })
-    .$defaultFn(() => createId({ prefix: 'dp' }))
-    .notNull()
-    .primaryKey(),
-
-  // Status
-  isActive: boolean('isActive').default(true).notNull(),
-  name: varchar('name', { length: 255 }).notNull(),
-  supportsBatchDelivery: boolean('supportsBatchDelivery')
-    .default(true)
-    .notNull(),
-  supportsCustomTransform: boolean('supportsCustomTransform')
-    .default(true)
-    .notNull(),
-
-  // Feature flags
-  supportsOpenTelemetry: boolean('supportsOpenTelemetry')
-    .default(true)
-    .notNull(),
-
-  type: destinationTypeEnum('type').notNull().unique(),
-  updatedAt: timestamp('updatedAt', {
-    mode: 'date',
-    withTimezone: true,
-  }).$onUpdateFn(() => new Date()),
-});
-
-export type DestinationProviderType = typeof DestinationProviders.$inferSelect;
-
 // Organization-specific destination configurations
-export const OrgDestinations = pgTable(
-  'orgDestinations',
+export const Destinations = pgTable(
+  'destinations',
   {
     batchSize: integer('batchSize').default(100),
 
@@ -592,6 +583,9 @@ export const OrgDestinations = pgTable(
       .defaultNow()
       .notNull(),
     description: text('description'),
+
+    // Reference to destination config by ID (no foreign key)
+    destinationId: varchar('destinationId', { length: 128 }).notNull(),
     id: varchar('id', { length: 128 })
       .$defaultFn(() => createId({ prefix: 'od' }))
       .notNull()
@@ -610,8 +604,9 @@ export const OrgDestinations = pgTable(
       .notNull()
       .default(requestingOrgId()),
 
-    providerId: varchar('providerId')
-      .references(() => DestinationProviders.id, {
+    // Project assignment
+    projectId: varchar('projectId')
+      .references(() => Projects.id, {
         onDelete: 'cascade',
       })
       .notNull(),
@@ -629,31 +624,31 @@ export const OrgDestinations = pgTable(
     }).$onUpdateFn(() => new Date()),
   },
   (table) => [
-    // Ensure unique destination names per org
-    unique().on(table.orgId, table.name),
+    // Ensure unique destination names per project
+    unique().on(table.projectId, table.name),
   ],
 );
 
-export type OrgDestinationType = typeof OrgDestinations.$inferSelect;
+export type DestinationType = typeof Destinations.$inferSelect;
 
-export const OrgDestinationsRelations = relations(
-  OrgDestinations,
+export const DestinationsRelations = relations(
+  Destinations,
   ({ one, many }) => ({
-    deliveries: many(TraceDeliveries),
+    deliveries: many(Deliveries),
     org: one(Orgs, {
-      fields: [OrgDestinations.orgId],
+      fields: [Destinations.orgId],
       references: [Orgs.id],
     }),
-    provider: one(DestinationProviders, {
-      fields: [OrgDestinations.providerId],
-      references: [DestinationProviders.id],
+    project: one(Projects, {
+      fields: [Destinations.projectId],
+      references: [Projects.id],
     }),
   }),
 );
 
 // Track trace deliveries for retry logic
-export const TraceDeliveries = pgTable(
-  'traceDeliveries',
+export const Deliveries = pgTable(
+  'deliveries',
   {
     attempts: integer('attempts').default(0).notNull(),
 
@@ -671,7 +666,7 @@ export const TraceDeliveries = pgTable(
     }),
 
     destinationId: varchar('destinationId')
-      .references(() => OrgDestinations.id, {
+      .references(() => Destinations.id, {
         onDelete: 'cascade',
       })
       .notNull(),
@@ -692,6 +687,11 @@ export const TraceDeliveries = pgTable(
       mode: 'date',
       withTimezone: true,
     }),
+    projectId: varchar('projectId')
+      .references(() => Projects.id, {
+        onDelete: 'cascade',
+      })
+      .notNull(),
     responseData: json('responseData'),
 
     // Delivery status
@@ -716,21 +716,22 @@ export const TraceDeliveries = pgTable(
   ],
 );
 
-export type TraceDeliveryType = typeof TraceDeliveries.$inferSelect;
+export type DeliveryType = typeof Deliveries.$inferSelect;
 
-export const TraceDeliveriesRelations = relations(
-  TraceDeliveries,
-  ({ one }) => ({
-    destination: one(OrgDestinations, {
-      fields: [TraceDeliveries.destinationId],
-      references: [OrgDestinations.id],
-    }),
-    trace: one(Traces, {
-      fields: [TraceDeliveries.traceId],
-      references: [Traces.id],
-    }),
+export const DeliveriesRelations = relations(Deliveries, ({ one }) => ({
+  destination: one(Destinations, {
+    fields: [Deliveries.destinationId],
+    references: [Destinations.id],
   }),
-);
+  project: one(Projects, {
+    fields: [Deliveries.projectId],
+    references: [Projects.id],
+  }),
+  trace: one(Traces, {
+    fields: [Deliveries.traceId],
+    references: [Traces.id],
+  }),
+}));
 
 // Create schemas for validation
 export const CreateTraceSchema = createInsertSchema(Traces).omit({
@@ -739,16 +740,14 @@ export const CreateTraceSchema = createInsertSchema(Traces).omit({
   updatedAt: true,
 });
 
-export const CreateOrgDestinationSchema = createInsertSchema(
-  OrgDestinations,
-).omit({
+export const CreateDestinationSchema = createInsertSchema(Destinations).omit({
   createdAt: true,
   id: true,
   orgId: true, // Will be set from auth context
   updatedAt: true,
 });
 
-export const UpdateOrgDestinationSchema = createInsertSchema(OrgDestinations)
+export const UpdateDestinationSchema = createInsertSchema(Destinations)
   .omit({
     createdAt: true,
     id: true,
@@ -759,8 +758,8 @@ export const UpdateOrgDestinationSchema = createInsertSchema(OrgDestinations)
 
 // Export types
 export type TCreateTrace = typeof Traces.$inferInsert;
-export type TCreateOrgDestination = Omit<
-  typeof OrgDestinations.$inferInsert,
+export type TCreateDestination = Omit<
+  typeof Destinations.$inferInsert,
   'id' | 'createdAt' | 'updatedAt' | 'orgId'
 >;
-export type TUpdateOrgDestination = Partial<TCreateOrgDestination>;
+export type TUpdateDestination = Partial<TCreateDestination>;

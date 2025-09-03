@@ -140,30 +140,56 @@ const policyConfigs: Record<string, PolicyConfig> = {
     ],
     tableName: 'apiKeyUsage',
   },
-  authCodes: {
+  deliveries: {
     policies: [
-      createUserOwnershipPolicy('ALL', 'userId'),
-      createOrgOwnershipPolicy('ALL', 'orgId'),
-    ],
-    tableName: 'authCodes',
-  },
-  destinationProviders: {
-    policies: [
-      // Destination providers are read-only for all authenticated users
+      // Deliveries are linked to projects, so we use project ownership
       {
-        name: 'Authenticated users can select destination providers',
+        name: 'Users can access deliveries for their projects',
         operation: 'SELECT',
-        using: 'true',
+        using: `EXISTS (
+          SELECT 1 FROM projects p
+          WHERE p.id = "projectId"
+          AND p."createdByUserId" = (SELECT requesting_user_id())
+        )`,
+      },
+      {
+        name: 'Users can insert deliveries for their projects',
+        operation: 'INSERT',
+        withCheck: `EXISTS (
+          SELECT 1 FROM projects p
+          WHERE p.id = "projectId"
+          AND p."createdByUserId" = (SELECT requesting_user_id())
+        )`,
+      },
+      {
+        name: 'Users can update deliveries for their projects',
+        operation: 'UPDATE',
+        using: `EXISTS (
+          SELECT 1 FROM projects p
+          WHERE p.id = "projectId"
+          AND p."createdByUserId" = (SELECT requesting_user_id())
+        )`,
+        withCheck: `EXISTS (
+          SELECT 1 FROM projects p
+          WHERE p.id = "projectId"
+          AND p."createdByUserId" = (SELECT requesting_user_id())
+        )`,
+      },
+      {
+        name: 'Users can delete deliveries for their projects',
+        operation: 'DELETE',
+        using: `EXISTS (
+          SELECT 1 FROM projects p
+          WHERE p.id = "projectId"
+          AND p."createdByUserId" = (SELECT requesting_user_id())
+        )`,
       },
     ],
-    tableName: 'destinationProviders',
+    tableName: 'deliveries',
   },
-  orgDestinations: {
-    policies: [
-      createUserOwnershipPolicy('ALL', 'userId'),
-      createOrgOwnershipPolicy('ALL', 'orgId'),
-    ],
-    tableName: 'orgDestinations',
+  destinations: {
+    policies: [createOrgOwnershipPolicy('ALL', 'orgId')],
+    tableName: 'destinations',
   },
   orgMembers: {
     policies: [
@@ -194,19 +220,19 @@ const policyConfigs: Record<string, PolicyConfig> = {
     ],
     tableName: 'orgs',
   },
+  projects: {
+    policies: [
+      createUserOwnershipPolicy('ALL', 'createdByUserId'),
+      createOrgOwnershipPolicy('ALL', 'orgId'),
+    ],
+    tableName: 'projects',
+  },
   shortUrls: {
     policies: [
       createUserOwnershipPolicy('ALL', 'userId'),
       createOrgOwnershipPolicy('ALL', 'orgId'),
     ],
     tableName: 'shortUrls',
-  },
-  traceDeliveries: {
-    policies: [
-      createUserOwnershipPolicy('ALL', 'userId'),
-      createOrgOwnershipPolicy('ALL', 'orgId'),
-    ],
-    tableName: 'traceDeliveries',
   },
   traces: {
     policies: [

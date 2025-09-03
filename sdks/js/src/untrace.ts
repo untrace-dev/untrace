@@ -10,10 +10,7 @@ import {
   type SpanProcessor,
 } from '@opentelemetry/sdk-trace-base';
 import { NodeTracerProvider } from '@opentelemetry/sdk-trace-node';
-import {
-  ATTR_SERVICE_NAME,
-  ATTR_SERVICE_VERSION,
-} from '@opentelemetry/semantic-conventions';
+import { ATTR_SERVICE_VERSION } from '@opentelemetry/semantic-conventions';
 import { UntraceContext } from './context';
 import { UntraceExporter } from './exporter';
 import { UntraceMetricsImpl } from './metrics';
@@ -21,10 +18,8 @@ import { getProviderInstrumentation } from './providers';
 import { UntraceTracer } from './tracer';
 import type { ProviderInstrumentation, UntraceConfig } from './types';
 
-// Define deployment environment attribute since it's not in stable exports
-const ATTR_DEPLOYMENT_ENVIRONMENT = 'deployment.environment' as const;
-
 let instance: Untrace | null = null;
+let isRegistered = false;
 
 /**
  * Main Untrace SDK class
@@ -41,19 +36,17 @@ export class Untrace {
     // Set up config with defaults
     this.config = {
       apiKey: config.apiKey,
-      baseUrl: config.baseUrl || 'https://api.untrace.dev',
+      baseUrl: config.baseUrl || 'https://untrace.dev',
       captureBody: config.captureBody !== false,
       captureErrors: config.captureErrors !== false,
       debug: config.debug || false,
       disableAutoInstrumentation: config.disableAutoInstrumentation || false,
-      environment: config.environment || 'production',
       exportIntervalMs: config.exportIntervalMs || 5000,
       headers: config.headers || {},
       maxBatchSize: config.maxBatchSize || 512,
       providers: config.providers || ['all'],
       resourceAttributes: config.resourceAttributes || {},
       samplingRate: config.samplingRate || 1.0,
-      serviceName: config.serviceName || 'untrace-app',
       spanProcessors: config.spanProcessors || [],
       version: config.version || '0.0.0',
     };
@@ -66,45 +59,73 @@ export class Untrace {
     // Create resource with service information
     const resource = Resource.default().merge(
       new Resource({
-        [ATTR_SERVICE_NAME]: this.config.serviceName,
         [ATTR_SERVICE_VERSION]: this.config.version,
-        [ATTR_DEPLOYMENT_ENVIRONMENT]: this.config.environment,
         ...this.config.resourceAttributes,
       }),
     );
 
-    // Create tracer provider
-    this.provider = new NodeTracerProvider({
-      resource,
-      sampler: {
-        shouldSample: () => ({
-          attributes: {},
-          decision: Math.random() < this.config.samplingRate ? 1 : 0,
-        }),
-        toString: () => 'UntraceSampler',
-      },
-    });
-
     // Create and add exporter
     const exporter = new UntraceExporter(this.config);
-    const spanProcessor = new BatchSpanProcessor(exporter, {
+
+    // Create batch span processor with configuration
+    const batchSpanProcessor = new BatchSpanProcessor(exporter, {
       maxExportBatchSize: this.config.maxBatchSize,
       maxQueueSize: this.config.maxBatchSize,
       scheduledDelayMillis: this.config.exportIntervalMs,
     });
-    this.provider.addSpanProcessor(spanProcessor);
 
-    // Add any custom span processors
-    this.config.spanProcessors.forEach((processor) => {
-      this.provider.addSpanProcessor(processor as SpanProcessor);
+    // Combine all span processors
+    const allSpanProcessors = [
+      batchSpanProcessor,
+      ...(this.config.spanProcessors as SpanProcessor[]),
+    ];
+
+    // Create tracer provider with span processors
+    this.provider = new NodeTracerProvider({
+      resource,
+      sampler: {
+        shouldSample: (
+          _context,
+          _traceId,
+          spanName,
+          _spanKind,
+          _attributes,
+          _links,
+        ) => {
+          const random = Math.random();
+          const decision = random < this.config.samplingRate ? 1 : 0;
+          if (this.config.debug) {
+            console.log(
+              `[UntraceSampler] Sampling span "${spanName}": random=${random}, rate=${this.config.samplingRate}, decision=${decision}`,
+            );
+          }
+          return {
+            attributes: {},
+            decision,
+          };
+        },
+        toString: () => 'UntraceSampler',
+      },
+      spanProcessors: allSpanProcessors,
     });
 
-    // Register as global tracer provider
-    this.provider.register();
+    // Register as global tracer provider only if not already registered
+    if (!isRegistered) {
+      try {
+        this.provider.register();
+        isRegistered = true;
+      } catch (error) {
+        // If registration fails, it might already be registered
+        console.warn(
+          'Tracer provider registration failed, might already be registered:',
+          error,
+        );
+      }
+    }
 
     // Initialize components
     this.tracer = new UntraceTracer(
-      trace.getTracer(this.config.serviceName, this.config.version),
+      trace.getTracer('untrace-app', this.config.version),
     );
     this.metrics = new UntraceMetricsImpl();
     this.context = new UntraceContext();
@@ -207,7 +228,7 @@ export class Untrace {
       );
     }
 
-    instrumentation.init(this.config);
+    instrumentation.init(this.config, this.tracer.getTracer());
     return instrumentation.instrument(module);
   }
 
@@ -238,6 +259,7 @@ export class Untrace {
     if (instance === this) {
       instance = null;
     }
+    isRegistered = false; // Reset registration flag on shutdown
   }
 
   /**

@@ -164,7 +164,7 @@ export function Navbar() {
                     className="hidden md:flex rounded-full"
                     variant="outline"
                   >
-                    <Link href="/app/dashboard?utm_source=marketing-site&utm_medium=navbar-dashboard">
+                    <Link href="/app?utm_source=marketing-site&utm_medium=navbar-dashboard">
                       Dashboard
                     </Link>
                   </Button>

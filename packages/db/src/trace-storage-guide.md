@@ -14,7 +14,7 @@ The Untrace trace storage system is designed to provide a flexible, extensible p
    - Supports OpenTelemetry trace/span IDs
    - Automatically expires data after 30 days (configurable)
 
-2. **Destination Providers** (`destinationProviders`)
+2. **Destinaions ** (`destinations`)
    - Reference table of all available trace destinations
    - Stores configuration schemas for each provider
    - Defines provider capabilities (OpenTelemetry support, batching, etc.)
@@ -229,8 +229,8 @@ const destination = await db.insert(OrgDestinations).values({
 ### Processing Deliveries
 ```typescript
 // Get pending deliveries
-const pending = await db.query.traceDeliveries.findMany({
-  where: eq(traceDeliveries.status, 'pending'),
+const pending = await db.query.deliveries.findMany({
+  where: eq(deliveries.status, 'pending'),
   with: {
     trace: true,
     destination: {

@@ -1,3 +1,4 @@
+import type { Tracer } from '@opentelemetry/api';
 import type { Instrumentation } from '@opentelemetry/instrumentation';
 import type { ProviderInstrumentation, UntraceConfig } from '../types';
 
@@ -9,14 +10,16 @@ export abstract class BaseProviderInstrumentation
 {
   protected config?: UntraceConfig;
   protected instrumentation?: Instrumentation;
+  protected tracer?: Tracer;
 
   abstract readonly name: string;
 
   /**
    * Initialize the instrumentation
    */
-  init(config: UntraceConfig): void {
+  init(config: UntraceConfig, tracer?: Tracer): void {
     this.config = config;
+    this.tracer = tracer;
   }
 
   /**

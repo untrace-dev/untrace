@@ -1,6 +1,0 @@
-import { createNextRoute, createNextRouter } from '@ts-rest/next';
-import { contract, routes } from '@untrace/api/rest';
-
-const router = createNextRoute(contract, routes);
-
-export default createNextRouter(contract, router);

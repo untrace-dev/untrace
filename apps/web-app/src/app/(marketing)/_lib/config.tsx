@@ -102,75 +102,36 @@ export const siteConfig = {
       {
         id: 1,
         logo: (
-          <svg
-            aria-label="OpenAI Logo"
-            className="dark:fill-white fill-black h-6 w-auto"
-            height="24"
-            role="img"
-            viewBox="0 0 120 24"
-            width="120"
-          >
-            <title>Works with OpenAI</title>
-            <text
-              fontFamily="system-ui"
-              fontSize="16"
-              fontWeight="600"
-              x="0"
-              y="18"
-            >
-              OpenAI
-            </text>
-          </svg>
+          // biome-ignore lint/performance/noImgElement: no need
+          <img
+            alt="OpenAI Logo"
+            className="h-6 w-auto"
+            src="https://cdn.brandfetch.io/openai.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA"
+          />
         ),
         name: 'OpenAI',
       },
       {
         id: 2,
         logo: (
-          <svg
-            aria-label="LangSmith Logo"
-            className="dark:fill-white fill-black h-6 w-auto"
-            height="24"
-            role="img"
-            viewBox="0 0 120 24"
-            width="120"
-          >
-            <title>Routes to LangSmith</title>
-            <text
-              fontFamily="system-ui"
-              fontSize="16"
-              fontWeight="600"
-              x="0"
-              y="18"
-            >
-              LangSmith
-            </text>
-          </svg>
+          // biome-ignore lint/performance/noImgElement: no need
+          <img
+            alt="LangSmith Logo"
+            className="h-6 w-auto"
+            src="https://cdn.brandfetch.io/smith.langchain.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA"
+          />
         ),
         name: 'LangSmith',
       },
       {
         id: 3,
         logo: (
-          <svg
-            aria-label="Langfuse Logo"
-            className="dark:fill-white fill-black h-6 w-auto"
-            height="24"
-            role="img"
-            viewBox="0 0 120 24"
-            width="120"
-          >
-            <title>Routes to Langfuse</title>
-            <text
-              fontFamily="system-ui"
-              fontSize="16"
-              fontWeight="600"
-              x="0"
-              y="18"
-            >
-              Langfuse
-            </text>
-          </svg>
+          // biome-ignore lint/performance/noImgElement: no need
+          <img
+            alt="Langfuse Logo"
+            className="h-6 w-auto"
+            src="https://cdn.brandfetch.io/langfuse.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA"
+          />
         ),
         name: 'Langfuse',
       },

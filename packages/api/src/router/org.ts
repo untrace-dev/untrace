@@ -1,5 +1,5 @@
 import { createOrg } from '@untrace/db';
-import { ApiKeys, OrgMembers, Orgs } from '@untrace/db/schema';
+import { ApiKeys, OrgMembers, Orgs, Projects } from '@untrace/db/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
@@ -100,6 +100,15 @@ export const orgRouter = createTRPCRouter({
         name: z
           .string()
           .min(3, 'Organization name must be at least 3 characters'),
+        projectName: z
+          .string()
+          .min(3, 'Project name must be at least 3 characters')
+          .max(50, 'Project name must be less than 50 characters')
+          .regex(
+            /^[a-z0-9-_]+$/,
+            'Project name can only contain lowercase letters, numbers, hyphens, and underscores',
+          )
+          .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -113,19 +122,40 @@ export const orgRouter = createTRPCRouter({
         });
 
         if (existingOrg) {
+          console.log(
+            'Organization already exists in database:',
+            existingOrg.id,
+          );
           const apiKey = await ctx.db.query.ApiKeys.findFirst({
             where: eq(ApiKeys.orgId, existingOrg.id),
           });
+
+          if (!apiKey) {
+            throw new Error('API key not found for existing organization');
+          }
+
+          const project = await ctx.db.query.Projects.findFirst({
+            where: eq(Projects.id, apiKey.projectId),
+          });
+
+          if (!project) {
+            throw new Error('Project not found for existing organization');
+          }
+
           return {
             apiKey: {
-              id: apiKey?.id,
-              key: apiKey?.key,
-              name: apiKey?.name,
+              id: apiKey.id,
+              key: apiKey.key,
+              name: apiKey.name,
             },
             org: {
               id: existingOrg.id,
               name: existingOrg.name,
               stripeCustomerId: existingOrg.stripeCustomerId,
+            },
+            project: {
+              id: project.id,
+              name: project.name,
             },
           };
         }
@@ -137,6 +167,7 @@ export const orgRouter = createTRPCRouter({
       try {
         const result = await createOrg({
           name: input.name,
+          projectName: input.projectName,
           userId: ctx.auth.userId,
         });
 

@@ -1,6 +1,10 @@
 import type { Attributes } from '@opentelemetry/api';
 import { type ExportResult, ExportResultCode } from '@opentelemetry/core';
 import type { ReadableSpan, SpanExporter } from '@opentelemetry/sdk-trace-base';
+import { createORPCClient } from '@orpc/client';
+import { RPCLink } from '@orpc/client/fetch';
+import type { RouterClient } from '@orpc/server';
+import type { router } from '@untrace/api/rest';
 import type { UntraceConfig } from './types';
 
 interface OTLPAttribute {
@@ -74,15 +78,30 @@ interface OTLPExportRequest {
  */
 export class UntraceExporter implements SpanExporter {
   private readonly config: UntraceConfig;
-  private readonly headers: Record<string, string>;
+  private readonly client: RouterClient<typeof router>;
 
   constructor(config: UntraceConfig) {
     this.config = config;
-    this.headers = {
-      Authorization: `Bearer ${config.apiKey}`,
-      'Content-Type': 'application/json',
-      ...config.headers,
-    };
+
+    // Create oRPC client
+    const link = new RPCLink({
+      headers: () => ({
+        Authorization: `Bearer ${config.apiKey}`,
+        'Content-Type': 'application/json',
+        ...config.headers,
+      }),
+      url: `${config.baseUrl}/rpc`,
+    });
+
+    this.client = createORPCClient(link) as RouterClient<typeof router>;
+
+    if (config.debug) {
+      console.log('[UntraceExporter] Initialized with config:', {
+        apiKey: config.apiKey ? '***' : 'missing',
+        baseUrl: config.baseUrl,
+        debug: config.debug,
+      });
+    }
   }
 
   /**
@@ -93,23 +112,28 @@ export class UntraceExporter implements SpanExporter {
     resultCallback: (result: ExportResult) => void,
   ): Promise<void> {
     try {
-      const payload = this.convertSpansToPayload(spans);
+      console.log(
+        `[UntraceExporter] Exporting ${spans.length} spans to ${this.config.baseUrl}/rpc`,
+      );
+      console.log(
+        '[UntraceExporter] Span names:',
+        spans.map((s) => s.name),
+      );
 
-      const response = await fetch(`${this.config.baseUrl}/v1/traces`, {
-        body: JSON.stringify(payload),
-        headers: this.headers,
-        method: 'POST',
+      const payload = this.convertSpansToPayload(spans);
+      console.log('[UntraceExporter] Payload prepared, sending request...');
+
+      const result = await this.client.traces.ingest({
+        resourceSpans: payload.resourceSpans,
       });
 
-      if (response.ok) {
-        resultCallback({ code: ExportResultCode.SUCCESS });
-      } else {
-        resultCallback({
-          code: ExportResultCode.FAILED,
-          error: new Error(`HTTP ${response.status}: ${response.statusText}`),
-        });
-      }
+      console.log('[UntraceExporter] Export successful');
+      console.log(
+        `[UntraceExporter] Traces processed: ${result.tracesProcessed}`,
+      );
+      resultCallback({ code: ExportResultCode.SUCCESS });
     } catch (error) {
+      console.error('[UntraceExporter] Export error:', error);
       resultCallback({
         code: ExportResultCode.FAILED,
         error: error instanceof Error ? error : new Error(String(error)),

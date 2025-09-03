@@ -14,13 +14,15 @@ import {
 import { eq } from 'drizzle-orm';
 import type Stripe from 'stripe';
 import { db } from '../client';
-import { ApiKeys, Orgs, Users } from '../schema';
+import { ApiKeys, Orgs, Projects, Users } from '../schema';
+import { ensureDefaultProject } from './projects';
 
 type Transaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
 type CreateOrgParams = {
   name: string;
   userId: string;
+  projectName?: string;
 };
 
 type CreateOrgResult = {
@@ -32,6 +34,10 @@ type CreateOrgResult = {
   apiKey: {
     id: string;
     key: string;
+    name: string;
+  };
+  project: {
+    id: string;
     name: string;
   };
 };
@@ -93,16 +99,77 @@ async function ensureUserExists({
   return dbUser;
 }
 
-// Helper function to create default API key
-async function ensureDefaultApiKey({
+// Helper function to create project with custom name
+async function createProjectWithName({
   orgId,
   userId,
+  projectName,
   tx,
 }: {
   orgId: string;
   userId: string;
+  projectName: string;
   tx: Transaction;
 }) {
+  // Check if project name already exists in the org
+  const existingProject = await tx.query.Projects.findFirst({
+    where: eq(Projects.orgId, orgId),
+  });
+
+  if (existingProject) {
+    return existingProject;
+  }
+
+  const [project] = await tx
+    .insert(Projects)
+    .values({
+      createdByUserId: userId,
+      name: projectName,
+      orgId,
+    })
+    .onConflictDoUpdate({
+      set: {
+        updatedAt: new Date(),
+      },
+      target: [Projects.orgId, Projects.name],
+    })
+    .returning();
+
+  if (!project) {
+    throw new Error(
+      `Failed to create project for orgId: ${orgId}, userId: ${userId}, projectName: ${projectName}`,
+    );
+  }
+
+  return project;
+}
+
+// Helper function to create default API key
+async function ensureDefaultApiKey({
+  orgId,
+  userId,
+  projectName,
+  tx,
+}: {
+  orgId: string;
+  userId: string;
+  projectName?: string;
+  tx: Transaction;
+}) {
+  // Create project with custom name or ensure default project exists
+  const project = projectName
+    ? await createProjectWithName({
+        orgId,
+        projectName,
+        tx,
+        userId,
+      })
+    : await ensureDefaultProject({
+        orgId,
+        tx,
+        userId,
+      });
+
   const existingApiKey = await tx.query.ApiKeys.findFirst({
     where: eq(ApiKeys.orgId, orgId),
   });
@@ -116,6 +183,7 @@ async function ensureDefaultApiKey({
     .values({
       name: 'Default',
       orgId,
+      projectId: project.id,
       userId,
     })
     .onConflictDoUpdate({
@@ -258,6 +326,7 @@ async function autoSubscribeToFreePlan({
 export async function createOrg({
   name,
   userId,
+  projectName,
 }: CreateOrgParams): Promise<CreateOrgResult> {
   return await db.transaction(async (tx) => {
     // Run Clerk client initialization and user existence check in parallel
@@ -376,6 +445,15 @@ export async function createOrg({
         userId,
       });
 
+      // Get the project associated with the API key
+      const project = await tx.query.Projects.findFirst({
+        where: eq(Projects.id, apiKey.projectId),
+      });
+
+      if (!project) {
+        throw new Error(`Project not found for API key: ${apiKey.id}`);
+      }
+
       return {
         apiKey: {
           id: apiKey.id,
@@ -386,6 +464,10 @@ export async function createOrg({
           id: finalCheckOrg.clerkOrgId,
           name: finalCheckOrg.name,
           stripeCustomerId: finalCheckOrg.stripeCustomerId || '',
+        },
+        project: {
+          id: project.id,
+          name: project.name,
         },
       };
     }
@@ -467,9 +549,19 @@ export async function createOrg({
     // Create default API key
     const apiKey = await ensureDefaultApiKey({
       orgId: org.id,
+      projectName,
       tx,
       userId,
     });
+
+    // Get the project associated with the API key
+    const project = await tx.query.Projects.findFirst({
+      where: eq(Projects.id, apiKey.projectId),
+    });
+
+    if (!project) {
+      throw new Error(`Project not found for API key: ${apiKey.id}`);
+    }
 
     return {
       apiKey: {
@@ -481,6 +573,10 @@ export async function createOrg({
         id: org.clerkOrgId,
         name: org.name,
         stripeCustomerId: stripeCustomer.id,
+      },
+      project: {
+        id: project.id,
+        name: project.name,
       },
     };
   });

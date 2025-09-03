@@ -1,5 +1,6 @@
 {
   "background_color": "#ffffff",
+  "description": "The Segment for LLM traces. Capture once, route everywhere - end vendor lock-in and observability tool sprawl.",
   "display": "standalone",
   "icons": [
     {
@@ -15,7 +16,8 @@
       "type": "image/png"
     }
   ],
-  "name": "Untrace",
+  "name": "Untrace - LLM Observability Routing Platform",
   "short_name": "Untrace",
+  "start_url": "/",
   "theme_color": "#ffffff"
 }

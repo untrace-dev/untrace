@@ -1,4 +1,10 @@
-import type { Attributes, Context, Span, SpanKind } from '@opentelemetry/api';
+import type {
+  Attributes,
+  Context,
+  Span,
+  SpanKind,
+  Tracer,
+} from '@opentelemetry/api';
 
 /**
  * Configuration options for initializing Untrace SDK
@@ -13,16 +19,6 @@ export interface UntraceConfig {
    * Base URL for the Untrace ingestion endpoint
    */
   baseUrl?: string;
-
-  /**
-   * Service name to identify your application
-   */
-  serviceName?: string;
-
-  /**
-   * Environment name (e.g., 'production', 'development', 'staging')
-   */
-  environment?: string;
 
   /**
    * Application version
@@ -225,7 +221,7 @@ export interface ProviderInstrumentation {
   /**
    * Initialize the instrumentation
    */
-  init(config: UntraceConfig): void;
+  init(config: UntraceConfig, tracer?: Tracer): void;
 
   /**
    * Check if a module is instrumentable

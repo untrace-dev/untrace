@@ -14,7 +14,8 @@ export default clerkMiddleware(async (auth, request) => {
     if (
       authResponse.userId &&
       !authResponse.orgId &&
-      !request.nextUrl.pathname.startsWith('/app/onboarding')
+      !request.nextUrl.pathname.startsWith('/app/onboarding') &&
+      !request.nextUrl.pathname.startsWith('/app/onboarding/destinations')
     ) {
       console.log('Redirecting to onboarding', {
         isOnboarding: request.nextUrl.pathname.startsWith('/app/onboarding'),

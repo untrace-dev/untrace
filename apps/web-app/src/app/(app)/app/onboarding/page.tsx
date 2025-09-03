@@ -16,15 +16,9 @@ export default async function Page(props: {
     return redirect('/');
   }
 
-  // If user already has an organization, redirect to dashboard
-  if (orgId) {
-    return redirect('/app/dashboard');
-  }
-
-  // If orgName is provided, redirect to webhook wizard
-  // The organization will be created when the user submits the form
-  if (searchParams.orgName) {
-    return redirect('/app/webhooks/create');
+  // // If user already has an organization, redirect to dashboard
+  if (orgId || searchParams.orgName) {
+    return redirect('/app');
   }
 
   // Otherwise, show the regular onboarding form for users with source/redirect

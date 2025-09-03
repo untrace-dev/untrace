@@ -2,10 +2,16 @@ import { sql } from 'drizzle-orm';
 import { db } from '../src/client';
 
 const tablesToEnableRealtime = [
-  'events',
-  'requests',
-  'webhooks',
-  'connections',
+  'apiKeys',
+  'apiKeyUsage',
+  'deliveries',
+  'destinations',
+  'orgMembers',
+  'orgs',
+  'projects',
+  'shortUrls',
+  'traces',
+  'user',
 ] as const;
 
 // RLS policies for realtime authorization

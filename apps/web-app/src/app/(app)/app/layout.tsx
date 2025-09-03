@@ -1,8 +1,8 @@
 import { SidebarInset } from '@untrace/ui/sidebar';
 import { cookies } from 'next/headers';
-import { AppSidebar } from './_components/app-sidebar/app-sidebar';
-import { SidebarStateProvider } from './_components/app-sidebar/sidebar-state-provider';
-import { SiteHeader } from './_components/site-header';
+import { AppSidebar } from './[projectId]/_components/app-sidebar/app-sidebar';
+import { SidebarStateProvider } from './[projectId]/_components/app-sidebar/sidebar-state-provider';
+import { SiteHeader } from './[projectId]/_components/site-header';
 
 export default async function Layout({
   children,

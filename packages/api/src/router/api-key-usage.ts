@@ -156,13 +156,14 @@ export const apiKeyUsageRouter = createTRPCRouter({
       z.object({
         apiKeyId: z.string().optional(),
         days: z.number().min(1).max(365).default(30),
+        projectId: z.string().optional(),
         type: z.enum(['mcp-server']).optional(),
       }),
     )
     .query(async ({ ctx, input }) => {
       if (!ctx.auth.orgId) throw new Error('Organization ID is required');
 
-      const { apiKeyId, type, days } = input;
+      const { apiKeyId, type, days, projectId } = input;
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
 
@@ -177,6 +178,10 @@ export const apiKeyUsageRouter = createTRPCRouter({
 
       if (type) {
         conditions.push(eq(ApiKeyUsage.type, type));
+      }
+
+      if (projectId) {
+        conditions.push(eq(ApiKeyUsage.projectId, projectId));
       }
 
       const stats = await ctx.db

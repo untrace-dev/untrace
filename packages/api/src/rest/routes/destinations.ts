@@ -1,19 +1,42 @@
 import crypto from 'node:crypto';
-import { createNextRoute } from '@ts-rest/next';
-import { and, eq } from '@untrace/db';
-import { db } from '@untrace/db/client';
-import { DestinationProviders, OrgDestinations } from '@untrace/db/schema';
-import type { NextApiRequest } from 'next';
-import { destinationsContract } from '../contract/destinations';
+import { ORPCError, os } from '@orpc/server';
+import { and, eq, sql } from '@untrace/db';
 
-// Helper to get organization ID from request (would be from auth in production)
-async function getOrgId(req: NextApiRequest): Promise<string> {
-  // TODO: Get from auth context
-  const orgId = req.headers['x-organization-id'];
+import { db } from '@untrace/db/client';
+import { Destinations } from '@untrace/db/schema';
+import { createSelectSchema } from 'drizzle-zod';
+import { z } from 'zod';
+
+// Use Drizzle-generated schemas exclusively
+const DestinationSelectSchema = createSelectSchema(Destinations);
+const OrgDestinationSelectSchema = createSelectSchema(Destinations);
+
+// Helper to get organization ID from context
+async function getOrgId(context: {
+  auth?: { orgId?: string };
+}): Promise<string> {
+  const orgId = context.auth?.orgId;
   if (!orgId) {
-    throw new Error('Organization ID not provided');
+    throw new ORPCError('UNAUTHORIZED', {
+      message:
+        'Organization ID not provided. Please provide a valid API key in the Authorization header.',
+    });
   }
-  return orgId as string;
+  return orgId;
+}
+
+// Helper to get project ID from context
+async function getProjectId(context: {
+  auth?: { projectId?: string };
+}): Promise<string> {
+  const projectId = context.auth?.projectId;
+  if (!projectId) {
+    throw new ORPCError('UNAUTHORIZED', {
+      message:
+        'Project ID not provided. Please provide a valid API key in the Authorization header.',
+    });
+  }
+  return projectId;
 }
 
 // Simple encryption for secrets (in production, use proper key management)
@@ -58,374 +81,391 @@ function _decryptSecrets(encryptedData: string): Record<string, string> {
   return JSON.parse(decrypted);
 }
 
-export const destinationsRouter = createNextRoute(destinationsContract, {
-  // Create a new destination
-  createDestination: async ({ body, req }) => {
+// oRPC handlers
+export const createDestination = os
+  .input(
+    z.object({
+      batchSize: z.number().int().positive().optional(),
+      config: z.record(z.string(), z.unknown()),
+      description: z.string().optional(),
+      destinationId: z.string(),
+      isEnabled: z.boolean().optional(),
+      maxRetries: z.number().int().positive().optional(),
+      name: z.string(),
+      rateLimit: z.number().int().positive().optional(),
+      retryDelayMs: z.number().int().positive().optional(),
+      retryEnabled: z.boolean().optional(),
+      transformFunction: z.string().optional(),
+    }),
+  )
+  .output(OrgDestinationSelectSchema)
+  .handler(async ({ input, context }) => {
     try {
-      const orgId = await getOrgId(req);
+      const orgId = await getOrgId(context);
+      const projectId = await getProjectId(context);
 
       // Verify provider exists
-      const provider = await db.query.DestinationProviders.findFirst({
-        where: eq(DestinationProviders.id, body.providerId),
+      const destination = await db.query.Destinations.findFirst({
+        where: eq(Destinations.id, input.destinationId),
       });
 
-      if (!provider) {
-        return {
-          body: { error: 'Invalid provider ID' },
-          status: 400 as const,
-        };
+      if (!destination) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Invalid destination ID',
+        });
       }
 
-      const [destination] = await db
-        .insert(OrgDestinations)
+      const [createdDestination] = await db
+        .insert(Destinations)
         .values({
-          batchSize: body.batchSize || null,
-          config: body.config,
-          description: body.description || null,
-          isEnabled: body.isEnabled ?? true,
-          maxRetries: body.maxRetries || 3,
-          name: body.name,
+          batchSize: input.batchSize || null,
+          config: input.config,
+          description: input.description || null,
+          destinationId: input.destinationId,
+          isEnabled: input.isEnabled ?? true,
+          maxRetries: input.maxRetries || 3,
+          name: input.name,
           orgId,
-          providerId: body.providerId,
-          rateLimit: body.rateLimit || null,
-          retryDelayMs: body.retryDelayMs || 1000,
-          retryEnabled: body.retryEnabled ?? true,
-          transformFunction: body.transformFunction || null,
+          projectId,
+          rateLimit: input.rateLimit || null,
+          retryDelayMs: input.retryDelayMs || 1000,
+          retryEnabled: input.retryEnabled ?? true,
+          transformFunction: input.transformFunction || null,
         })
         .returning();
 
-      if (!destination) {
-        return {
-          body: { error: 'Failed to create destination' },
-          status: 400 as const,
-        };
+      if (!createdDestination) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Failed to create destination',
+        });
       }
 
       // Fetch with provider relation
-      const createdDestination = await db.query.OrgDestinations.findFirst({
-        where: eq(OrgDestinations.id, destination.id),
-        with: {
-          provider: true,
-        },
+      const destinationWithRelation = await db.query.Destinations.findFirst({
+        where: eq(Destinations.id, createdDestination.id),
       });
 
-      return {
-        body: {
-          ...createdDestination,
-          config: createdDestination?.config as Record<string, unknown>,
-          provider: createdDestination?.provider
-            ? {
-                ...createdDestination?.provider,
-                configSchema: createdDestination?.provider
-                  .configSchema as Record<string, unknown>,
-              }
-            : undefined,
-        },
-        status: 201 as const,
-      };
-    } catch (error) {
-      return {
-        body: {
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Failed to create destination',
-        },
-        status: 400 as const,
-      };
-    }
-  },
-
-  // Delete a destination
-  deleteDestination: async ({ params, req }) => {
-    try {
-      const orgId = await getOrgId(req);
-
-      const result = await db
-        .delete(OrgDestinations)
-        .where(
-          and(
-            eq(OrgDestinations.id, params.id),
-            eq(OrgDestinations.orgId, orgId),
-          ),
-        )
-        .returning({ id: OrgDestinations.id });
-
-      if (result.length === 0) {
-        return {
-          body: { error: 'Destination not found' },
-          status: 404 as const,
-        };
+      if (!destinationWithRelation) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Failed to create destination',
+        });
       }
 
-      return {
-        body: undefined,
-        status: 204 as const,
-      };
-    } catch (_error) {
-      return {
-        body: { error: 'Unauthorized' },
-        status: 401 as const,
-      };
+      return destinationWithRelation;
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('BAD_REQUEST', {
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to create destination',
+      });
     }
-  },
+  });
 
-  // Get a single destination
-  getDestination: async ({ params, req }) => {
+export const deleteDestination = os
+  .input(z.object({ id: z.string() }))
+  .output(z.object({ success: z.boolean() }))
+  .handler(async ({ input, context }) => {
     try {
-      const orgId = await getOrgId(req);
+      const orgId = await getOrgId(context);
 
-      const destination = await db.query.OrgDestinations.findFirst({
+      const result = await db
+        .delete(Destinations)
+        .where(
+          and(eq(Destinations.id, input.id), eq(Destinations.orgId, orgId)),
+        )
+        .returning({ id: Destinations.id });
+
+      if (result.length === 0) {
+        throw new ORPCError('NOT_FOUND', { message: 'Destination not found' });
+      }
+
+      return { success: true };
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('UNAUTHORIZED', { message: 'Unauthorized' });
+    }
+  });
+
+export const getDestination = os
+  .input(z.object({ id: z.string() }))
+  .output(OrgDestinationSelectSchema)
+  .handler(async ({ input, context }) => {
+    try {
+      const orgId = await getOrgId(context);
+
+      const destination = await db.query.Destinations.findFirst({
         where: and(
-          eq(OrgDestinations.id, params.id),
-          eq(OrgDestinations.orgId, orgId),
+          eq(Destinations.id, input.id),
+          eq(Destinations.orgId, orgId),
         ),
-        with: {
-          provider: true,
-        },
       });
 
       if (!destination) {
-        return {
-          body: { error: 'Destination not found' },
-          status: 404 as const,
-        };
+        throw new ORPCError('NOT_FOUND', { message: 'Destination not found' });
       }
 
-      return {
-        body: {
-          ...destination,
-          config: destination.config as Record<string, unknown>,
-          provider: destination.provider
-            ? {
-                ...destination.provider,
-                configSchema: destination.provider.configSchema as Record<
-                  string,
-                  unknown
-                >,
-              }
-            : undefined,
-        },
-        status: 200 as const,
-      };
-    } catch (_error) {
-      return {
-        body: { error: 'Unauthorized' },
-        status: 401 as const,
-      };
+      return destination;
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('UNAUTHORIZED', { message: 'Unauthorized' });
     }
-  },
+  });
 
-  // Get a single provider
-  getProvider: async ({ params }) => {
+export const getProvider = os
+  .input(z.object({ id: z.string() }))
+  .output(DestinationSelectSchema)
+  .handler(async ({ input }) => {
     try {
-      const provider = await db.query.DestinationProviders.findFirst({
-        where: eq(DestinationProviders.id, params.id),
+      const destination = await db.query.Destinations.findFirst({
+        where: eq(Destinations.id, input.id),
       });
 
-      if (!provider) {
-        return {
-          body: { error: 'Provider not found' },
-          status: 404 as const,
-        };
+      if (!destination) {
+        throw new ORPCError('NOT_FOUND', { message: 'Provider not found' });
       }
 
-      return {
-        body: {
-          ...provider,
-          configSchema: provider.configSchema as Record<string, unknown>,
-        },
-        status: 200 as const,
-      };
-    } catch (_error) {
-      return {
-        body: { error: 'Unauthorized' },
-        status: 401 as const,
-      };
+      return destination;
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('UNAUTHORIZED', { message: 'Unauthorized' });
     }
-  },
+  });
 
-  // List organization destinations
-  listDestinations: async ({ query, req }) => {
+export const listDestinations = os
+  .input(
+    z.object({
+      destinationId: z.string().optional(),
+      isEnabled: z.boolean().optional(),
+      limit: z.number().int().min(1).max(100).optional(),
+      offset: z.number().int().min(0).optional(),
+    }),
+  )
+  .output(
+    z.object({
+      destinations: z.array(OrgDestinationSelectSchema),
+      total: z.number(),
+    }),
+  )
+  .handler(async ({ input, context }) => {
     try {
-      const orgId = await getOrgId(req);
+      const orgId = await getOrgId(context);
 
-      const conditions = [eq(OrgDestinations.orgId, query.orgId || orgId)];
+      const conditions = [eq(Destinations.orgId, orgId)];
 
-      if (query.isEnabled !== undefined) {
-        conditions.push(eq(OrgDestinations.isEnabled, query.isEnabled));
+      if (input.isEnabled !== undefined) {
+        conditions.push(eq(Destinations.isEnabled, input.isEnabled));
       }
-      if (query.providerId) {
-        conditions.push(eq(OrgDestinations.providerId, query.providerId));
+      if (input.destinationId) {
+        conditions.push(eq(Destinations.destinationId, input.destinationId));
       }
 
-      const destinations = await db.query.OrgDestinations.findMany({
+      const destinations = await db.query.Destinations.findMany({
+        limit: input.limit,
+        offset: input.offset,
         where: and(...conditions),
-        with: {
-          provider: true,
-        },
+        with: {},
       });
 
-      return {
-        body: {
-          destinations: destinations.map((dest) => ({
-            ...dest,
-            config: dest.config as Record<string, unknown>,
-            provider: dest.provider
-              ? {
-                  ...dest.provider,
-                  configSchema: dest.provider.configSchema as Record<
-                    string,
-                    unknown
-                  >,
-                }
-              : undefined,
-          })),
-        },
-        status: 200 as const,
-      };
-    } catch (_error) {
-      return {
-        body: { error: 'Unauthorized' },
-        status: 401 as const,
-      };
-    }
-  },
-  // List available providers
-  listProviders: async ({ query }) => {
-    try {
-      const conditions = [];
+      const total = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(Destinations)
+        .where(and(...conditions))
+        .then((result) => Number(result[0]?.count || 0));
 
-      if (query.isActive !== undefined) {
-        conditions.push(eq(DestinationProviders.isActive, query.isActive));
+      return {
+        destinations,
+        total,
+      };
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('UNAUTHORIZED', { message: 'Unauthorized' });
+    }
+  });
+
+export const listProviders = os
+  .input(
+    z.object({
+      isActive: z.boolean().optional(),
+    }),
+  )
+  .output(
+    z.object({
+      providers: z.array(DestinationSelectSchema),
+    }),
+  )
+  .handler(async ({ input }) => {
+    try {
+      const conditions: ReturnType<typeof eq>[] = [];
+
+      if (input.isActive !== undefined) {
+        conditions.push(eq(Destinations.isEnabled, input.isActive));
       }
 
-      const providers = await db.query.DestinationProviders.findMany({
+      const providers = await db.query.Destinations.findMany({
         where: conditions.length > 0 ? and(...conditions) : undefined,
       });
 
       return {
-        body: {
-          providers: providers.map((provider) => ({
-            ...provider,
-            configSchema: provider.configSchema as Record<string, unknown>,
-          })),
-        },
-        status: 200 as const,
+        providers,
       };
-    } catch (_error) {
-      return {
-        body: { error: 'Unauthorized' },
-        status: 401 as const,
-      };
+    } catch (error) {
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('UNAUTHORIZED', { message: 'Unauthorized' });
     }
-  },
+  });
 
-  // Test a destination configuration
-  testDestination: async ({ params, body: _body, req }) => {
+export const testDestination = os
+  .input(
+    z.object({
+      config: z.record(z.string(), z.unknown()).optional(),
+      id: z.string(),
+      sampleTrace: z.record(z.string(), z.unknown()).optional(),
+    }),
+  )
+  .output(
+    z.object({
+      details: z
+        .object({
+          destination: z.string().optional(),
+          destinationName: z.string().optional(),
+        })
+        .optional(),
+      message: z.string(),
+      success: z.boolean(),
+    }),
+  )
+  .handler(async ({ input, context }) => {
     try {
-      const orgId = await getOrgId(req);
+      const orgId = await getOrgId(context);
 
-      const destination = await db.query.OrgDestinations.findFirst({
+      const destination = await db.query.Destinations.findFirst({
         where: and(
-          eq(OrgDestinations.id, params.id),
-          eq(OrgDestinations.orgId, orgId),
+          eq(Destinations.id, input.id),
+          eq(Destinations.orgId, orgId),
         ),
-        with: {
-          provider: true,
-        },
       });
 
       if (!destination) {
-        return {
-          body: { error: 'Destination not found' },
-          status: 404 as const,
-        };
+        throw new ORPCError('NOT_FOUND', { message: 'Destination not found' });
       }
-
-      // Merge provided config/secrets with existing ones
-      // const _testConfig = body.config || destination.config;
-      // const _testSecrets =
-      //   body.secrets ||
-      //   (destination.encryptedSecrets
-      //     ? decryptSecrets(destination.encryptedSecrets)
-      //     : {});
 
       // TODO: Implement actual testing logic based on provider type
       // This would involve making a test API call or connection
 
       return {
-        body: {
-          details: {
-            destinationName: destination.name,
-            provider: destination.provider?.type,
-          },
-          message: `Test connection to ${destination.provider?.name} successful`,
-          success: true,
+        details: {
+          destination: destination.destinationId,
+          destinationName: destination.name,
         },
-        status: 200 as const,
+        message: `Test connection to ${destination.name} successful`,
+        success: true,
       };
     } catch (error) {
-      return {
-        body: { error: error instanceof Error ? error.message : 'Test failed' },
-        status: 400 as const,
-      };
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('BAD_REQUEST', {
+        message: error instanceof Error ? error.message : 'Test failed',
+      });
     }
-  },
+  });
 
-  // Test a destination configuration before creating
-  testNewDestination: async ({ body }) => {
+export const testNewDestination = os
+  .input(
+    z.object({
+      config: z.record(z.string(), z.unknown()).optional(),
+      destinationId: z.string(),
+      sampleTrace: z.record(z.string(), z.unknown()).optional(),
+    }),
+  )
+  .output(
+    z.object({
+      details: z
+        .object({
+          destination: z.string().optional(),
+        })
+        .optional(),
+      message: z.string(),
+      success: z.boolean(),
+    }),
+  )
+  .handler(async ({ input }) => {
     try {
-      const provider = await db.query.DestinationProviders.findFirst({
-        where: eq(DestinationProviders.id, body.providerId),
+      const destination = await db.query.Destinations.findFirst({
+        where: eq(Destinations.id, input.destinationId),
       });
 
-      if (!provider) {
-        return {
-          body: { error: 'Invalid provider ID' },
-          status: 400 as const,
-        };
+      if (!destination) {
+        throw new ORPCError('BAD_REQUEST', { message: 'Invalid provider ID' });
       }
 
       // TODO: Implement actual testing logic based on provider type
       // This would involve making a test API call or connection
 
       return {
-        body: {
-          details: {
-            provider: provider.type,
-          },
-          message: `Test connection to ${provider.name} successful`,
-          success: true,
+        details: {
+          destination: destination.destinationId,
         },
-        status: 200 as const,
+        message: `Test connection to ${destination.name} successful`,
+        success: true,
       };
     } catch (error) {
-      return {
-        body: { error: error instanceof Error ? error.message : 'Test failed' },
-        status: 400 as const,
-      };
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('BAD_REQUEST', {
+        message: error instanceof Error ? error.message : 'Test failed',
+      });
     }
-  },
+  });
 
-  // Update a destination
-  updateDestination: async ({ params, body, req }) => {
+export const updateDestination = os
+  .input(
+    z.object({
+      data: z.object({
+        batchSize: z.number().int().positive().optional(),
+        config: z.record(z.string(), z.unknown()).optional(),
+        description: z.string().optional(),
+        isEnabled: z.boolean().optional(),
+        maxRetries: z.number().int().positive().optional(),
+        name: z.string().optional(),
+        rateLimit: z.number().int().positive().optional(),
+        retryDelayMs: z.number().int().positive().optional(),
+        retryEnabled: z.boolean().optional(),
+        transformFunction: z.string().optional(),
+      }),
+      id: z.string(),
+    }),
+  )
+  .output(OrgDestinationSelectSchema)
+  .handler(async ({ input, context }) => {
     try {
-      const orgId = await getOrgId(req);
+      const orgId = await getOrgId(context);
 
       // Check if destination exists and belongs to org
-      const existingDestination = await db.query.OrgDestinations.findFirst({
+      const existingDestination = await db.query.Destinations.findFirst({
         where: and(
-          eq(OrgDestinations.id, params.id),
-          eq(OrgDestinations.orgId, orgId),
+          eq(Destinations.id, input.id),
+          eq(Destinations.orgId, orgId),
         ),
       });
 
       if (!existingDestination) {
-        return {
-          body: { error: 'Destination not found' },
-          status: 404 as const,
-        };
+        throw new ORPCError('NOT_FOUND', { message: 'Destination not found' });
       }
 
       // Build update object with only provided fields
@@ -441,69 +481,73 @@ export const destinationsRouter = createNextRoute(destinationsContract, {
         retryEnabled: boolean;
         transformFunction: string | null;
       }> = {};
-      if (body.description !== undefined)
-        updateData.description = body.description;
-      if (body.config !== undefined) updateData.config = body.config;
-      if (body.isEnabled !== undefined) updateData.isEnabled = body.isEnabled;
-      if (body.name !== undefined) updateData.name = body.name;
-      if (body.batchSize !== undefined) updateData.batchSize = body.batchSize;
-      if (body.maxRetries !== undefined)
-        updateData.maxRetries = body.maxRetries;
-      if (body.rateLimit !== undefined) updateData.rateLimit = body.rateLimit;
-      if (body.retryDelayMs !== undefined)
-        updateData.retryDelayMs = body.retryDelayMs;
-      if (body.retryEnabled !== undefined)
-        updateData.retryEnabled = body.retryEnabled;
-      if (body.transformFunction !== undefined)
-        updateData.transformFunction = body.transformFunction;
+
+      if (input.data.description !== undefined)
+        updateData.description = input.data.description;
+      if (input.data.config !== undefined)
+        updateData.config = input.data.config;
+      if (input.data.isEnabled !== undefined)
+        updateData.isEnabled = input.data.isEnabled;
+      if (input.data.name !== undefined) updateData.name = input.data.name;
+      if (input.data.batchSize !== undefined)
+        updateData.batchSize = input.data.batchSize;
+      if (input.data.maxRetries !== undefined)
+        updateData.maxRetries = input.data.maxRetries;
+      if (input.data.rateLimit !== undefined)
+        updateData.rateLimit = input.data.rateLimit;
+      if (input.data.retryDelayMs !== undefined)
+        updateData.retryDelayMs = input.data.retryDelayMs;
+      if (input.data.retryEnabled !== undefined)
+        updateData.retryEnabled = input.data.retryEnabled;
+      if (input.data.transformFunction !== undefined)
+        updateData.transformFunction = input.data.transformFunction;
 
       const [updatedDestination] = await db
-        .update(OrgDestinations)
+        .update(Destinations)
         .set(updateData)
-        .where(eq(OrgDestinations.id, params.id))
+        .where(eq(Destinations.id, input.id))
         .returning();
 
       if (!updatedDestination) {
-        return {
-          body: { error: 'Failed to update destination' },
-          status: 400 as const,
-        };
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Failed to update destination',
+        });
       }
 
       // Fetch with provider relation
-      const destination = await db.query.OrgDestinations.findFirst({
-        where: eq(OrgDestinations.id, params.id),
-        with: {
-          provider: true,
-        },
+      const destination = await db.query.Destinations.findFirst({
+        where: eq(Destinations.id, input.id),
       });
 
-      return {
-        body: {
-          ...destination,
-          config: destination?.config as Record<string, unknown>,
-          provider: destination?.provider
-            ? {
-                ...destination?.provider,
-                configSchema: destination?.provider.configSchema as Record<
-                  string,
-                  unknown
-                >,
-              }
-            : undefined,
-        },
-        status: 200 as const,
-      };
+      if (!destination) {
+        throw new ORPCError('BAD_REQUEST', {
+          message: 'Failed to update destination',
+        });
+      }
+
+      return destination;
     } catch (error) {
-      return {
-        body: {
-          error:
-            error instanceof Error
-              ? error.message
-              : 'Failed to update destination',
-        },
-        status: 400 as const,
-      };
+      if (error instanceof ORPCError) {
+        throw error;
+      }
+      throw new ORPCError('BAD_REQUEST', {
+        message:
+          error instanceof Error
+            ? error.message
+            : 'Failed to update destination',
+      });
     }
-  },
+  });
+
+// Export the destinations router
+export const destinationsRouter = os.router({
+  createDestination,
+  deleteDestination,
+  getDestination,
+  getProvider,
+  listDestinations,
+  listProviders,
+  testDestination,
+  testNewDestination,
+  updateDestination,
 });

@@ -9,30 +9,12 @@
     "public.apiKeyUsageType": {
       "name": "apiKeyUsageType",
       "schema": "public",
-      "values": ["mcp-server"]
+      "values": ["mcp-server", "trace"]
     },
     "public.deliveryStatus": {
       "name": "deliveryStatus",
       "schema": "public",
       "values": ["pending", "success", "failed", "retrying", "cancelled"]
-    },
-    "public.destinationType": {
-      "name": "destinationType",
-      "schema": "public",
-      "values": [
-        "langfuse",
-        "openai",
-        "langsmith",
-        "keywords_ai",
-        "s3",
-        "webhook",
-        "datadog",
-        "new_relic",
-        "grafana",
-        "prometheus",
-        "elasticsearch",
-        "custom"
-      ]
     },
     "public.localConnectionStatus": {
       "name": "localConnectionStatus",
@@ -59,7 +41,7 @@
       "values": ["admin", "superAdmin", "user"]
     }
   },
-  "id": "985ffbc2-4fff-41b4-8a01-477a842591ad",
+  "id": "94c4de81-e053-4daa-b8ec-f898484239ed",
   "policies": {},
   "prevId": "00000000-0000-0000-0000-000000000000",
   "roles": {},
@@ -120,6 +102,12 @@
           "primaryKey": false,
           "type": "varchar"
         },
+        "projectId": {
+          "name": "projectId",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar"
+        },
         "updatedAt": {
           "name": "updatedAt",
           "notNull": false,
@@ -144,6 +132,15 @@
           "onUpdate": "no action",
           "tableFrom": "apiKeys",
           "tableTo": "orgs"
+        },
+        "apiKeys_projectId_projects_id_fk": {
+          "columnsFrom": ["projectId"],
+          "columnsTo": ["id"],
+          "name": "apiKeys_projectId_projects_id_fk",
+          "onDelete": "cascade",
+          "onUpdate": "no action",
+          "tableFrom": "apiKeys",
+          "tableTo": "projects"
         },
         "apiKeys_userId_user_id_fk": {
           "columnsFrom": ["userId"],
@@ -203,6 +200,12 @@
           "primaryKey": false,
           "type": "varchar"
         },
+        "projectId": {
+          "name": "projectId",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar"
+        },
         "type": {
           "name": "type",
           "notNull": true,
@@ -244,6 +247,15 @@
           "tableFrom": "apiKeyUsage",
           "tableTo": "orgs"
         },
+        "apiKeyUsage_projectId_projects_id_fk": {
+          "columnsFrom": ["projectId"],
+          "columnsTo": ["id"],
+          "name": "apiKeyUsage_projectId_projects_id_fk",
+          "onDelete": "cascade",
+          "onUpdate": "no action",
+          "tableFrom": "apiKeyUsage",
+          "tableTo": "projects"
+        },
         "apiKeyUsage_userId_user_id_fk": {
           "columnsFrom": ["userId"],
           "columnsTo": ["id"],
@@ -261,9 +273,16 @@
       "schema": "",
       "uniqueConstraints": {}
     },
-    "public.authCodes": {
+    "public.deliveries": {
       "checkConstraints": {},
       "columns": {
+        "attempts": {
+          "default": 0,
+          "name": "attempts",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "integer"
+        },
         "createdAt": {
           "default": "now()",
           "name": "createdAt",
@@ -271,11 +290,17 @@
           "primaryKey": false,
           "type": "timestamp with time zone"
         },
-        "expiresAt": {
-          "name": "expiresAt",
-          "notNull": true,
+        "deliveredAt": {
+          "name": "deliveredAt",
+          "notNull": false,
           "primaryKey": false,
           "type": "timestamp with time zone"
+        },
+        "destinationId": {
+          "name": "destinationId",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar"
         },
         "id": {
           "name": "id",
@@ -283,165 +308,107 @@
           "primaryKey": true,
           "type": "varchar(128)"
         },
-        "orgId": {
-          "default": "requesting_org_id()",
-          "name": "orgId",
+        "lastError": {
+          "name": "lastError",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "text"
+        },
+        "lastErrorAt": {
+          "name": "lastErrorAt",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        },
+        "nextRetryAt": {
+          "name": "nextRetryAt",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        },
+        "projectId": {
+          "name": "projectId",
           "notNull": true,
           "primaryKey": false,
           "type": "varchar"
         },
-        "sessionId": {
-          "name": "sessionId",
+        "responseData": {
+          "name": "responseData",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "json"
+        },
+        "status": {
+          "default": "'pending'",
+          "name": "status",
           "notNull": true,
           "primaryKey": false,
-          "type": "text"
+          "type": "deliveryStatus",
+          "typeSchema": "public"
+        },
+        "traceId": {
+          "name": "traceId",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar"
+        },
+        "transformedPayload": {
+          "name": "transformedPayload",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "json"
         },
         "updatedAt": {
           "name": "updatedAt",
           "notNull": false,
           "primaryKey": false,
           "type": "timestamp with time zone"
-        },
-        "usedAt": {
-          "name": "usedAt",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "userId": {
-          "default": "requesting_user_id()",
-          "name": "userId",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar"
         }
       },
       "compositePrimaryKeys": {},
       "foreignKeys": {
-        "authCodes_orgId_orgs_id_fk": {
-          "columnsFrom": ["orgId"],
+        "deliveries_destinationId_destinations_id_fk": {
+          "columnsFrom": ["destinationId"],
           "columnsTo": ["id"],
-          "name": "authCodes_orgId_orgs_id_fk",
+          "name": "deliveries_destinationId_destinations_id_fk",
           "onDelete": "cascade",
           "onUpdate": "no action",
-          "tableFrom": "authCodes",
-          "tableTo": "orgs"
+          "tableFrom": "deliveries",
+          "tableTo": "destinations"
         },
-        "authCodes_userId_user_id_fk": {
-          "columnsFrom": ["userId"],
+        "deliveries_projectId_projects_id_fk": {
+          "columnsFrom": ["projectId"],
           "columnsTo": ["id"],
-          "name": "authCodes_userId_user_id_fk",
+          "name": "deliveries_projectId_projects_id_fk",
           "onDelete": "cascade",
           "onUpdate": "no action",
-          "tableFrom": "authCodes",
-          "tableTo": "user"
+          "tableFrom": "deliveries",
+          "tableTo": "projects"
+        },
+        "deliveries_traceId_traces_id_fk": {
+          "columnsFrom": ["traceId"],
+          "columnsTo": ["id"],
+          "name": "deliveries_traceId_traces_id_fk",
+          "onDelete": "cascade",
+          "onUpdate": "no action",
+          "tableFrom": "deliveries",
+          "tableTo": "traces"
         }
       },
       "indexes": {},
       "isRLSEnabled": false,
-      "name": "authCodes",
-      "policies": {},
-      "schema": "",
-      "uniqueConstraints": {}
-    },
-    "public.destinationProviders": {
-      "checkConstraints": {},
-      "columns": {
-        "configSchema": {
-          "name": "configSchema",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "json"
-        },
-        "createdAt": {
-          "default": "now()",
-          "name": "createdAt",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "defaultTransform": {
-          "name": "defaultTransform",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "description": {
-          "name": "description",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "id": {
-          "name": "id",
-          "notNull": true,
-          "primaryKey": true,
-          "type": "varchar(128)"
-        },
-        "isActive": {
-          "default": true,
-          "name": "isActive",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "name": {
-          "name": "name",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar(255)"
-        },
-        "supportsBatchDelivery": {
-          "default": true,
-          "name": "supportsBatchDelivery",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "supportsCustomTransform": {
-          "default": true,
-          "name": "supportsCustomTransform",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "supportsOpenTelemetry": {
-          "default": true,
-          "name": "supportsOpenTelemetry",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "boolean"
-        },
-        "type": {
-          "name": "type",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "destinationType",
-          "typeSchema": "public"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "foreignKeys": {},
-      "indexes": {},
-      "isRLSEnabled": false,
-      "name": "destinationProviders",
+      "name": "deliveries",
       "policies": {},
       "schema": "",
       "uniqueConstraints": {
-        "destinationProviders_type_unique": {
-          "columns": ["type"],
-          "name": "destinationProviders_type_unique",
+        "deliveries_traceId_destinationId_unique": {
+          "columns": ["traceId", "destinationId"],
+          "name": "deliveries_traceId_destinationId_unique",
           "nullsNotDistinct": false
         }
       }
     },
-    "public.orgDestinations": {
+    "public.destinations": {
       "checkConstraints": {},
       "columns": {
         "batchSize": {
@@ -469,6 +436,12 @@
           "notNull": false,
           "primaryKey": false,
           "type": "text"
+        },
+        "destinationId": {
+          "name": "destinationId",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar(128)"
         },
         "id": {
           "name": "id",
@@ -503,8 +476,8 @@
           "primaryKey": false,
           "type": "varchar"
         },
-        "providerId": {
-          "name": "providerId",
+        "projectId": {
+          "name": "projectId",
           "notNull": true,
           "primaryKey": false,
           "type": "varchar"
@@ -544,34 +517,34 @@
       },
       "compositePrimaryKeys": {},
       "foreignKeys": {
-        "orgDestinations_orgId_orgs_id_fk": {
+        "destinations_orgId_orgs_id_fk": {
           "columnsFrom": ["orgId"],
           "columnsTo": ["id"],
-          "name": "orgDestinations_orgId_orgs_id_fk",
+          "name": "destinations_orgId_orgs_id_fk",
           "onDelete": "cascade",
           "onUpdate": "no action",
-          "tableFrom": "orgDestinations",
+          "tableFrom": "destinations",
           "tableTo": "orgs"
         },
-        "orgDestinations_providerId_destinationProviders_id_fk": {
-          "columnsFrom": ["providerId"],
+        "destinations_projectId_projects_id_fk": {
+          "columnsFrom": ["projectId"],
           "columnsTo": ["id"],
-          "name": "orgDestinations_providerId_destinationProviders_id_fk",
+          "name": "destinations_projectId_projects_id_fk",
           "onDelete": "cascade",
           "onUpdate": "no action",
-          "tableFrom": "orgDestinations",
-          "tableTo": "destinationProviders"
+          "tableFrom": "destinations",
+          "tableTo": "projects"
         }
       },
       "indexes": {},
       "isRLSEnabled": false,
-      "name": "orgDestinations",
+      "name": "destinations",
       "policies": {},
       "schema": "",
       "uniqueConstraints": {
-        "orgDestinations_orgId_name_unique": {
-          "columns": ["orgId", "name"],
-          "name": "orgDestinations_orgId_name_unique",
+        "destinations_projectId_name_unique": {
+          "columns": ["projectId", "name"],
+          "name": "destinations_projectId_name_unique",
           "nullsNotDistinct": false
         }
       }
@@ -745,6 +718,89 @@
         }
       }
     },
+    "public.projects": {
+      "checkConstraints": {},
+      "columns": {
+        "createdAt": {
+          "default": "now()",
+          "name": "createdAt",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        },
+        "createdByUserId": {
+          "default": "requesting_user_id()",
+          "name": "createdByUserId",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar"
+        },
+        "description": {
+          "name": "description",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "text"
+        },
+        "id": {
+          "name": "id",
+          "notNull": true,
+          "primaryKey": true,
+          "type": "varchar(128)"
+        },
+        "name": {
+          "name": "name",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "text"
+        },
+        "orgId": {
+          "default": "requesting_org_id()",
+          "name": "orgId",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar"
+        },
+        "updatedAt": {
+          "name": "updatedAt",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "timestamp with time zone"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "foreignKeys": {
+        "projects_createdByUserId_user_id_fk": {
+          "columnsFrom": ["createdByUserId"],
+          "columnsTo": ["id"],
+          "name": "projects_createdByUserId_user_id_fk",
+          "onDelete": "cascade",
+          "onUpdate": "no action",
+          "tableFrom": "projects",
+          "tableTo": "user"
+        },
+        "projects_orgId_orgs_id_fk": {
+          "columnsFrom": ["orgId"],
+          "columnsTo": ["id"],
+          "name": "projects_orgId_orgs_id_fk",
+          "onDelete": "cascade",
+          "onUpdate": "no action",
+          "tableFrom": "projects",
+          "tableTo": "orgs"
+        }
+      },
+      "indexes": {},
+      "isRLSEnabled": false,
+      "name": "projects",
+      "policies": {},
+      "schema": "",
+      "uniqueConstraints": {
+        "projects_orgId_name_unique": {
+          "columns": ["orgId", "name"],
+          "name": "projects_orgId_name_unique",
+          "nullsNotDistinct": false
+        }
+      }
+    },
     "public.shortUrls": {
       "checkConstraints": {},
       "columns": {
@@ -835,129 +891,15 @@
       "schema": "",
       "uniqueConstraints": {}
     },
-    "public.traceDeliveries": {
-      "checkConstraints": {},
-      "columns": {
-        "attempts": {
-          "default": 0,
-          "name": "attempts",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "integer"
-        },
-        "createdAt": {
-          "default": "now()",
-          "name": "createdAt",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "deliveredAt": {
-          "name": "deliveredAt",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "destinationId": {
-          "name": "destinationId",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar"
-        },
-        "id": {
-          "name": "id",
-          "notNull": true,
-          "primaryKey": true,
-          "type": "varchar(128)"
-        },
-        "lastError": {
-          "name": "lastError",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "text"
-        },
-        "lastErrorAt": {
-          "name": "lastErrorAt",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "nextRetryAt": {
-          "name": "nextRetryAt",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        },
-        "responseData": {
-          "name": "responseData",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "json"
-        },
-        "status": {
-          "default": "'pending'",
-          "name": "status",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "deliveryStatus",
-          "typeSchema": "public"
-        },
-        "traceId": {
-          "name": "traceId",
-          "notNull": true,
-          "primaryKey": false,
-          "type": "varchar"
-        },
-        "transformedPayload": {
-          "name": "transformedPayload",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "json"
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "notNull": false,
-          "primaryKey": false,
-          "type": "timestamp with time zone"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "foreignKeys": {
-        "traceDeliveries_destinationId_orgDestinations_id_fk": {
-          "columnsFrom": ["destinationId"],
-          "columnsTo": ["id"],
-          "name": "traceDeliveries_destinationId_orgDestinations_id_fk",
-          "onDelete": "cascade",
-          "onUpdate": "no action",
-          "tableFrom": "traceDeliveries",
-          "tableTo": "orgDestinations"
-        },
-        "traceDeliveries_traceId_traces_id_fk": {
-          "columnsFrom": ["traceId"],
-          "columnsTo": ["id"],
-          "name": "traceDeliveries_traceId_traces_id_fk",
-          "onDelete": "cascade",
-          "onUpdate": "no action",
-          "tableFrom": "traceDeliveries",
-          "tableTo": "traces"
-        }
-      },
-      "indexes": {},
-      "isRLSEnabled": false,
-      "name": "traceDeliveries",
-      "policies": {},
-      "schema": "",
-      "uniqueConstraints": {
-        "traceDeliveries_traceId_destinationId_unique": {
-          "columns": ["traceId", "destinationId"],
-          "name": "traceDeliveries_traceId_destinationId_unique",
-          "nullsNotDistinct": false
-        }
-      }
-    },
     "public.traces": {
       "checkConstraints": {},
       "columns": {
+        "apiKeyId": {
+          "name": "apiKeyId",
+          "notNull": false,
+          "primaryKey": false,
+          "type": "varchar"
+        },
         "createdAt": {
           "default": "now()",
           "name": "createdAt",
@@ -1002,6 +944,12 @@
           "primaryKey": false,
           "type": "varchar(32)"
         },
+        "projectId": {
+          "name": "projectId",
+          "notNull": true,
+          "primaryKey": false,
+          "type": "varchar"
+        },
         "spanId": {
           "name": "spanId",
           "notNull": false,
@@ -1030,6 +978,15 @@
       },
       "compositePrimaryKeys": {},
       "foreignKeys": {
+        "traces_apiKeyId_apiKeys_id_fk": {
+          "columnsFrom": ["apiKeyId"],
+          "columnsTo": ["id"],
+          "name": "traces_apiKeyId_apiKeys_id_fk",
+          "onDelete": "cascade",
+          "onUpdate": "no action",
+          "tableFrom": "traces",
+          "tableTo": "apiKeys"
+        },
         "traces_orgId_orgs_id_fk": {
           "columnsFrom": ["orgId"],
           "columnsTo": ["id"],
@@ -1038,6 +995,15 @@
           "onUpdate": "no action",
           "tableFrom": "traces",
           "tableTo": "orgs"
+        },
+        "traces_projectId_projects_id_fk": {
+          "columnsFrom": ["projectId"],
+          "columnsTo": ["id"],
+          "name": "traces_projectId_projects_id_fk",
+          "onDelete": "cascade",
+          "onUpdate": "no action",
+          "tableFrom": "traces",
+          "tableTo": "projects"
         },
         "traces_userId_user_id_fk": {
           "columnsFrom": ["userId"],

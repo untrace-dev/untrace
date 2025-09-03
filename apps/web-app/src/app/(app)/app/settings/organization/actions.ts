@@ -185,7 +185,7 @@ export const deleteTeamAction = action
     await db.delete(Orgs).where(eq(Orgs.id, orgId));
 
     // Redirect to dashboard after deletion
-    redirect('/app/dashboard');
+    redirect('/app');
   });
 
 // Get organization members action

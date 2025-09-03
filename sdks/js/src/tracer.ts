@@ -18,6 +18,13 @@ export class UntraceTracer {
   constructor(private tracer: Tracer) {}
 
   /**
+   * Get the underlying OpenTelemetry tracer
+   */
+  getTracer(): Tracer {
+    return this.tracer;
+  }
+
+  /**
    * Start a new span
    */
   startSpan(options: UntraceSpanOptions): Span {

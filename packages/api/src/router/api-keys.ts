@@ -4,51 +4,65 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 export const apiKeysRouter = createTRPCRouter({
-  all: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.auth.orgId) throw new Error('Organization ID is required');
+  all: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.auth.orgId) throw new Error('Organization ID is required');
 
-    const apiKeys = await ctx.db.query.ApiKeys.findMany({
-      orderBy: [desc(ApiKeys.updatedAt)],
-      where: eq(ApiKeys.orgId, ctx.auth.orgId),
-    });
+      const apiKeys = await ctx.db.query.ApiKeys.findMany({
+        orderBy: [desc(ApiKeys.updatedAt)],
+        where: and(
+          eq(ApiKeys.orgId, ctx.auth.orgId),
+          eq(ApiKeys.projectId, input.projectId),
+        ),
+      });
 
-    return apiKeys;
-  }),
+      return apiKeys;
+    }),
 
-  allWithLastUsage: protectedProcedure.query(async ({ ctx }) => {
-    if (!ctx.auth.orgId) throw new Error('Organization ID is required');
+  allWithLastUsage: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.auth.orgId) throw new Error('Organization ID is required');
 
-    // Get all API keys
-    const apiKeys = await ctx.db.query.ApiKeys.findMany({
-      orderBy: [desc(ApiKeys.updatedAt)],
-      where: eq(ApiKeys.orgId, ctx.auth.orgId),
-    });
+      // Get all API keys for the specific project
+      const apiKeys = await ctx.db.query.ApiKeys.findMany({
+        orderBy: [desc(ApiKeys.updatedAt)],
+        where: and(
+          eq(ApiKeys.orgId, ctx.auth.orgId),
+          eq(ApiKeys.projectId, input.projectId),
+        ),
+      });
 
-    // For each API key, get the most recent usage
-    const apiKeysWithLastUsage = await Promise.all(
-      apiKeys.map(async (apiKey) => {
-        const lastUsage = await ctx.db.query.ApiKeyUsage.findFirst({
-          orderBy: [desc(ApiKeyUsage.createdAt)],
-          where: eq(ApiKeyUsage.apiKeyId, apiKey.id),
-        });
+      // For each API key, get the most recent usage
+      const apiKeysWithLastUsage = await Promise.all(
+        apiKeys.map(async (apiKey) => {
+          const lastUsage = await ctx.db.query.ApiKeyUsage.findFirst({
+            orderBy: [desc(ApiKeyUsage.createdAt)],
+            where: eq(ApiKeyUsage.apiKeyId, apiKey.id),
+          });
 
-        return {
-          ...apiKey,
-          lastUsage,
-        };
-      }),
-    );
+          return {
+            ...apiKey,
+            lastUsage,
+          };
+        }),
+      );
 
-    return apiKeysWithLastUsage;
-  }),
+      return apiKeysWithLastUsage;
+    }),
 
   byId: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string(), projectId: z.string() }))
     .query(async ({ ctx, input }) => {
       if (!ctx.auth.orgId) throw new Error('Organization ID is required');
 
       const apiKey = await ctx.db.query.ApiKeys.findFirst({
-        where: and(eq(ApiKeys.id, input.id), eq(ApiKeys.orgId, ctx.auth.orgId)),
+        where: and(
+          eq(ApiKeys.id, input.id),
+          eq(ApiKeys.orgId, ctx.auth.orgId),
+          eq(ApiKeys.projectId, input.projectId),
+        ),
       });
 
       if (!apiKey) return null;
@@ -57,7 +71,7 @@ export const apiKeysRouter = createTRPCRouter({
     }),
 
   create: protectedProcedure
-    .input(CreateApiKeySchema)
+    .input(CreateApiKeySchema.extend({ projectId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth.orgId) throw new Error('Organization ID is required');
       if (!ctx.auth.userId) throw new Error('User ID is required');
@@ -68,6 +82,7 @@ export const apiKeysRouter = createTRPCRouter({
           .values({
             ...input,
             orgId: ctx.auth.orgId,
+            projectId: input.projectId,
             userId: ctx.auth.userId,
           })
           .returning();
@@ -79,27 +94,55 @@ export const apiKeysRouter = createTRPCRouter({
       }
     }),
 
+  default: protectedProcedure
+    .input(z.object({ projectId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      if (!ctx.auth.orgId) throw new Error('Organization ID is required');
+
+      const apiKey = await ctx.db.query.ApiKeys.findFirst({
+        orderBy: [desc(ApiKeys.createdAt)],
+        where: and(
+          eq(ApiKeys.orgId, ctx.auth.orgId),
+          eq(ApiKeys.projectId, input.projectId),
+        ),
+      });
+
+      if (!apiKey) return null;
+
+      return apiKey;
+    }),
+
   delete: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string(), projectId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth.orgId) throw new Error('Organization ID is required');
 
       const apiKey = await ctx.db
         .delete(ApiKeys)
-        .where(and(eq(ApiKeys.id, input.id), eq(ApiKeys.orgId, ctx.auth.orgId)))
+        .where(
+          and(
+            eq(ApiKeys.id, input.id),
+            eq(ApiKeys.orgId, ctx.auth.orgId),
+            eq(ApiKeys.projectId, input.projectId),
+          ),
+        )
         .returning();
 
       return apiKey;
     }),
 
   toggleActive: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string(), projectId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth.orgId) throw new Error('Organization ID is required');
 
       // First get the current state
       const currentApiKey = await ctx.db.query.ApiKeys.findFirst({
-        where: and(eq(ApiKeys.id, input.id), eq(ApiKeys.orgId, ctx.auth.orgId)),
+        where: and(
+          eq(ApiKeys.id, input.id),
+          eq(ApiKeys.orgId, ctx.auth.orgId),
+          eq(ApiKeys.projectId, input.projectId),
+        ),
       });
 
       if (!currentApiKey) throw new Error('API Key not found');
@@ -109,7 +152,13 @@ export const apiKeysRouter = createTRPCRouter({
         .set({
           isActive: !currentApiKey.isActive,
         })
-        .where(and(eq(ApiKeys.id, input.id), eq(ApiKeys.orgId, ctx.auth.orgId)))
+        .where(
+          and(
+            eq(ApiKeys.id, input.id),
+            eq(ApiKeys.orgId, ctx.auth.orgId),
+            eq(ApiKeys.projectId, input.projectId),
+          ),
+        )
         .returning();
 
       return apiKey;
@@ -131,24 +180,31 @@ export const apiKeysRouter = createTRPCRouter({
             write: z.boolean().optional(),
           })
           .optional(),
+        projectId: z.string(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth.orgId) throw new Error('Organization ID is required');
 
-      const { id, ...updateData } = input;
+      const { id, projectId, ...updateData } = input;
 
       const [apiKey] = await ctx.db
         .update(ApiKeys)
         .set(updateData)
-        .where(and(eq(ApiKeys.id, id), eq(ApiKeys.orgId, ctx.auth.orgId)))
+        .where(
+          and(
+            eq(ApiKeys.id, id),
+            eq(ApiKeys.orgId, ctx.auth.orgId),
+            eq(ApiKeys.projectId, projectId),
+          ),
+        )
         .returning();
 
       return apiKey;
     }),
 
   updateLastUsed: protectedProcedure
-    .input(z.object({ id: z.string() }))
+    .input(z.object({ id: z.string(), projectId: z.string() }))
     .mutation(async ({ ctx, input }) => {
       if (!ctx.auth.orgId) throw new Error('Organization ID is required');
 
@@ -157,7 +213,13 @@ export const apiKeysRouter = createTRPCRouter({
         .set({
           lastUsedAt: new Date(),
         })
-        .where(and(eq(ApiKeys.id, input.id), eq(ApiKeys.orgId, ctx.auth.orgId)))
+        .where(
+          and(
+            eq(ApiKeys.id, input.id),
+            eq(ApiKeys.orgId, ctx.auth.orgId),
+            eq(ApiKeys.projectId, input.projectId),
+          ),
+        )
         .returning();
 
       return apiKey;

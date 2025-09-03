@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'bun:test';
 import { TestFactories } from '../test-utils/factories';
 import { testDb } from './setup';
 
@@ -6,6 +6,9 @@ describe('Basic Integration Tests', () => {
   let factories: TestFactories;
 
   beforeEach(async () => {
+    if (!testDb) {
+      throw new Error('Test database not initialized');
+    }
     factories = new TestFactories(testDb.db);
   });
 
@@ -33,11 +36,20 @@ describe('Basic Integration Tests', () => {
   it('should create an API key', async () => {
     const user = await factories.createUser();
     const org = await factories.createOrg();
-    const apiKey = await factories.createApiKey(user.id, org.id);
+    const project = await factories.createProject({
+      orgId: org.id,
+      userId: user.id,
+    });
+    const apiKey = await factories.createApiKey({
+      orgId: org.id,
+      projectId: project.id,
+      userId: user.id,
+    });
 
     expect(apiKey).toBeDefined();
     expect(apiKey.id).toMatch(/^ak_/);
     expect(apiKey.userId).toBe(user.id);
     expect(apiKey.orgId).toBe(org.id);
+    expect(apiKey.projectId).toBe(project.id);
   });
 });

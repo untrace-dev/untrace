@@ -10,7 +10,7 @@ const FINAL_FILE = join('src', 'supabase', 'types.generated.ts');
 async function main() {
   try {
     // Generate types
-    await $`npx supabase gen types typescript --project-id ${process.env.SUPABASE_PROJECT_ID} --schema public > ${TEMP_FILE}`;
+    await $`npx supabase gen types typescript --project-id ${process.env.SUPABASE_PROJECT_ID} --schema public --debug > ${TEMP_FILE}`;
 
     // Read the generated types
     const generatedTypes = await fs.readFile(TEMP_FILE, 'utf-8');

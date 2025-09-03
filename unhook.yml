@@ -25,8 +25,12 @@
 
 webhookUrl: https://unhook.sh/seawatts/untrace
 destination:
-  - name: local
-    url: http://localhost:3000/api/webhooks
+  - name: clerk
+    url: http://localhost:3000/api/webhooks/clerk
+  - name: stripe
+    url: http://localhost:3000/api/webhooks/stripe
 delivery:
-  - source: '*'
-    destination: local
+  - source: 'clerk'
+    destination: clerk
+  - source: 'stripe'
+    destination: stripe

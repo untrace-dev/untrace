@@ -26,7 +26,10 @@ export const MetricLink = ({
   className,
   ref,
   ...linkProps
-}: MetricLinkProps & { ref?: React.Ref<HTMLAnchorElement> }) => {
+}: MetricLinkProps & {
+  ref?: React.Ref<HTMLAnchorElement>;
+  asChild?: boolean;
+}) => {
   const handleClick = () => {
     // Track the metric in PostHog
     posthog.capture(metric, properties);

@@ -164,17 +164,30 @@ const onboardingSchema = z.object({
       'Organization name can only contain lowercase letters, numbers, hyphens, and underscores',
     )
     .transform((val) => val.toLowerCase().trim()),
+  projectName: z
+    .string()
+    .min(3, 'Project name must be at least 3 characters')
+    .max(50, 'Project name must be less than 50 characters')
+    .regex(
+      VALIDATION_REGEX,
+      'Project name can only contain lowercase letters, numbers, hyphens, and underscores',
+    )
+    .transform((val) => val.toLowerCase().trim()),
 });
 
 type OnboardingFormData = z.infer<typeof onboardingSchema>;
 
 interface OnboardingFormProps {
   isLoading?: boolean;
+  projectId?: string;
   redirectTo?: string;
   source?: string;
 }
 
-export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
+export function OnboardingForm({
+  isLoading = false,
+  redirectTo,
+}: OnboardingFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { organization } = useOrganization();
@@ -184,6 +197,7 @@ export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
   const form = useForm<OnboardingFormData>({
     defaultValues: {
       orgName: '',
+      projectName: '',
     },
     mode: 'onChange',
     resolver: zodResolver(onboardingSchema),
@@ -191,6 +205,7 @@ export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
 
   const { watch } = form;
   const orgName = watch('orgName');
+  const projectName = watch('projectName');
 
   // Use tRPC utils for API calls
   const apiUtils = api.useUtils();
@@ -206,6 +221,18 @@ export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
           name,
         }),
       [apiUtils.org.checkNameAvailability, organization?.id],
+    ),
+  );
+
+  const projectNameValidation = useNameValidation(
+    projectName,
+    3,
+    useCallback(
+      (name) =>
+        apiUtils.projects.checkNameAvailability.fetch({
+          name,
+        }),
+      [apiUtils.projects.checkNameAvailability],
     ),
   );
 
@@ -226,40 +253,6 @@ export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
     setIsSubmitting(true);
 
     try {
-      // Check if user already has an organization to prevent duplicate creation
-      // This prevents the issue where users would end up with multiple Stripe customers
-      // by checking for existing organizations before attempting to create new ones
-      // The createOrg function also has additional duplicate prevention logic
-      if (organization) {
-        console.log(
-          'User already has an organization, preventing duplicate creation:',
-          {
-            existingOrgId: organization.id,
-            existingOrgName: organization.name,
-            requestedOrgName: data.orgName,
-            userId: user.id,
-          },
-        );
-
-        // Update existing organization name if it's different
-        if (organization.name !== data.orgName) {
-          try {
-            await organization.update({
-              name: data.orgName,
-            });
-            console.log('Organization name updated in Clerk successfully');
-            await organization.reload();
-          } catch (error) {
-            console.error('Failed to update organization in Clerk:', error);
-            // Continue with the flow even if Clerk update fails
-          }
-        }
-
-        // Redirect to dashboard since organization already exists
-        router.push('/app/dashboard');
-        return;
-      }
-
       console.log('Creating new organization for user:', {
         orgName: data.orgName,
         userEmail: user.emailAddresses?.[0]?.emailAddress,
@@ -269,6 +262,7 @@ export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
       // Create organization with Stripe integration
       const orgResult = await createOrganization({
         name: data.orgName,
+        projectName: data.projectName,
       });
 
       if (!orgResult) {
@@ -282,16 +276,24 @@ export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
         stripeCustomerId: orgResult.org.stripeCustomerId,
       });
 
-      if (setActive) {
-        await setActive({ organization: orgResult.org.id });
+      // Set the organization as active in Clerk if needed
+      if (setActive && orgResult.org.id) {
+        try {
+          await setActive({ organization: orgResult.org.id });
+        } catch (error) {
+          console.warn('Could not set active organization in Clerk:', error);
+          // Continue even if this fails
+        }
       }
 
       toast.success('Organization created successfully!', {
         description: 'Redirecting to your dashboard...',
       });
 
-      // Redirect to dashboard
-      router.push('/app/dashboard');
+      // Redirect to destinations setup page
+      router.push(
+        `/app/onboarding/destinations?projectId=${encodeURIComponent(orgResult.project.id)}${redirectTo ? `&redirectTo=${encodeURIComponent(redirectTo)}` : ''}`,
+      );
     } catch (error) {
       console.error('Failed to create organization:', error);
       toast.error('Failed to create organization', {
@@ -347,7 +349,8 @@ export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
         <CardHeader>
           <CardTitle className="text-2xl">Welcome to Untrace! 🎉</CardTitle>
           <CardDescription>
-            Let's set up your organization. Choose a name for your organization.
+            Let's set up your organization and project. Choose names for both to
+            get started.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -394,6 +397,44 @@ export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
                   )}
                 />
 
+                <FormField
+                  control={form.control}
+                  name="projectName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Project Name</FormLabel>
+                      <FormControl>
+                        <div className="relative">
+                          <Input
+                            placeholder="e.g., my-app"
+                            {...field}
+                            autoCapitalize="off"
+                            autoComplete="off"
+                            autoCorrect="off"
+                            autoSave="off"
+                            className={getInputBorderClasses(
+                              projectNameValidation,
+                            )}
+                            disabled={isSubmitting || isLoading}
+                          />
+                          {renderValidationIcon(projectNameValidation)}
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        This will be your project identifier. Use lowercase
+                        letters, numbers, and hyphens only.
+                      </FormDescription>
+                      {projectNameValidation.available === false &&
+                        projectNameValidation.message && (
+                          <p className="text-sm text-destructive">
+                            {projectNameValidation.message}
+                          </p>
+                        )}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
                 <div className="flex justify-end">
                   <Button
                     className="min-w-32"
@@ -401,7 +442,9 @@ export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
                       isSubmitting ||
                       isLoading ||
                       !orgName ||
-                      orgNameValidation.available === false
+                      !projectName ||
+                      orgNameValidation.available === false ||
+                      projectNameValidation.available === false
                     }
                     type="submit"
                   >
@@ -411,10 +454,10 @@ export function OnboardingForm({ isLoading = false }: OnboardingFormProps) {
                           className="animate-spin mr-2"
                           size="sm"
                         />
-                        Creating...
+                        Next...
                       </>
                     ) : (
-                      'Create Organization'
+                      'Next'
                     )}
                   </Button>
                 </div>
