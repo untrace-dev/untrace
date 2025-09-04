@@ -1,7 +1,7 @@
 import { ORPCError, os } from '@orpc/server';
 import { and, desc, eq, gte, lte, sql } from '@untrace/db';
 import { db } from '@untrace/db/client';
-import { Deliveries, Traces } from '@untrace/db/schema';
+import { Deliveries, type TraceInsertType, Traces } from '@untrace/db/schema';
 import { createTraceFanoutService } from '@untrace/destinations';
 import { createId } from '@untrace/id';
 import { addDays } from 'date-fns';
@@ -102,6 +102,7 @@ export const create = os
       const [trace] = await db
         .insert(Traces)
         .values({
+          apiKeyId: context.apiKey.id,
           data: input.data,
           expiresAt,
           id: createId(),
@@ -355,7 +356,7 @@ export const retry = os
   });
 
 export const ingest = os
-  .route({ method: 'POST', path: '/traces/otlp' })
+  .route({ method: 'POST', path: '/traces/ingest' })
   .input(
     z.object({
       resourceSpans: z.array(
@@ -425,16 +426,7 @@ export const ingest = os
       // Initialize fanout service
       const fanoutService = createTraceFanoutService();
 
-      const traces: Array<{
-        data: Record<string, unknown>;
-        expiresAt: Date;
-        id: string;
-        orgId: string;
-        parentSpanId: string | null;
-        projectId: string;
-        spanId: string;
-        traceId: string;
-      }> = [];
+      const traces: TraceInsertType[] = [];
 
       for (const resourceSpan of input.resourceSpans) {
         const resourceAttributes = convertOTLPAttributes(
@@ -508,6 +500,7 @@ export const ingest = os
 
             // Create trace record
             const trace = {
+              apiKeyId: context.apiKey.id,
               data: {
                 ...llmData,
                 resource: resourceAttributes,
@@ -526,13 +519,12 @@ export const ingest = os
                 },
               },
               expiresAt: addDays(new Date(), 30), // 30 days TTL
-              id: createId(),
               orgId: context.apiKey.orgId,
               parentSpanId: span.parentSpanId || null,
               projectId: context.apiKey.projectId,
               spanId: span.spanId,
               traceId: span.traceId,
-            };
+            } satisfies TraceInsertType;
 
             traces.push(trace);
           }
@@ -550,25 +542,10 @@ export const ingest = os
           userId: (context as { auth?: { userId?: string } }).auth?.userId,
         };
 
-        // Convert traces to TraceData format for fanout
-        const traceDataArray = traces.map((trace) => ({
-          createdAt: new Date(),
-          data: trace.data,
-          expiresAt: trace.expiresAt,
-          metadata: {},
-          orgId: trace.orgId,
-          parentSpanId: trace.parentSpanId || undefined,
-          spanId: trace.spanId || undefined,
-          traceId: trace.traceId,
-          userId: (context as { auth?: { userId?: string } }).auth?.userId,
-        }));
-
         // Process fanout asynchronously (don't wait for completion)
-        fanoutService
-          .processTraces(traceDataArray, fanoutContext)
-          .catch((error) => {
-            console.error('Fanout processing failed:', error);
-          });
+        fanoutService.processTraces(traces, fanoutContext).catch((error) => {
+          console.error('Fanout processing failed:', error);
+        });
       }
 
       return {

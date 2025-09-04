@@ -1,10 +1,10 @@
+import type { TraceType } from '@untrace/db/schema';
 import { LangfuseIntegration } from './langfuse';
 import { PostHogIntegration } from './posthog';
 import type {
   IntegrationProvider,
   IntegrationsConfig,
   TraceContext,
-  TraceData,
 } from './types';
 import { WebhookIntegration } from './webhook';
 
@@ -55,7 +55,7 @@ export class IntegrationsManager {
   /**
    * Capture a trace event across all enabled providers
    */
-  async captureTrace(trace: TraceData): Promise<void> {
+  async captureTrace(trace: TraceType): Promise<void> {
     const promises = Array.from(this.providers.values())
       .filter((provider) => provider.isEnabled())
       .map((provider) => provider.captureTrace(trace));
@@ -66,7 +66,7 @@ export class IntegrationsManager {
   /**
    * Capture an error event across all enabled providers
    */
-  async captureError(error: Error, trace: TraceData): Promise<void> {
+  async captureError(error: Error, trace: TraceType): Promise<void> {
     const promises = Array.from(this.providers.values())
       .filter((provider) => provider.isEnabled())
       .map((provider) => provider.captureError(error, trace));
@@ -154,18 +154,22 @@ export class IntegrationsManager {
       createdAt?: Date;
       expiresAt?: Date;
     } = {},
-  ): TraceData {
+  ): TraceType {
     return {
+      apiKeyId: null,
       createdAt: options.createdAt || new Date(),
       data,
       expiresAt:
         options.expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      metadata: options.metadata,
+      id: traceId,
+      metadata: options.metadata || {},
       orgId,
-      parentSpanId: options.parentSpanId,
-      spanId: options.spanId,
+      parentSpanId: options.parentSpanId ?? null,
+      projectId: 'unknown',
+      spanId: options.spanId ?? null,
       traceId,
-      userId: options.userId,
+      updatedAt: null,
+      userId: options.userId ?? null,
     };
   }
 }

@@ -546,6 +546,7 @@ export const Traces = pgTable('traces', {
 });
 
 export type TraceType = typeof Traces.$inferSelect;
+export type TraceInsertType = typeof Traces.$inferInsert;
 
 export const TracesRelations = relations(Traces, ({ one, many }) => ({
   apiKey: one(ApiKeys, {
@@ -755,11 +756,3 @@ export const UpdateDestinationSchema = createInsertSchema(Destinations)
     updatedAt: true,
   })
   .partial();
-
-// Export types
-export type TCreateTrace = typeof Traces.$inferInsert;
-export type TCreateDestination = Omit<
-  typeof Destinations.$inferInsert,
-  'id' | 'createdAt' | 'updatedAt' | 'orgId'
->;
-export type TUpdateDestination = Partial<TCreateDestination>;

@@ -1,8 +1,8 @@
+import type { TraceType } from '@untrace/db/schema';
 import type {
   IntegrationConfig,
   IntegrationProvider,
   LLMGenerationEvent,
-  TraceData,
 } from './types';
 
 export class WebhookIntegration implements IntegrationProvider {
@@ -20,7 +20,7 @@ export class WebhookIntegration implements IntegrationProvider {
     return this.config.enabled && !!this.config.endpoint;
   }
 
-  async captureTrace(trace: TraceData): Promise<void> {
+  async captureTrace(trace: TraceType): Promise<void> {
     if (!this.isEnabled()) {
       return;
     }
@@ -57,7 +57,7 @@ export class WebhookIntegration implements IntegrationProvider {
     }
   }
 
-  async captureError(error: Error, trace: TraceData): Promise<void> {
+  async captureError(error: Error, trace: TraceType): Promise<void> {
     if (!this.isEnabled()) {
       return;
     }
@@ -65,7 +65,7 @@ export class WebhookIntegration implements IntegrationProvider {
     try {
       // Create error event with trace context
       const errorEvent: LLMGenerationEvent = {
-        distinctId: trace.userId,
+        distinctId: trace.userId || undefined,
         error: error.message,
         input: [],
         inputTokens: 0,
@@ -73,15 +73,15 @@ export class WebhookIntegration implements IntegrationProvider {
         model: 'unknown',
         outputChoices: [],
         outputTokens: 0,
-        parentId: trace.parentSpanId,
+        parentId: trace.parentSpanId || undefined,
         properties: {
-          ...trace.metadata,
+          ...((trace.metadata as Record<string, unknown>) || {}),
           error_name: error.name,
           error_stack: error.stack,
           org_id: trace.orgId,
         },
         provider: 'unknown',
-        spanId: trace.spanId,
+        spanId: trace.spanId || undefined,
         spanName: 'error',
         traceId: trace.traceId,
       };
@@ -160,15 +160,15 @@ export class WebhookIntegration implements IntegrationProvider {
   /**
    * Transform trace data to webhook format
    */
-  private transformTraceToWebhookFormat(trace: TraceData): LLMGenerationEvent {
-    const traceData = trace.data;
+  private transformTraceToWebhookFormat(trace: TraceType): LLMGenerationEvent {
+    const traceData = trace.data as Record<string, unknown>;
 
     // If already in LLM generation format, extract it
     if (traceData.llm_generation) {
       const llmGen = traceData.llm_generation as LLMGenerationEvent;
       return {
         ...llmGen,
-        distinctId: trace.userId,
+        distinctId: trace.userId || undefined,
         properties: {
           ...llmGen.properties,
           created_at: trace.createdAt,
@@ -185,7 +185,7 @@ export class WebhookIntegration implements IntegrationProvider {
       baseUrl: llmData.baseUrl,
       cacheCreationInputTokens: llmData.cacheCreationInputTokens,
       cacheReadInputTokens: llmData.cacheReadInputTokens,
-      distinctId: trace.userId,
+      distinctId: trace.userId || undefined,
       error: llmData.error,
       httpStatus: llmData.httpStatus,
       input: llmData.input || [],
@@ -198,16 +198,16 @@ export class WebhookIntegration implements IntegrationProvider {
       outputChoices: llmData.outputChoices || [],
       outputCostUsd: llmData.outputCostUsd,
       outputTokens: llmData.outputTokens || 0,
-      parentId: trace.parentSpanId,
+      parentId: trace.parentSpanId || undefined,
       properties: {
-        ...trace.metadata,
+        ...((trace.metadata as Record<string, unknown>) || {}),
         created_at: trace.createdAt,
         expires_at: trace.expiresAt,
         org_id: trace.orgId,
       },
       provider: llmData.provider || 'unknown',
       requestUrl: llmData.requestUrl,
-      spanId: trace.spanId,
+      spanId: trace.spanId || undefined,
       spanName: llmData.spanName || 'llm_generation',
       stream: llmData.stream,
       temperature: llmData.temperature,

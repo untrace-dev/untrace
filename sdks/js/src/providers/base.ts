@@ -1,25 +1,33 @@
 import type { Tracer } from '@opentelemetry/api';
-import type { Instrumentation } from '@opentelemetry/instrumentation';
-import type { ProviderInstrumentation, UntraceConfig } from '../types';
+import { InstrumentationBase } from '@opentelemetry/instrumentation';
+import type {
+  ProviderInstrumentation,
+  UntraceConfig,
+  UntraceInstrumentationConfig,
+} from '../types';
 
 /**
  * Base class for provider instrumentations
  */
 export abstract class BaseProviderInstrumentation
+  extends InstrumentationBase<UntraceInstrumentationConfig>
   implements ProviderInstrumentation
 {
   protected config?: UntraceConfig;
-  protected instrumentation?: Instrumentation;
-  protected tracer?: Tracer;
 
-  abstract readonly name: string;
+  constructor(name: string, version = '1.0.0') {
+    super(name, version, { enabled: true });
+  }
 
   /**
    * Initialize the instrumentation
    */
-  init(config: UntraceConfig, tracer?: Tracer): void {
+  initialize(config: UntraceConfig, tracer?: Tracer): void {
     this.config = config;
-    this.tracer = tracer;
+    if (tracer) {
+      this.setTracerProvider({ getTracer: () => tracer });
+    }
+    this.setConfig({ enabled: true, untraceConfig: config });
   }
 
   /**
@@ -33,12 +41,17 @@ export abstract class BaseProviderInstrumentation
   abstract instrument<T = unknown>(module: T): T;
 
   /**
-   * Disable instrumentation
+   * Enable the instrumentation
+   */
+  enable(): void {
+    // Implementation will be provided by subclasses
+  }
+
+  /**
+   * Disable the instrumentation
    */
   disable(): void {
-    if (this.instrumentation) {
-      this.instrumentation.disable();
-    }
+    // Implementation will be provided by subclasses
   }
 
   /**
@@ -53,7 +66,21 @@ export abstract class BaseProviderInstrumentation
    */
   protected debug(message: string, ...args: unknown[]): void {
     if (this.isDebugEnabled()) {
-      console.debug(`[Untrace:${this.name}]`, message, ...args);
+      console.debug(`[Untrace:${this.instrumentationName}]`, message, ...args);
     }
+  }
+
+  /**
+   * Get the tracer instance
+   */
+  protected getTracer(): Tracer {
+    return this.tracer;
+  }
+
+  /**
+   * Initialize the instrumentation - required by OpenTelemetry
+   */
+  protected init(): void {
+    // Implementation will be provided by subclasses
   }
 }

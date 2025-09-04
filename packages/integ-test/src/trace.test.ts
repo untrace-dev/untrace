@@ -30,7 +30,7 @@ describe('JS SDK Trace Integration Tests', () => {
     // Create test setup with API key
     testSetup = await createTestSetup({
       apiKeyName: 'Trace Test API Key',
-      orgName: 'Trace Test Organization',
+      orgName: `Trace Test Organization ${Date.now()}`,
       userEmail: `trace-test-${Date.now()}@example.com`,
       userName: { firstName: 'Trace', lastName: 'Test' },
     });

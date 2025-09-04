@@ -1,3 +1,4 @@
+import type { TraceType } from '@untrace/db/schema';
 import type { PostHog } from 'posthog-node';
 import type {
   IntegrationConfig,
@@ -6,7 +7,6 @@ import type {
   LLMRequestData,
   LLMResponseData,
   LLMTraceOptions,
-  TraceData,
 } from './types';
 
 export class PostHogIntegration implements IntegrationProvider {
@@ -45,7 +45,7 @@ export class PostHogIntegration implements IntegrationProvider {
     }
   }
 
-  async captureTrace(trace: TraceData): Promise<void> {
+  async captureTrace(trace: TraceType): Promise<void> {
     if (!this.isEnabled()) {
       return;
     }
@@ -110,7 +110,7 @@ export class PostHogIntegration implements IntegrationProvider {
     }
   }
 
-  async captureError(error: Error, trace: TraceData): Promise<void> {
+  async captureError(error: Error, trace: TraceType): Promise<void> {
     if (!this.isEnabled()) {
       return;
     }
@@ -118,7 +118,7 @@ export class PostHogIntegration implements IntegrationProvider {
     try {
       // Create error event with trace context
       const errorEvent: LLMGenerationEvent = {
-        distinctId: trace.userId,
+        distinctId: trace.userId || undefined,
         error: error.message,
         input: [],
         inputTokens: 0,
@@ -126,15 +126,15 @@ export class PostHogIntegration implements IntegrationProvider {
         model: 'unknown',
         outputChoices: [],
         outputTokens: 0,
-        parentId: trace.parentSpanId,
+        parentId: trace.parentSpanId || undefined,
         properties: {
-          ...trace.metadata,
+          ...((trace.metadata as Record<string, unknown>) || {}),
           error_name: error.name,
           error_stack: error.stack,
           org_id: trace.orgId,
         },
         provider: 'unknown',
-        spanId: trace.spanId,
+        spanId: trace.spanId || undefined,
         spanName: 'error',
         traceId: trace.traceId,
       };
@@ -181,15 +181,15 @@ export class PostHogIntegration implements IntegrationProvider {
   /**
    * Transform trace data to PostHog LLM analytics format
    */
-  private transformTraceToPostHogFormat(trace: TraceData): LLMGenerationEvent {
-    const traceData = trace.data;
+  private transformTraceToPostHogFormat(trace: TraceType): LLMGenerationEvent {
+    const traceData = trace.data as Record<string, unknown>;
 
     // If already in PostHog format, extract it
     if (traceData.$ai_generation) {
       const aiGen = traceData.$ai_generation as LLMGenerationEvent;
       return {
         ...aiGen,
-        distinctId: trace.userId,
+        distinctId: trace.userId || undefined,
         properties: {
           ...aiGen.properties,
           created_at: trace.createdAt,
@@ -206,7 +206,7 @@ export class PostHogIntegration implements IntegrationProvider {
       baseUrl: llmData.baseUrl,
       cacheCreationInputTokens: llmData.cacheCreationInputTokens,
       cacheReadInputTokens: llmData.cacheReadInputTokens,
-      distinctId: trace.userId,
+      distinctId: trace.userId || undefined,
       error: llmData.error,
       httpStatus: llmData.httpStatus,
       input: llmData.input || [],
@@ -219,16 +219,16 @@ export class PostHogIntegration implements IntegrationProvider {
       outputChoices: llmData.outputChoices || [],
       outputCostUsd: llmData.outputCostUsd,
       outputTokens: llmData.outputTokens || 0,
-      parentId: trace.parentSpanId,
+      parentId: trace.parentSpanId || undefined,
       properties: {
-        ...trace.metadata,
+        ...((trace.metadata as Record<string, unknown>) || {}),
         created_at: trace.createdAt,
         expires_at: trace.expiresAt,
         org_id: trace.orgId,
       },
       provider: llmData.provider || 'unknown',
       requestUrl: llmData.requestUrl,
-      spanId: trace.spanId,
+      spanId: trace.spanId || undefined,
       spanName: llmData.spanName || 'llm_generation',
       stream: llmData.stream,
       temperature: llmData.temperature,
@@ -416,14 +416,19 @@ export class PostHogIntegration implements IntegrationProvider {
       options,
     );
     this.captureTrace({
+      apiKeyId: null,
       createdAt: new Date(),
       data: { $ai_generation: event },
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      id: event.traceId,
+      metadata: {},
       orgId: 'unknown',
-      parentSpanId: event.parentId,
-      spanId: event.spanId,
+      parentSpanId: event.parentId ?? null,
+      projectId: 'unknown',
+      spanId: event.spanId ?? null,
       traceId: event.traceId,
-      userId: event.distinctId,
+      updatedAt: null,
+      userId: event.distinctId ?? null,
     });
   }
 
@@ -453,14 +458,19 @@ export class PostHogIntegration implements IntegrationProvider {
     };
 
     this.captureTrace({
+      apiKeyId: null,
       createdAt: new Date(),
       data: { $ai_generation: event },
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      id: event.traceId,
+      metadata: {},
       orgId: 'unknown',
-      parentSpanId: event.parentId,
-      spanId: event.spanId,
+      parentSpanId: event.parentId ?? null,
+      projectId: 'unknown',
+      spanId: event.spanId ?? null,
       traceId: event.traceId,
-      userId: event.distinctId,
+      updatedAt: null,
+      userId: event.distinctId ?? null,
     });
   }
 
@@ -494,14 +504,19 @@ export class PostHogIntegration implements IntegrationProvider {
         );
         event.latency = (Date.now() - startTime) / 1000;
         this.captureTrace({
+          apiKeyId: null,
           createdAt: new Date(),
           data: { $ai_generation: event },
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          id: event.traceId,
+          metadata: {},
           orgId: 'unknown',
-          parentSpanId: event.parentId,
-          spanId: event.spanId,
+          parentSpanId: event.parentId ?? null,
+          projectId: 'unknown',
+          spanId: event.spanId ?? null,
           traceId: event.traceId,
-          userId: event.distinctId,
+          updatedAt: null,
+          userId: event.distinctId ?? null,
         });
         return result;
       })
@@ -522,14 +537,19 @@ export class PostHogIntegration implements IntegrationProvider {
           traceId,
         };
         this.captureTrace({
+          apiKeyId: null,
           createdAt: new Date(),
           data: { $ai_generation: event },
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+          id: event.traceId,
+          metadata: {},
           orgId: 'unknown',
-          parentSpanId: event.parentId,
-          spanId: event.spanId,
+          parentSpanId: event.parentId ?? null,
+          projectId: 'unknown',
+          spanId: event.spanId ?? null,
           traceId: event.traceId,
-          userId: event.distinctId,
+          updatedAt: null,
+          userId: event.distinctId ?? null,
         });
         throw error;
       });

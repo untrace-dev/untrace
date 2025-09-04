@@ -5,6 +5,10 @@ import type {
   SpanKind,
   Tracer,
 } from '@opentelemetry/api';
+import type {
+  Instrumentation,
+  InstrumentationConfig,
+} from '@opentelemetry/instrumentation';
 
 /**
  * Configuration options for initializing Untrace SDK
@@ -210,18 +214,24 @@ export interface WorkflowAttributes extends Attributes {
 }
 
 /**
+ * Configuration for Untrace instrumentations
+ */
+export interface UntraceInstrumentationConfig extends InstrumentationConfig {
+  /**
+   * Untrace configuration
+   */
+  untraceConfig?: UntraceConfig;
+}
+
+/**
  * Provider instrumentation interface
  */
-export interface ProviderInstrumentation {
-  /**
-   * Name of the provider
-   */
-  name: string;
-
+export interface ProviderInstrumentation
+  extends Instrumentation<UntraceInstrumentationConfig> {
   /**
    * Initialize the instrumentation
    */
-  init(config: UntraceConfig, tracer?: Tracer): void;
+  initialize(config: UntraceConfig, tracer?: Tracer): void;
 
   /**
    * Check if a module is instrumentable

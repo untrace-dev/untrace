@@ -7,7 +7,7 @@ import type {
 import { LangfuseIntegration } from './langfuse';
 import { IntegrationsManager } from './manager';
 import { PostHogIntegration } from './posthog';
-import type { IntegrationProvider, TraceData } from './types';
+import type { IntegrationProvider } from './types';
 import { WebhookIntegration } from './webhook';
 
 export interface TraceDeliveryService {
@@ -37,7 +37,7 @@ export interface TraceDeliveryService {
   /**
    * Convert database trace to our trace format
    */
-  convertDatabaseTraceToTraceData(trace: TraceType): TraceData;
+  convertDatabaseTraceToTraceData(trace: TraceType): TraceType;
 
   /**
    * Get delivery status for a trace
@@ -163,17 +163,21 @@ export class DatabaseTraceDeliveryService implements TraceDeliveryService {
   /**
    * Convert database trace to our trace format
    */
-  convertDatabaseTraceToTraceData(trace: TraceType): TraceData {
+  convertDatabaseTraceToTraceData(trace: TraceType): TraceType {
     return {
+      apiKeyId: trace.apiKeyId,
       createdAt: trace.createdAt,
       data: trace.data as Record<string, unknown>,
       expiresAt: trace.expiresAt,
+      id: trace.id,
       metadata: trace.metadata as Record<string, unknown>,
       orgId: trace.orgId,
-      parentSpanId: trace.parentSpanId || undefined,
-      spanId: trace.spanId || undefined,
+      parentSpanId: trace.parentSpanId ?? null,
+      projectId: trace.projectId,
+      spanId: trace.spanId ?? null,
       traceId: trace.traceId,
-      userId: trace.userId || undefined,
+      updatedAt: trace.updatedAt,
+      userId: trace.userId ?? null,
     };
   }
 

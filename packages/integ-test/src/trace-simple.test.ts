@@ -9,16 +9,16 @@ describe('JS SDK Simple Trace Tests', () => {
   beforeAll(async () => {
     // Initialize Untrace SDK with test configuration
     untrace = init({
-      apiKey: 'test-api-key',
-      baseUrl: 'http://localhost:3000/api',
+      // biome-ignore lint/style/noNonNullAssertion: This is a valid use of any
+      apiKey: process.env.UNTRACE_API_KEY!,
+      baseUrl: 'http://localhost:3000',
       debug: true,
-      disableAutoInstrumentation: false,
       providers: ['openai'],
     });
 
     // Initialize OpenAI client
     openai = new OpenAI({
-      apiKey: 'test-key',
+      apiKey: process.env.OPENAI_API_KEY,
     });
 
     // Instrument OpenAI with Untrace

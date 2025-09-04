@@ -1,18 +1,20 @@
 'use client';
 
-import { Check, Copy } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useTheme } from 'next-themes';
-import { type HTMLAttributes, useEffect, useState } from 'react';
+import { type HTMLAttributes, useEffect, useId, useState } from 'react';
 import { Button } from '../components/button';
+import { CopyButton } from '../custom/copy-button';
 import { cn } from '../lib/utils';
 
 interface ScriptCopyBtnProps extends HTMLAttributes<HTMLDivElement> {
   showMultiplePackageOptions?: boolean;
-  codeLanguage: string;
+  codeLanguage?: string; // Made optional since we'll use languageMap
   lightTheme: string;
   darkTheme: string;
   commandMap: Record<string, string>;
+  copyTextMap?: Record<string, string>; // Optional prop for different copy text
+  languageMap?: Record<string, string>; // New prop for language-specific highlighting
   className?: string;
 }
 
@@ -22,24 +24,31 @@ export function ScriptCopyBtn({
   lightTheme,
   darkTheme,
   commandMap,
+  copyTextMap,
+  languageMap,
   className,
 }: ScriptCopyBtnProps) {
   const packageManagers = Object.keys(commandMap);
   const [packageManager, setPackageManager] = useState<string>(
     packageManagers[0] ?? '',
   );
-  const [copied, setCopied] = useState(false);
+  // Generate a unique ID for this instance
+  const instanceId = useId();
   const [highlightedCode, setHighlightedCode] = useState('');
   const { theme } = useTheme();
   const command = commandMap[packageManager] ?? '';
+  const copyText = copyTextMap?.[packageManager] ?? command;
 
   useEffect(() => {
     async function loadHighlightedCode() {
       try {
         const { codeToHtml } = await import('shiki');
+        // Use languageMap if available, otherwise fall back to codeLanguage
+        const language =
+          languageMap?.[packageManager] || codeLanguage || 'bash';
         const highlighted = await codeToHtml(command, {
           defaultColor: theme === 'dark' ? 'dark' : 'light',
-          lang: codeLanguage,
+          lang: language,
           themes: {
             dark: darkTheme,
             light: lightTheme,
@@ -53,21 +62,18 @@ export function ScriptCopyBtn({
     }
 
     loadHighlightedCode();
-  }, [command, theme, codeLanguage, lightTheme, darkTheme]);
-
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(command);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  }, [
+    command,
+    theme,
+    codeLanguage,
+    languageMap,
+    packageManager,
+    lightTheme,
+    darkTheme,
+  ]);
 
   return (
-    <div
-      className={cn(
-        'mx-auto flex max-w-md items-center justify-center',
-        className,
-      )}
-    >
+    <div className={cn('flex items-center justify-center', className)}>
       <div className="w-full space-y-2">
         <div className="mb-2 flex items-center justify-center">
           {showMultiplePackageOptions && (
@@ -93,7 +99,7 @@ export function ScriptCopyBtn({
                         <motion.div
                           className="absolute inset-x-0 bottom-[1px] mx-auto h-0.5 w-[90%] bg-primary"
                           initial={false}
-                          layoutId="activeTab"
+                          layoutId={`activeTab-${instanceId}`}
                           transition={{
                             damping: 30,
                             stiffness: 500,
@@ -108,41 +114,28 @@ export function ScriptCopyBtn({
             </div>
           )}
         </div>
-        <div className="relative flex items-center">
-          <div className="min-w-[300px] grow font-mono">
+        <div className="relative flex gap-2 w-full">
+          <div className="font-mono flex-1">
             {highlightedCode ? (
               <div
-                className={`[&>pre]:overflow-x-auto [&>pre]:rounded-md [&>pre]:p-1.5 [&>pre]:px-4 [&>pre]:font-mono bg-background rounded ${
+                className={`[&>pre]:overflow-x-auto [&>pre]:rounded-md [&>pre]:p-2 [&>pre]:px-4 [&>pre]:font-mono bg-muted rounded h-9 ${
                   theme === 'dark' ? 'dark' : 'light'
                 }`}
                 // biome-ignore lint/security/noDangerouslySetInnerHtml: ok
                 dangerouslySetInnerHTML={{ __html: highlightedCode }}
               />
             ) : (
-              <pre className="rounded-md border border-border bg-white p-2 px-4 font-mono dark:bg-black">
+              <pre className="rounded-md border border-border bg-muted p-2 px-4 font-mono dark:bg-black">
                 {command}
               </pre>
             )}
           </div>
-          <Button
-            aria-label={copied ? 'Copied' : 'Copy to clipboard'}
-            className="relative ml-2 rounded-md hidden md:block"
-            onClick={copyToClipboard}
-            size="icon"
+          <CopyButton
+            className="flex-shrink-0"
+            size="sm"
+            text={copyText}
             variant="outline"
-          >
-            <span className="sr-only">{copied ? 'Copied' : 'Copy'}</span>
-            <Copy
-              className={`absolute inset-0 m-auto h-4 w-4 transition-all duration-300 ${
-                copied ? 'scale-0' : 'scale-100'
-              }`}
-            />
-            <Check
-              className={`absolute inset-0 m-auto h-4 w-4 transition-all duration-300 ${
-                copied ? 'scale-100' : 'scale-0'
-              }`}
-            />
-          </Button>
+          />
         </div>
       </div>
     </div>

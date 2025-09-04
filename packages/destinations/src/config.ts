@@ -10,6 +10,7 @@ export interface DestinationConfig {
   supportsOpenTelemetry: boolean;
   isActive: boolean;
   logo?: string;
+  docsUrl?: string;
 }
 
 export const destinations: DestinationConfig[] = [
@@ -29,6 +30,7 @@ export const destinations: DestinationConfig[] = [
     },
     description:
       'Open-source LLM engineering platform for observability, metrics, and testing',
+    docsUrl: 'https://docs.untrace.dev/destinations/langfuse',
     id: 'langfuse',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/langfuse.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -51,6 +53,7 @@ export const destinations: DestinationConfig[] = [
       type: 'object',
     },
     description: 'OpenAI observability and monitoring',
+    docsUrl: 'https://docs.untrace.dev/destinations/openai',
     id: 'openai',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/openai.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -75,6 +78,7 @@ export const destinations: DestinationConfig[] = [
       type: 'object',
     },
     description: 'LangChain observability and testing platform',
+    docsUrl: 'https://docs.untrace.dev/destinations/langsmith',
     id: 'langsmith',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/smith.langchain.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -98,6 +102,7 @@ export const destinations: DestinationConfig[] = [
       type: 'object',
     },
     description: 'LLM monitoring and optimization platform',
+    docsUrl: 'https://docs.untrace.dev/destinations/keywords-ai',
     id: 'keywords_ai',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/keywordsai.co/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -127,6 +132,7 @@ export const destinations: DestinationConfig[] = [
       type: 'object',
     },
     description: 'Store traces in Amazon S3 buckets',
+    docsUrl: 'https://docs.untrace.dev/destinations/s3',
     id: 's3',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/amazon.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -167,6 +173,7 @@ function transform(trace, destination) {
   return trace;
 }`,
     description: 'Send traces to a custom webhook endpoint',
+    docsUrl: 'https://docs.untrace.dev/destinations/webhook',
     id: 'webhook',
     isActive: true,
     name: 'Webhook',
@@ -198,6 +205,7 @@ function transform(trace, destination) {
       type: 'object',
     },
     description: 'Datadog APM and distributed tracing',
+    docsUrl: 'https://docs.untrace.dev/destinations/datadog',
     id: 'datadog',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/datadoghq.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -223,6 +231,7 @@ function transform(trace, destination) {
       type: 'object',
     },
     description: 'New Relic APM and distributed tracing',
+    docsUrl: 'https://docs.untrace.dev/destinations/new-relic',
     id: 'new_relic',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/newrelic.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -243,6 +252,7 @@ function transform(trace, destination) {
       type: 'object',
     },
     description: 'Grafana observability and monitoring',
+    docsUrl: 'https://docs.untrace.dev/destinations/grafana',
     id: 'grafana',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/grafana.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -263,6 +273,7 @@ function transform(trace, destination) {
       type: 'object',
     },
     description: 'Prometheus monitoring and alerting',
+    docsUrl: 'https://docs.untrace.dev/destinations/prometheus',
     id: 'prometheus',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/prometheus.io/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -284,6 +295,7 @@ function transform(trace, destination) {
       type: 'object',
     },
     description: 'Elasticsearch search and analytics',
+    docsUrl: 'https://docs.untrace.dev/destinations/elasticsearch',
     id: 'elasticsearch',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/elastic.co/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -308,6 +320,7 @@ function transform(trace, destination) {
       type: 'object',
     },
     description: 'Product analytics and user behavior tracking',
+    docsUrl: 'https://docs.untrace.dev/destinations/posthog',
     id: 'posthog',
     isActive: true,
     logo: 'https://cdn.brandfetch.io/posthug.com/w/400/h/400?c=1idGJK6TyS2PPBb74bA',
@@ -336,6 +349,7 @@ function transform(trace, destination) {
       type: 'object',
     },
     description: 'Custom destination with custom configuration',
+    docsUrl: 'https://docs.untrace.dev/destinations/custom',
     id: 'custom',
     isActive: true,
     name: 'Custom',

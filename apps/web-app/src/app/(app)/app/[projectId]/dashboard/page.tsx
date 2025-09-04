@@ -1,9 +1,22 @@
-import { SectionCards } from './_components/section-cards';
+import { ApiKeySection } from './_components/api-key-section';
+import { ExampleProjects } from './_components/example-projects';
+import { DestinationsGrid } from './_components/integrations-grid';
+import { SummaryStats } from './_components/summary-stats';
 
 export default function Page() {
   return (
-    <div className="flex flex-col gap-4 md:gap-6">
-      <SectionCards />
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Top Left - Activity Overview */}
+      <SummaryStats />
+
+      {/* Top Right - API Key Section */}
+      <ApiKeySection />
+
+      {/* Bottom Left - Destinations Grid */}
+      <DestinationsGrid />
+
+      {/* Bottom Right - Example Projects */}
+      <ExampleProjects />
     </div>
   );
 }

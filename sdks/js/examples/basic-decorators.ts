@@ -11,8 +11,6 @@ import {
 // Initialize Untrace SDK
 init({
   apiKey: process.env.UNTRACE_API_KEY || 'demo-api-key',
-  environment: 'development',
-  serviceName: 'basic-decorator-example',
 });
 
 /**

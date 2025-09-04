@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
-import type { TraceData } from '@untrace/destinations';
+import type { TraceType } from '@untrace/db/schema';
 import { checkDatabaseRecords } from '../check-db-records';
 import { checkLangfuseAPI } from '../check-langfuse-api';
 import { env } from '../test-utils/env';
@@ -49,7 +49,8 @@ describe('Langfuse Simple Fan-out Test', () => {
     console.log('✅ Found destinations in test DB:', foundDestinations.length);
 
     // Create mock trace data
-    const traceData: TraceData = {
+    const traceData: TraceType = {
+      apiKeyId: null,
       createdAt: new Date(),
       data: {
         request: {
@@ -71,17 +72,20 @@ describe('Langfuse Simple Fan-out Test', () => {
         },
       },
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+      id: 'test-trace-id',
       metadata: {},
       orgId: setup.org.id,
-      parentSpanId: undefined,
+      parentSpanId: null,
+      projectId: setup.project.id,
       spanId: 'test-span-id',
       traceId: 'test-trace-id',
+      updatedAt: null,
       userId: setup.user.id,
     };
 
     // Store trace in database first (like the API does)
     const traceRecord = await factories.createTrace({
-      data: traceData.data,
+      data: traceData.data as Record<string, unknown>,
       orgId: setup.org.id,
       overrides: {
         expiresAt: traceData.expiresAt,
@@ -90,7 +94,7 @@ describe('Langfuse Simple Fan-out Test', () => {
         userId: setup.user.id,
       },
       projectId: setup.project.id,
-      spanId: traceData.spanId,
+      spanId: traceData.spanId || undefined,
       traceId: traceData.traceId,
     });
 
@@ -364,7 +368,7 @@ describe('Langfuse Simple Fan-out Test', () => {
 
     try {
       const response = await fetch(
-        `http://localhost:${serverPort}/api/v1/traces/otlp`,
+        `http://localhost:${serverPort}/api/v1/traces/ingest`,
         {
           body: JSON.stringify(otlpData),
           headers: {

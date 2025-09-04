@@ -1,3 +1,5 @@
+import type { TraceType } from '@untrace/db/schema';
+
 // Standard LLM Generation Event Interface
 export interface LLMGenerationEvent {
   // Core properties
@@ -68,34 +70,12 @@ export interface LLMGenerationEvent {
   properties?: Record<string, unknown>;
 }
 
-// Raw trace data from OpenTelemetry + custom metadata
-export interface TraceData {
-  // OpenTelemetry fields
-  traceId: string;
-  spanId?: string;
-  parentSpanId?: string;
-
-  // Raw trace payload (JSON)
-  data: Record<string, unknown>;
-
-  // Metadata
-  metadata?: Record<string, unknown>;
-
-  // User/Org context
-  userId?: string;
-  orgId: string;
-
-  // Timestamps
-  createdAt: Date;
-  expiresAt: Date;
-}
-
 // Standard Integration Interface
 export interface IntegrationProvider {
   name: string;
   isEnabled(): boolean;
-  captureTrace(trace: TraceData): Promise<void>;
-  captureError(error: Error, trace: TraceData): Promise<void>;
+  captureTrace(trace: TraceType): Promise<void>;
+  captureError(error: Error, trace: TraceType): Promise<void>;
   identifyUser(
     distinctId: string,
     properties: Record<string, unknown>,

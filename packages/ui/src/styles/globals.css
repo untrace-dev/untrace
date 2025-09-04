@@ -337,3 +337,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+pre[style*="background-color"] {
+  /* biome-ignore lint/complexity/noImportantStyles: we need this to override shiki's background color */
+  background-color: var(--muted) !important;
+}

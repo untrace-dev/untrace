@@ -10,20 +10,14 @@ const shouldSkipValidation = !!process.env.CI || isHelpMode || isDevelopment;
 
 export const env = createEnv({
   client: {
-    NEXT_PUBLIC_API_URL: z
-      .string()
-      .optional()
-      .default('https://api.untrace.sh'),
+    NEXT_PUBLIC_API_URL: z.string().optional().default('https://untrace.sh'),
     NEXT_PUBLIC_APP_ENV: z
       .enum(['development', 'production'])
       .default('development'),
     NEXT_PUBLIC_APP_TYPE: z.enum(['cli', 'nextjs']).default('cli'),
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().optional().default(''),
     NEXT_PUBLIC_CLI_VERSION: z.string().optional().default(''),
-    NEXT_PUBLIC_POSTHOG_HOST: z
-      .string()
-      .optional()
-      .default('https://app.posthog.com'),
+    NEXT_PUBLIC_POSTHOG_HOST: z.string().optional(),
     NEXT_PUBLIC_POSTHOG_KEY: z.string().optional().default(''),
     NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional().default(''),
     NEXT_PUBLIC_SUPABASE_URL: z.string().optional().default(''),

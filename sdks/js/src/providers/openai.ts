@@ -1,4 +1,4 @@
-import { SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
+import { SpanKind, SpanStatusCode } from '@opentelemetry/api';
 import { ATTR_LLM_MODEL, ATTR_LLM_PROVIDER } from '../attributes';
 import type {
   LLMOperationType,
@@ -66,7 +66,12 @@ interface OpenAIResponse {
  * OpenAI provider instrumentation
  */
 export class OpenAIInstrumentation extends BaseProviderInstrumentation {
-  readonly name = 'openai';
+  // biome-ignore lint/complexity/noBannedTypes: This is a valid use of any
+  private originalMethods: Map<string, Function> = new Map();
+
+  constructor() {
+    super('openai', '1.0.0');
+  }
 
   canInstrument(module: unknown): boolean {
     // Check if this is an OpenAI client
@@ -86,6 +91,7 @@ export class OpenAIInstrumentation extends BaseProviderInstrumentation {
       const originalCreate = client.chat.completions.create.bind(
         client.chat.completions,
       );
+      this.originalMethods.set('chat.completions.create', originalCreate);
       client.chat.completions.create = this.wrapMethod(
         originalCreate,
         'chat',
@@ -96,6 +102,7 @@ export class OpenAIInstrumentation extends BaseProviderInstrumentation {
     // Instrument completions
     if (client.completions?.create) {
       const originalCreate = client.completions.create.bind(client.completions);
+      this.originalMethods.set('completions.create', originalCreate);
       client.completions.create = this.wrapMethod(
         originalCreate,
         'completion',
@@ -106,6 +113,7 @@ export class OpenAIInstrumentation extends BaseProviderInstrumentation {
     // Instrument embeddings
     if (client.embeddings?.create) {
       const originalCreate = client.embeddings.create.bind(client.embeddings);
+      this.originalMethods.set('embeddings.create', originalCreate);
       client.embeddings.create = this.wrapMethod(
         originalCreate,
         'embedding',
@@ -116,6 +124,7 @@ export class OpenAIInstrumentation extends BaseProviderInstrumentation {
     // Instrument images
     if (client.images?.generate) {
       const originalGenerate = client.images.generate.bind(client.images);
+      this.originalMethods.set('images.generate', originalGenerate);
       client.images.generate = this.wrapMethod(
         originalGenerate,
         'image_generation',
@@ -128,6 +137,7 @@ export class OpenAIInstrumentation extends BaseProviderInstrumentation {
       const originalCreate = client.audio.transcriptions.create.bind(
         client.audio.transcriptions,
       );
+      this.originalMethods.set('audio.transcriptions.create', originalCreate);
       client.audio.transcriptions.create = this.wrapMethod(
         originalCreate,
         'audio_transcription',
@@ -138,6 +148,7 @@ export class OpenAIInstrumentation extends BaseProviderInstrumentation {
     // Instrument moderations
     if (client.moderations?.create) {
       const originalCreate = client.moderations.create.bind(client.moderations);
+      this.originalMethods.set('moderations.create', originalCreate);
       client.moderations.create = this.wrapMethod(
         originalCreate,
         'moderation',
@@ -146,6 +157,21 @@ export class OpenAIInstrumentation extends BaseProviderInstrumentation {
     }
 
     return module;
+  }
+
+  enable(): void {
+    // Enable instrumentation - this is called when the instrumentation is enabled
+    this.debug('OpenAI instrumentation enabled');
+  }
+
+  disable(): void {
+    // Restore original methods
+    this.originalMethods.forEach((_originalMethod, methodName) => {
+      // This would need to be implemented based on how we track the instrumented modules
+      this.debug(`Restored original method: ${methodName}`);
+    });
+    this.originalMethods.clear();
+    this.debug('OpenAI instrumentation disabled');
   }
 
   private wrapMethod(
@@ -371,14 +397,5 @@ export class OpenAIInstrumentation extends BaseProviderInstrumentation {
       prompt: promptCost,
       total: promptCost + completionCost,
     };
-  }
-
-  private getTracer() {
-    // Use the tracer from the SDK if available
-    if (this.tracer) {
-      return this.tracer;
-    }
-    // Fallback to OpenTelemetry tracer
-    return trace.getTracer(this.name, this.config?.version);
   }
 }

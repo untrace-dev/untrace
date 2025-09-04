@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'bun:test';
+import type { TraceType } from '@untrace/db/schema';
 import { LangfuseIntegration } from './langfuse';
-import type { TraceData } from './types';
 
 describe('LangfuseIntegration', () => {
   let integration: LangfuseIntegration;
@@ -42,7 +42,8 @@ describe('LangfuseIntegration', () => {
 
   describe('captureTrace', () => {
     it('should not throw when processing trace data', async () => {
-      const mockTrace: TraceData = {
+      const mockTrace: TraceType = {
+        apiKeyId: null,
         createdAt: new Date('2024-01-01T00:00:00Z'),
         data: {
           llm_generation: {
@@ -59,14 +60,17 @@ describe('LangfuseIntegration', () => {
           },
         },
         expiresAt: new Date('2024-02-01T00:00:00Z'),
+        id: 'test-trace-id',
         metadata: {
           environment: 'test',
           version: '1.0.0',
         },
         orgId: 'test-org',
         parentSpanId: 'test-parent-span-id',
+        projectId: 'test-project',
         spanId: 'test-span-id',
         traceId: 'test-trace-id',
+        updatedAt: null,
         userId: 'test-user',
       };
 
@@ -77,12 +81,20 @@ describe('LangfuseIntegration', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      const mockTrace: TraceData = {
+      const mockTrace: TraceType = {
+        apiKeyId: null,
         createdAt: new Date(),
         data: {},
         expiresAt: new Date(),
+        id: 'test-trace-id',
+        metadata: {},
         orgId: 'test-org',
+        parentSpanId: null,
+        projectId: 'test-project',
+        spanId: null,
         traceId: 'test-trace-id',
+        updatedAt: null,
+        userId: null,
       };
 
       // Should not throw even with network errors
@@ -95,12 +107,20 @@ describe('LangfuseIntegration', () => {
   describe('captureError', () => {
     it('should not throw when processing error', async () => {
       const error = new Error('Test error');
-      const mockTrace: TraceData = {
+      const mockTrace: TraceType = {
+        apiKeyId: null,
         createdAt: new Date(),
         data: {},
         expiresAt: new Date(),
+        id: 'test-trace-id',
+        metadata: {},
         orgId: 'test-org',
+        parentSpanId: null,
+        projectId: 'test-project',
+        spanId: null,
         traceId: 'test-trace-id',
+        updatedAt: null,
+        userId: null,
       };
 
       // Should not throw

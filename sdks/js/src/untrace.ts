@@ -168,7 +168,7 @@ export class Untrace {
       try {
         const instrumentation = getProviderInstrumentation(providerName);
         if (instrumentation) {
-          instrumentation.init(this.config);
+          instrumentation.initialize(this.config, this.tracer.getTracer());
           instrumentations.push(instrumentation);
         }
       } catch (error) {
@@ -228,7 +228,7 @@ export class Untrace {
       );
     }
 
-    instrumentation.init(this.config, this.tracer.getTracer());
+    instrumentation.initialize(this.config, this.tracer.getTracer());
     return instrumentation.instrument(module);
   }
 

@@ -1,8 +1,12 @@
 import { db } from '@untrace/db/client';
-import { ApiKeys, Destinations, Traces } from '@untrace/db/schema';
+import {
+  ApiKeys,
+  Destinations,
+  type TraceInsertType,
+  Traces,
+} from '@untrace/db/schema';
 import { eq } from 'drizzle-orm';
 import { createTraceDeliveryService } from './database-adapter';
-import type { TraceData } from './types';
 
 export interface FanoutContext {
   apiKeyId?: string;
@@ -37,7 +41,7 @@ export class TraceFanoutService {
    * Process a single trace through all enabled destinations for the org/project
    */
   async processTrace(
-    trace: TraceData,
+    trace: TraceInsertType,
     context: FanoutContext,
   ): Promise<FanoutResult> {
     const errors: Array<{ destinationId: string; error: string }> = [];
@@ -99,7 +103,7 @@ export class TraceFanoutService {
    * Process multiple traces through all enabled destinations
    */
   async processTraces(
-    traces: TraceData[],
+    traces: TraceInsertType[],
     context: FanoutContext,
   ): Promise<FanoutResult> {
     const errors: Array<{ destinationId: string; error: string }> = [];
@@ -228,14 +232,15 @@ export class TraceFanoutService {
    * Convert TraceData to database trace format
    */
   private convertTraceDataToDatabaseTrace(
-    trace: TraceData,
+    trace: TraceInsertType,
     context: FanoutContext,
   ) {
     return {
       apiKeyId: context.apiKeyId || null,
-      createdAt: trace.createdAt,
+      createdAt: trace.createdAt || new Date(),
       data: trace.data,
-      expiresAt: trace.expiresAt,
+      expiresAt:
+        trace.expiresAt || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
       id: trace.traceId, // Use traceId as id for now
       metadata: trace.metadata || null,
       orgId: context.orgId,
@@ -314,12 +319,12 @@ export class TraceFanoutService {
    * Create a trace delivery job for queue processing
    */
   createTraceDeliveryJob(
-    trace: TraceData,
+    trace: TraceInsertType,
     context: FanoutContext,
   ): TraceDeliveryJob {
     return {
       apiKeyId: context.apiKeyId,
-      metadata: trace.metadata,
+      metadata: trace.metadata as Record<string, unknown> | undefined,
       orgId: context.orgId,
       projectId: context.projectId,
       traceId: trace.traceId,

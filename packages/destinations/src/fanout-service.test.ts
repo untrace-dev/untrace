@@ -1,9 +1,10 @@
-import type { TraceData } from './types';
+import type { TraceType } from '@untrace/db/schema';
 
 describe('TraceFanoutService', () => {
   describe('TraceData interface', () => {
     it('should have the correct structure', () => {
-      const mockTrace: TraceData = {
+      const mockTrace: TraceType = {
+        apiKeyId: null,
         createdAt: new Date(),
         data: {
           llm_generation: {
@@ -16,9 +17,14 @@ describe('TraceFanoutService', () => {
           },
         },
         expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        id: 'test-trace-id',
+        metadata: {},
         orgId: 'test-org',
+        parentSpanId: null,
+        projectId: 'test-project',
         spanId: 'test-span-id',
         traceId: 'test-trace-id',
+        updatedAt: null,
         userId: 'test-user',
       };
 

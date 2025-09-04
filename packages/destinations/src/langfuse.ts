@@ -1,8 +1,5 @@
-import type {
-  IntegrationConfig,
-  IntegrationProvider,
-  TraceData,
-} from './types';
+import type { TraceType } from '@untrace/db/schema';
+import type { IntegrationConfig, IntegrationProvider } from './types';
 
 interface LangfuseOTLPSpan {
   attributes: Array<{
@@ -147,7 +144,7 @@ export class LangfuseIntegration implements IntegrationProvider {
     }
   }
 
-  async captureTrace(trace: TraceData): Promise<void> {
+  async captureTrace(trace: TraceType): Promise<void> {
     if (!this.isEnabled()) {
       return;
     }
@@ -176,17 +173,17 @@ export class LangfuseIntegration implements IntegrationProvider {
     }
   }
 
-  async captureError(error: Error, trace: TraceData): Promise<void> {
+  async captureError(error: Error, trace: TraceType): Promise<void> {
     if (!this.isEnabled()) {
       return;
     }
 
     try {
       // Create error trace with error status
-      const errorTrace: TraceData = {
+      const errorTrace: TraceType = {
         ...trace,
         data: {
-          ...trace.data,
+          ...((trace.data as Record<string, unknown>) || {}),
           error: {
             message: error.message,
             name: error.name,
@@ -221,13 +218,15 @@ export class LangfuseIntegration implements IntegrationProvider {
    * Transform trace data to Langfuse OTLP format
    */
   private transformTraceToLangfuseFormat(
-    trace: TraceData,
+    trace: TraceType,
   ): LangfuseOTLPPayload {
     const now = Date.now();
     const nowNano = now * 1000000; // Convert to nanoseconds
 
     // Extract LLM-specific data from trace
-    const llmData = this.extractLLMDataFromTrace(trace.data);
+    const llmData = this.extractLLMDataFromTrace(
+      trace.data as Record<string, unknown>,
+    );
 
     // Create span attributes following Langfuse conventions
     const attributes: Array<{

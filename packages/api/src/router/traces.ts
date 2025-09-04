@@ -7,6 +7,107 @@ import { z } from 'zod';
 import { createTRPCRouter, protectedProcedure } from '../trpc';
 
 export const tracesRouter = createTRPCRouter({
+  analytics: protectedProcedure
+    .input(
+      z.object({
+        days: z.number().min(1).max(365).default(30),
+        projectId: z.string().optional(),
+      }),
+    )
+    .output(
+      z.object({
+        dailyTraces: z.array(
+          z.object({
+            count: z.number(),
+            date: z.string(),
+          }),
+        ),
+        latencyStats: z.object({
+          average: z.number(),
+          p50: z.number(),
+          p95: z.number(),
+          p99: z.number(),
+        }),
+        totalTraces: z.number(),
+      }),
+    )
+    .query(async ({ input, ctx }) => {
+      if (!ctx.auth.orgId) throw new Error('Organization ID is required');
+
+      const { days, projectId } = input;
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+
+      const conditions = [eq(Traces.orgId, ctx.auth.orgId)];
+      if (projectId) {
+        conditions.push(eq(Traces.projectId, projectId));
+      }
+      conditions.push(gte(Traces.createdAt, startDate));
+
+      // Get all traces for the period
+      const traces = await db.query.Traces.findMany({
+        orderBy: [desc(Traces.createdAt)],
+        where: and(...conditions),
+      });
+
+      // Calculate daily trace counts
+      const dailyCounts: Record<string, number> = {};
+      traces.forEach((trace) => {
+        const date =
+          new Date(trace.createdAt).toISOString().split('T')[0] || 'unknown';
+        dailyCounts[date] = (dailyCounts[date] || 0) + 1;
+      });
+
+      const dailyTraces = Object.entries(dailyCounts).map(([date, count]) => ({
+        count,
+        date,
+      }));
+
+      // Calculate latency statistics
+      const latencies: number[] = [];
+      traces.forEach((trace) => {
+        const traceData = trace.data as Record<string, unknown>;
+        if (
+          traceData.llm_generation &&
+          typeof traceData.llm_generation === 'object' &&
+          traceData.llm_generation !== null
+        ) {
+          const llmGen = traceData.llm_generation as { latency?: number };
+          if (llmGen.latency) {
+            latencies.push(llmGen.latency);
+          }
+        }
+      });
+
+      latencies.sort((a, b) => a - b);
+      const latencyStats = {
+        average:
+          latencies.length > 0
+            ? Math.round(
+                latencies.reduce((sum, val) => sum + val, 0) / latencies.length,
+              )
+            : 0,
+        p50:
+          latencies.length > 0
+            ? latencies[Math.floor(latencies.length * 0.5)] || 0
+            : 0,
+        p95:
+          latencies.length > 0
+            ? latencies[Math.floor(latencies.length * 0.95)] || 0
+            : 0,
+        p99:
+          latencies.length > 0
+            ? latencies[Math.floor(latencies.length * 0.99)] || 0
+            : 0,
+      };
+
+      return {
+        dailyTraces,
+        latencyStats,
+        totalTraces: traces.length,
+      };
+    }),
+
   list: protectedProcedure
     .input(
       z.object({

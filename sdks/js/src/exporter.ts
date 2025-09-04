@@ -90,14 +90,16 @@ export class UntraceExporter implements SpanExporter {
         'Content-Type': 'application/json',
         ...config.headers,
       }),
-      url: `${config.baseUrl}/rpc`,
+      url: `${config.baseUrl}/api/v1`,
     });
 
     this.client = createORPCClient(link) as RouterClient<typeof router>;
 
     if (config.debug) {
       console.log('[UntraceExporter] Initialized with config:', {
-        apiKey: config.apiKey ? '***' : 'missing',
+        apiKey: config.apiKey
+          ? `${config.apiKey.substring(0, 8)}...${config.apiKey.substring(config.apiKey.length - 4)}`
+          : 'missing',
         baseUrl: config.baseUrl,
         debug: config.debug,
       });
